@@ -19,7 +19,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  X
+  X,
+  Tags
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,13 @@ const adminNavItems = [
     href: "/admin",
     icon: Package,
     description: "Manage product catalog",
+    category: "content"
+  },
+  {
+    title: "Categories",
+    href: "/admin/categories",
+    icon: Tags,
+    description: "Manage product categories and cover photos",
     category: "content"
   },
   {
