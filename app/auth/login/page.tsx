@@ -20,6 +20,7 @@ export default function LoginPage() {
   const [success, setSuccess] = useState<string>("");
   const [emailNotConfirmed, setEmailNotConfirmed] = useState<string>("");
   const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
+  const [isSupabaseConfigured, setIsSupabaseConfigured] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -28,6 +29,20 @@ export default function LoginPage() {
 
   // Check if user is already authenticated
   useEffect(() => {
+    // Check if Supabase is configured
+    const checkSupabaseConfig = () => {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      return !!(supabaseUrl && supabaseKey && supabaseUrl !== '' && supabaseKey !== '' && supabaseUrl.includes('supabase.co'));
+    };
+    
+    setIsSupabaseConfigured(checkSupabaseConfig());
+    
+    if (!checkSupabaseConfig()) {
+      setError("Supabase is not configured. Please set up your environment variables to enable authentication.");
+      return;
+    }
+
     const checkAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -44,6 +59,11 @@ export default function LoginPage() {
   }, [router]);
 
   const handleResendConfirmation = async () => {
+    if (!isSupabaseConfigured) {
+      setError("Supabase is not configured. Please set up your environment variables to enable authentication.");
+      return;
+    }
+    
     if (!emailNotConfirmed) return;
     
     setIsResendingConfirmation(true);
@@ -70,6 +90,12 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isSupabaseConfigured) {
+      setError("Supabase is not configured. Please set up your environment variables to enable authentication.");
+      return;
+    }
+    
     setError("");
     setSuccess("");
     setEmailNotConfirmed("");
@@ -158,6 +184,28 @@ export default function LoginPage() {
         </CardHeader>
         
         <CardContent>
+          {!isSupabaseConfigured && (
+            <Alert className="mb-4 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <AlertDescription className="text-amber-800 dark:text-amber-200">
+                <div className="space-y-3">
+                  <p>
+                    <strong>Supabase Setup Required:</strong> Authentication is not available because Supabase is not configured.
+                  </p>
+                  <p className="text-sm">
+                    To enable authentication, please:
+                  </p>
+                  <ol className="text-sm list-decimal list-inside space-y-1 ml-2">
+                    <li>Create a Supabase project at <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="underline">supabase.com</a></li>
+                    <li>Get your Project URL and anon key from Settings → API</li>
+                    <li>Create a <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded">.env.local</code> file with your credentials</li>
+                    <li>Restart your development server</li>
+                  </ol>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {error && (
             <Alert className="mb-4 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
               <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
@@ -274,7 +322,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700"
-              disabled={isLoading}
+              disabled={isLoading || !isSupabaseConfigured}
             >
               {isLoading ? (
                 <>
@@ -286,12 +334,12 @@ export default function LoginPage() {
                   {isSignUp ? (
                     <>
                       <UserPlus className="h-4 w-4 mr-2" />
-                      Create Account
+                      {!isSupabaseConfigured ? "Setup Required" : "Create Account"}
                     </>
                   ) : (
                     <>
                       <LogIn className="h-4 w-4 mr-2" />
-                      Sign In
+                      {!isSupabaseConfigured ? "Setup Required" : "Sign In"}
                     </>
                   )}
                 </>
@@ -310,7 +358,7 @@ export default function LoginPage() {
                 setEmailNotConfirmed("");
                 setFormData({ email: "", password: "", confirmPassword: "" });
               }}
-              disabled={isLoading}
+              disabled={isLoading || !isSupabaseConfigured}
               className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
             >
               {isSignUp 
