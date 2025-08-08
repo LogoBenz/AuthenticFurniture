@@ -130,6 +130,7 @@ useEffect(() => {
 
 **Location**: `components/products/EnquiryCartModal.tsx`
 
+
 **Debug Steps**:
 1. Add render logging:
 

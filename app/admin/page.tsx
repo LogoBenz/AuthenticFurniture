@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -44,6 +44,12 @@ function AdminPageContent() {
     inStock: true,
     isFeatured: false,
   });
+
+  // Debug function to track image changes
+  const handleImagesChange = (newImages: string[]) => {
+    console.log('🔄 Admin: Images changed to:', newImages);
+    setProductImages(newImages);
+  };
 
   useEffect(() => {
     // Check if Supabase is configured by checking environment variables
@@ -112,8 +118,8 @@ function AdminPageContent() {
       isFeatured: product.isFeatured,
     });
     setCustomCategory("");
-    // Convert single image URL to array for editing
-    setProductImages(product.imageUrl ? [product.imageUrl] : []);
+    // Use the full images array if available, otherwise fallback to single imageUrl
+    setProductImages(product.images && product.images.length > 0 ? product.images : (product.imageUrl ? [product.imageUrl] : []));
     setIsDialogOpen(true);
   };
 
@@ -162,10 +168,13 @@ function AdminPageContent() {
       price: priceValue,
       description: formData.description,
       features: formData.features.split('\n').filter(f => f.trim()),
-      imageUrl: productImages[0], // Use first image as primary
+      images: productImages,
+      imageUrl: productImages[0],
       inStock: formData.inStock,
       isFeatured: formData.isFeatured,
     };
+
+    console.log('🔄 Submitting product data:', productData);
 
     try {
       if (editingProduct) {
@@ -318,6 +327,9 @@ function AdminPageContent() {
             <DialogTitle>
               {editingProduct ? "Edit Product" : "Add New Product"}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              {editingProduct ? "Edit existing product details" : "Add a new product to the inventory"}
+            </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -425,7 +437,7 @@ function AdminPageContent() {
               <div>
                 <MultiImageUpload
                   images={productImages}
-                  onImagesChange={setProductImages}
+                  onImagesChange={handleImagesChange}
                   maxImages={5}
                   disabled={isUploading}
                 />
@@ -465,8 +477,8 @@ function AdminPageContent() {
       {/* Products Grid with Responsive Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
         {products.map((product) => {
-          // Convert single image URL to array for gallery component
-          const images = [product.imageUrl];
+          // Use the full images array if available, otherwise fallback to single imageUrl
+          const images = product.images && product.images.length > 0 ? product.images : (product.imageUrl ? [product.imageUrl] : []);
           
           return (
             <Card key={product.id} className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-shadow">

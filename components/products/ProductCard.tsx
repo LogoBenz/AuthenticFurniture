@@ -14,7 +14,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { name, slug, category, price, imageUrl, inStock } = product;
+  const { name, slug, category, price, images, inStock } = product;
   const { addToCart, removeFromCart, isInCart, isLoaded } = useEnquiryCart();
   const [isProcessing, setIsProcessing] = useState(false);
   
@@ -74,7 +74,7 @@ export function ProductCard({ product }: ProductCardProps) {
       return (
         <>
           <div className="animate-spin rounded-full h-3 w-3 border-2 border-current border-t-transparent mr-1" />
-          {isProductInCart ? 'Removing' : 'Adding'}
+          <span className="hidden sm:inline">{isProductInCart ? 'Removing' : 'Adding'}</span>
         </>
       );
     }
@@ -83,7 +83,7 @@ export function ProductCard({ product }: ProductCardProps) {
       return (
         <>
           <X className="h-3 w-3 mr-1" />
-          Remove
+          <span className="hidden sm:inline">Remove</span>
         </>
       );
     }
@@ -91,7 +91,7 @@ export function ProductCard({ product }: ProductCardProps) {
     return (
       <>
         <Plus className="h-3 w-3 mr-1" />
-        Enquire
+        <span className="hidden sm:inline">Enquire</span>
       </>
     );
   };
@@ -101,7 +101,7 @@ export function ProductCard({ product }: ProductCardProps) {
       return (
         <>
           <div className="animate-spin rounded-full h-3 w-3 border-2 border-current border-t-transparent mr-1" />
-          {isProductInCart ? 'Removing...' : 'Adding...'}
+          <span className="hidden sm:inline">{isProductInCart ? 'Removing...' : 'Adding...'}</span>
         </>
       );
     }
@@ -110,7 +110,7 @@ export function ProductCard({ product }: ProductCardProps) {
       return (
         <>
           <X className="h-3 w-3 mr-1" />
-          Remove
+          <span className="hidden sm:inline">Remove</span>
         </>
       );
     }
@@ -118,26 +118,36 @@ export function ProductCard({ product }: ProductCardProps) {
     return (
       <>
         <ShoppingCart className="h-3 w-3 mr-1" />
-        Quick Add
+        <span className="hidden sm:inline">Quick Add</span>
       </>
     );
   };
+
+  // Get the first image or fallback
+  const mainImage = images && images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80';
 
   return (
     <div className="group relative overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-800/50">
       <Link href={`/products/${slug}`}>
         <div className="aspect-square relative overflow-hidden bg-slate-50 dark:bg-slate-900">
+          {/* Simple Image - No Gallery */}
           <Image
-            src={imageUrl}
+            src={mainImage}
             alt={name}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            priority={false}
           />
+          
+          {/* Multiple images indicator */}
+          {images && images.length > 1 && (
+            <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+              {images.length} photos
+            </div>
+          )}
+          
           {!inStock && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+              <span className="bg-red-600 text-white px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-medium">
                 Out of Stock
               </span>
             </div>
@@ -145,7 +155,7 @@ export function ProductCard({ product }: ProductCardProps) {
           
           {/* Quick Add Button Overlay - Only show if in stock */}
           {inStock && (
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 z-10">
               <Button
                 size="sm"
                 onClick={handleCartAction}
@@ -163,16 +173,16 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
       
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <Link href={`/products/${slug}`}>
-          <h3 className="font-medium text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-500 transition-colors line-clamp-1 mb-1">
+          <h3 className="font-medium text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-500 transition-colors line-clamp-1 mb-1 text-sm sm:text-base">
             {name}
           </h3>
         </Link>
-        <p className="text-sm text-muted-foreground mb-3">{category}</p>
+        <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">{category}</p>
         
         <div className="flex items-center justify-between">
-          <p className="font-semibold text-foreground">
+          <p className="font-semibold text-foreground text-sm sm:text-base">
             {formatPrice(price)}
           </p>
           
@@ -181,7 +191,7 @@ export function ProductCard({ product }: ProductCardProps) {
             variant={isProductInCart ? "destructive" : "outline"}
             onClick={handleCartAction}
             disabled={!isLoaded || !inStock || isProcessing}
-            className={`transition-all duration-200 ${
+            className={`transition-all duration-200 text-xs sm:text-sm ${
               isProductInCart 
                 ? "bg-red-600 hover:bg-red-700 text-white border-red-600" 
                 : "hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20 dark:hover:border-blue-800"

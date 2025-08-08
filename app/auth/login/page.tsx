@@ -51,9 +51,13 @@ export default function LoginPage() {
     setSuccess("");
 
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
+      // Use signUp again to resend confirmation email
+      const { error } = await supabase.auth.signUp({
         email: emailNotConfirmed,
+        password: "temporary-password", // This won't be used since user already exists
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/login`
+        }
       });
 
       if (error) throw error;
@@ -90,6 +94,9 @@ export default function LoginPage() {
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/login`
+          }
         });
 
         if (error) throw error;
@@ -176,7 +183,7 @@ export default function LoginPage() {
                     Your email address <strong>{emailNotConfirmed}</strong> needs to be verified before you can sign in.
                   </p>
                   <p className="text-sm">
-                    Please check your email inbox (and spam folder) for a verification link. If you didn't receive the email, you can request a new one.
+                    Please check your email inbox (and spam folder) for a verification link. If you didn&apos;t receive the email, you can request a new one.
                   </p>
                   <Button
                     type="button"
@@ -214,13 +221,12 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                placeholder="admin@example.com"
                 required
                 disabled={isLoading}
               />
@@ -234,10 +240,8 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => handleInputChange("password", e.target.value)}
-                  placeholder={isSignUp ? "Create a password (min 6 characters)" : "Enter your password"}
                   required
                   disabled={isLoading}
-                  minLength={isSignUp ? 6 : undefined}
                 />
                 <Button
                   type="button"
@@ -248,9 +252,9 @@ export default function LoginPage() {
                   disabled={isLoading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <Eye className="h-4 w-4" />
                   )}
                 </Button>
               </div>
@@ -264,7 +268,6 @@ export default function LoginPage() {
                   type="password"
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                  placeholder="Confirm your password"
                   required
                   disabled={isLoading}
                 />
@@ -273,7 +276,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -283,17 +286,8 @@ export default function LoginPage() {
                 </>
               ) : (
                 <>
-                  {isSignUp ? (
-                    <>
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Create Account
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="h-4 w-4 mr-2" />
-                      Sign In
-                    </>
-                  )}
+                  {isSignUp ? <UserPlus className="h-4 w-4 mr-2" /> : <LogIn className="h-4 w-4 mr-2" />}
+                  {isSignUp ? "Create Account" : "Sign In"}
                 </>
               )}
             </Button>
@@ -311,24 +305,11 @@ export default function LoginPage() {
                 setFormData({ email: "", password: "", confirmPassword: "" });
               }}
               disabled={isLoading}
-              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
             >
               {isSignUp 
                 ? "Already have an account? Sign in" 
                 : "Need an account? Create one"
               }
-            </Button>
-          </div>
-
-          <div className="mt-4 text-center">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/')}
-              disabled={isLoading}
-              className="text-sm"
-            >
-              Back to Website
             </Button>
           </div>
         </CardContent>

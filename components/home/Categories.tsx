@@ -2,27 +2,29 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getProductCategories } from "@/lib/products";
+import { getPopularCategories } from "@/lib/db";
+
+interface Category {
+  id: string;
+  name: string;
+  image_url: string;
+  slug: string;
+  is_popular: boolean;
+}
 
 export function Categories() {
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const cats = await getProductCategories();
+        const cats = await getPopularCategories();
         setCategories(Array.isArray(cats) ? cats : []);
       } catch (error) {
-        console.error('Error loading categories:', error);
-        // Fallback categories if there's an error
-        setCategories([
-          "Office Chairs",
-          "Lounge Chairs", 
-          "Gaming Chairs",
-          "Conference Furniture",
-          "Living Room"
-        ]);
+        console.error('Error loading popular categories:', error);
+        // Fallback to empty array if no popular categories
+        setCategories([]);
       } finally {
         setIsLoading(false);
       }
@@ -46,58 +48,67 @@ export function Categories() {
 
   if (isLoading) {
     return (
-      <section className="py-16">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold tracking-tight mb-2 text-center">
-            Browse by Category
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2 text-center">
+            Popular Categories
           </h2>
-          <div className="text-center text-muted-foreground">Loading categories...</div>
+          <div className="text-center text-muted-foreground text-sm sm:text-base">Loading popular categories...</div>
         </div>
       </section>
     );
   }
 
+  // Don't render the section if there are no popular categories
+  if (categories.length === 0) {
+    return null;
+  }
+
   return (
-    <section className="py-16">
+    <section className="py-12 sm:py-16">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold tracking-tight mb-2 text-center">
-          Browse by Category
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2 text-center">
+          Popular Categories
         </h2>
-        <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
+        <p className="text-center text-muted-foreground mb-8 sm:mb-10 max-w-2xl mx-auto text-sm sm:text-base">
           Find the perfect furniture for every space, from luxury homes to corporate offices.
         </p>
         
-        {categories.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-            {categories.map((category) => (
-              <Link 
-                href={`/products?category=${encodeURIComponent(category)}`}
-                key={category}
-                className="group relative overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:shadow-md"
-              >
-                <div className="aspect-square relative bg-slate-50 dark:bg-slate-900">
-                  {categoryIcons[category] && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+          {categories.map((category) => (
+            <Link 
+              href={`/products?category=${encodeURIComponent(category.name)}`}
+              key={category.id}
+              className="group relative overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:shadow-md"
+            >
+              <div className="aspect-square relative bg-slate-50 dark:bg-slate-900">
+                {category.image_url ? (
+                  <div 
+                    className="w-full h-full bg-cover bg-center opacity-70 group-hover:opacity-90 transition-opacity duration-300"
+                    style={{ backgroundImage: `url(${category.image_url})` }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                  </div>
+                ) : (
+                  // Fallback to hardcoded images if no image_url
+                  categoryIcons[category.name] && (
                     <div 
                       className="w-full h-full bg-cover bg-center opacity-70 group-hover:opacity-90 transition-opacity duration-300"
-                      style={{ backgroundImage: `url(${categoryIcons[category]})` }}
+                      style={{ backgroundImage: `url(${categoryIcons[category.name]})` }}
                     >
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
                     </div>
-                  )}
-                  <div className="absolute inset-0 flex items-end p-4">
-                    <h3 className="text-white font-medium text-lg group-hover:text-amber-100 transition-colors">
-                      {category}
-                    </h3>
-                  </div>
+                  )
+                )}
+                <div className="absolute inset-0 flex items-end p-3 sm:p-4">
+                  <h3 className="text-white font-medium text-sm sm:text-base lg:text-lg group-hover:text-amber-100 transition-colors leading-tight">
+                    {category.name}
+                  </h3>
                 </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center text-muted-foreground">
-            No categories available
-          </div>
-        )}
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -6,7 +6,8 @@ export interface Product {
   price: number;
   description: string;
   features: string[];
-  imageUrl: string;
+  images: string[];
+  imageUrl: string; // Keep for backward compatibility - will be first image
   inStock: boolean;
   isFeatured: boolean;
 }

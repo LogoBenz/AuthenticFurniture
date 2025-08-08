@@ -1,17 +1,19 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import { getProductBySlug, formatPrice, getAllProducts } from "@/lib/products";
+import { getProductBySlug, formatPrice } from "@/lib/products";
 import { ProductPageClient } from "@/components/products/ProductPageClient";
+import { ProductImageGallery } from "@/components/products/ProductImageGallery";
 
 interface ProductPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const product = await getProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
   
   if (!product) {
     return {
@@ -26,16 +28,9 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   };
 }
 
-export async function generateStaticParams() {
-  const products = await getAllProducts();
-  
-  return products.map((product) => ({
-    slug: product.slug,
-  }));
-}
-
 export default async function ProductPage({ params }: ProductPageProps) {
-  const product = await getProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
   
   if (!product) {
     notFound();
@@ -44,17 +39,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <div className="pt-24 pb-16">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-          {/* Product Image */}
-          <div className="relative h-96 md:h-[600px] bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden">
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-              priority
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+          {/* Product Image Gallery - Completely isolated container */}
+          <div className="flex flex-col">
+            {/* Main image container */}
+            <div className="relative h-96 md:h-[500px] bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden mb-4">
+              <ProductImageGallery 
+                images={product.images}
+                productName={product.name}
+                className="h-full w-full"
+              />
+            </div>
           </div>
 
           {/* Product Details */}

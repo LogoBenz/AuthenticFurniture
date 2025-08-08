@@ -88,18 +88,18 @@ export default function ProductsPage() {
 
   if (isLoading) {
     return (
-      <div className="pt-24 pb-16">
+      <div className="pt-20 sm:pt-24 pb-12 sm:pb-16">
         <div className="container mx-auto px-4">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold tracking-tight mb-2">Our Products</h1>
-            <p className="text-muted-foreground max-w-2xl">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2">Our Products</h1>
+            <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
               Browse our collection of high-quality furniture, perfect for homes, offices, 
               and commercial spaces throughout Nigeria.
             </p>
           </div>
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent mr-3"></div>
-            <span className="text-muted-foreground">Loading products...</span>
+          <div className="flex items-center justify-center py-8 sm:py-12">
+            <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-2 border-blue-600 border-t-transparent mr-3"></div>
+            <span className="text-muted-foreground text-sm sm:text-base">Loading products...</span>
           </div>
         </div>
       </div>
@@ -107,17 +107,17 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="pt-24 pb-16">
+    <div className="pt-20 sm:pt-24 pb-12 sm:pb-16">
       <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold tracking-tight mb-2">Our Products</h1>
-          <p className="text-muted-foreground max-w-2xl">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2">Our Products</h1>
+          <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
             Browse our collection of high-quality furniture, perfect for homes, offices, 
             and commercial spaces throughout Nigeria.
           </p>
         </div>
         
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <ProductFilters
             categories={categories}
             selectedCategory={selectedCategory}
@@ -132,7 +132,7 @@ export default function ProductsPage() {
         <ProductGrid products={filteredProducts} />
         
         {/* Results Summary */}
-        <div className="mt-8 text-center text-sm text-muted-foreground">
+        <div className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-muted-foreground">
           Showing {filteredProducts.length} of {products.length} products
           {searchQuery && ` for "${searchQuery}"`}
           {selectedCategory !== "all" && ` in ${selectedCategory}`}

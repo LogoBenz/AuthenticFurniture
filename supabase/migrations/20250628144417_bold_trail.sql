@@ -11,6 +11,7 @@
       - `description` (text, required)
       - `features` (text array)
       - `image_url` (text, required)
+      - `images` (text array)
       - `in_stock` (boolean, default true)
       - `is_featured` (boolean, default false)
       - `created_at` (timestamp with timezone, default now)
@@ -36,6 +37,7 @@ CREATE TABLE IF NOT EXISTS products (
   description text NOT NULL,
   features text[] DEFAULT '{}',
   image_url text NOT NULL,
+  images text[] DEFAULT '{}',
   in_stock boolean DEFAULT true,
   is_featured boolean DEFAULT false,
   created_at timestamptz DEFAULT now(),

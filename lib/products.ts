@@ -3,11 +3,49 @@ import { Product } from "@/types";
 import productsData from "@/data/products-fallback.json";
 
 // Fallback data when Supabase is not configured
-const fallbackProducts: Product[] = productsData.products;
+const fallbackProducts: Product[] = productsData.products as Product[];
 
 // Convert Supabase row to Product type
 function mapSupabaseRowToProduct(row: any): Product {
-  return {
+  console.log('🔄 Mapping database row:', row);
+  
+  // Handle images - could be stored as JSON array, comma-separated string, or single URL
+  let images: string[] = [];
+  
+  if (row.images) {
+    console.log('📝 Found images field:', row.images, 'Type:', typeof row.images);
+    // If images is already an array
+    if (Array.isArray(row.images)) {
+      images = row.images;
+      console.log('✅ Images is already an array:', images);
+    }
+    // If images is a JSON string
+    else if (typeof row.images === 'string') {
+      try {
+        const parsed = JSON.parse(row.images);
+        images = Array.isArray(parsed) ? parsed : [row.images];
+        console.log('✅ Parsed JSON images:', images);
+      } catch {
+        // If JSON parsing fails, treat as comma-separated string
+        images = row.images.split(',').map((url: string) => url.trim()).filter(Boolean);
+        console.log('✅ Treated as comma-separated string:', images);
+      }
+    }
+  }
+  
+  // Fallback to single image_url if no images array
+  if (images.length === 0 && row.image_url) {
+    images = [row.image_url];
+    console.log('🔄 Fallback to image_url:', images);
+  }
+  
+  // Ensure we have at least one image
+  if (images.length === 0) {
+    images = ['/placeholder-product.jpg']; // Fallback placeholder
+    console.log('🔄 Using placeholder image');
+  }
+
+  const product = {
     id: row.id,
     name: row.name,
     slug: row.slug,
@@ -15,10 +53,14 @@ function mapSupabaseRowToProduct(row: any): Product {
     price: parseFloat(row.price),
     description: row.description,
     features: row.features || [],
-    imageUrl: row.image_url,
+    images: images,
+    imageUrl: images[0], // Backward compatibility - use first image
     inStock: row.in_stock,
     isFeatured: row.is_featured,
   };
+  
+  console.log('✅ Mapped product:', product);
+  return product;
 }
 
 // Check if Supabase is properly configured
@@ -250,19 +292,22 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
   try {
     console.log('🔄 Creating product:', product.name);
 
+    const productData = {
+      name: product.name,
+      slug: product.slug,
+      category: product.category,
+      price: product.price,
+      description: product.description,
+      features: product.features,
+      images: JSON.stringify(product.images),
+      image_url: product.imageUrl,
+      in_stock: product.inStock,
+      is_featured: product.isFeatured,
+    };
+
     const { data, error } = await supabase
       .from('products')
-      .insert({
-        name: product.name,
-        slug: product.slug,
-        category: product.category,
-        price: product.price,
-        description: product.description,
-        features: product.features,
-        image_url: product.imageUrl,
-        in_stock: product.inStock,
-        is_featured: product.isFeatured,
-      })
+      .insert(productData)
       .select()
       .single();
 
@@ -323,6 +368,7 @@ export async function updateProduct(id: number, updates: Partial<Product>): Prom
     if (updates.price !== undefined) updateData.price = updates.price;
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.features !== undefined) updateData.features = updates.features;
+    if (updates.images !== undefined) updateData.images = JSON.stringify(updates.images);
     if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl;
     if (updates.inStock !== undefined) updateData.in_stock = updates.inStock;
     if (updates.isFeatured !== undefined) updateData.is_featured = updates.isFeatured;

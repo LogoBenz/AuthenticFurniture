@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
   Package, 
   AlertTriangle, 
@@ -17,13 +18,20 @@ import {
   Upload,
   MapPin,
   Warehouse,
-  Edit
+  Edit,
+  MoreHorizontal
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { getAllProducts, formatPrice } from "@/lib/products";
 import { Product } from "@/types";
 import { ProductImageGallery } from "@/components/products/ProductImageGallery";
 import { StockAdjustmentModal } from "@/components/inventory/StockAdjustmentModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface InventoryItem extends Product {
   stockLevel: number;
@@ -135,19 +143,31 @@ function InventoryContent() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Inventory Management
-        </h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
-          Track stock levels across all locations
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            Inventory Management
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-1">
+            Track stock levels across all locations
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          <Button variant="outline" size="sm">
+            <Upload className="h-4 w-4 mr-2" />
+            Import
+          </Button>
+        </div>
       </div>
 
-      {/* Inventory Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Inventory Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100">Total Items</CardTitle>
@@ -201,7 +221,7 @@ function InventoryContent() {
         </Card>
       </div>
 
-      {/* Alerts */}
+      {/* Stock Alerts */}
       {(lowStockItems.length > 0 || outOfStockItems.length > 0) && (
         <Alert className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
           <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
@@ -212,57 +232,41 @@ function InventoryContent() {
         </Alert>
       )}
 
-      {/* Filters and Actions */}
+      {/* Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle>Inventory Filters & Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-col md:flex-row gap-4 flex-1">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="px-3 py-2 border border-input bg-background rounded-md text-sm"
-              >
-                <option value="all">All Locations</option>
-                {locations.map(location => (
-                  <option key={location} value={location}>{location}</option>
-                ))}
-              </select>
-              
-              <select
-                value={stockFilter}
-                onChange={(e) => setStockFilter(e.target.value)}
-                className="px-3 py-2 border border-input bg-background rounded-md text-sm"
-              >
-                <option value="all">All Stock Levels</option>
-                <option value="good">In Stock</option>
-                <option value="low">Low Stock</option>
-                <option value="out">Out of Stock</option>
-              </select>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
             
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-              <Button variant="outline" size="sm">
-                <Upload className="h-4 w-4 mr-2" />
-                Import
-              </Button>
-            </div>
+            <select
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              className="px-3 py-2 border border-input bg-background rounded-md text-sm"
+            >
+              <option value="all">All Locations</option>
+              {locations.map(location => (
+                <option key={location} value={location}>{location}</option>
+              ))}
+            </select>
+            
+            <select
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.target.value)}
+              className="px-3 py-2 border border-input bg-background rounded-md text-sm"
+            >
+              <option value="all">All Stock Levels</option>
+              <option value="good">In Stock</option>
+              <option value="low">Low Stock</option>
+              <option value="out">Out of Stock</option>
+            </select>
           </div>
         </CardContent>
       </Card>
@@ -273,59 +277,90 @@ function InventoryContent() {
           <CardTitle>Inventory Items ({filteredInventory.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredInventory.map((item) => {
-              const status = getStockStatus(item);
-              // Convert single image URL to array for gallery component
-              const images = [item.imageUrl];
-              
-              return (
-                <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16">
-                      <ProductImageGallery
-                        images={images}
-                        productName={item.name}
-                        className="w-full h-full"
-                      />
-                    </div>
-                    
-                    <div className="flex-1">
-                      <h3 className="font-medium">{item.name}</h3>
-                      <p className="text-sm text-muted-foreground">{item.category}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <MapPin className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">{item.location}</span>
-                      </div>
-                    </div>
-                  </div>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[300px]">Product</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Stock Level</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Value</TableHead>
+                  <TableHead>Last Updated</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredInventory.map((item) => {
+                  const status = getStockStatus(item);
+                  const images = [item.imageUrl];
                   
-                  <div className="text-right space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant={status.color as any}>{status.label}</Badge>
-                      <span className="font-medium">{item.stockLevel} units</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Reorder at: {item.reorderPoint}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Value: {formatPrice(item.stockLevel * item.costPrice)}
-                    </p>
-                  </div>
-                  
-                  <div className="ml-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => openStockModal(item)}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Update Stock
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
+                  return (
+                    <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 rounded-md overflow-hidden bg-slate-100 dark:bg-slate-800">
+                            <ProductImageGallery
+                              images={images}
+                              productName={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div>
+                            <div className="font-medium">{item.name}</div>
+                            <div className="text-sm text-muted-foreground">{item.category}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-sm">{item.location}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div className="font-medium">{item.stockLevel} units</div>
+                          <div className="text-muted-foreground">Reorder: {item.reorderPoint}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={status.color as any}>{status.label}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm font-medium">
+                          {formatPrice(item.stockLevel * item.costPrice)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(item.lastRestocked).toLocaleDateString()}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => openStockModal(item)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Update Stock
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Package className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
           
           {filteredInventory.length === 0 && (

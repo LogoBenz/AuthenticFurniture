@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, AlertCircle, Database, Image as ImageIcon } from "lucide-react";
+import { Plus, Edit, Trash2, AlertCircle, Database, Image as ImageIcon, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { getAllCategories, createCategory, updateCategory, deleteCategory } from "@/lib/db";
+import { getAllCategories, createCategory, updateCategory, deleteCategory, toggleCategoryPopular } from "@/lib/db";
 import { MultiImageUpload } from "@/components/products/MultiImageUpload";
 import Image from "next/image";
 
@@ -19,6 +20,7 @@ interface Category {
   image_url: string;
   productCount: number;
   createdAt: string;
+  is_popular?: boolean;
 }
 
 function slugify(text: string) {
@@ -43,6 +45,7 @@ function CategoriesContent() {
   const [formData, setFormData] = useState({
     name: "",
     image_url: "",
+    is_popular: false,
   });
   const [categoryImages, setCategoryImages] = useState<string[]>([]);
 
@@ -96,6 +99,7 @@ function CategoriesContent() {
     setFormData({
       name: "",
       image_url: "",
+      is_popular: false,
     });
     setEditingCategory(null);
     setCategoryImages([]);
@@ -111,9 +115,25 @@ function CategoriesContent() {
     setFormData({
       name: category.name,
       image_url: category.image_url,
+      is_popular: category.is_popular || false,
     });
     setCategoryImages(category.image_url ? [category.image_url] : []);
     setIsDialogOpen(true);
+  };
+
+  const handlePopularToggle = async (categoryId: string, currentPopular: boolean) => {
+    if (!isSupabaseConfigured) {
+      alert("Supabase is not configured. Please set up your database to manage categories.");
+      return;
+    }
+
+    try {
+      await toggleCategoryPopular(categoryId, !currentPopular);
+      await loadCategories(); // Reload to get updated data
+    } catch (error) {
+      console.error('Error toggling popular status:', error);
+      alert('Error updating popular status. Please try again.');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -139,6 +159,7 @@ function CategoriesContent() {
       name: formData.name.trim(),
       image_url: categoryImages[0],
       slug: slugify(formData.name.trim()),
+      is_popular: formData.is_popular,
     };
 
     try {
@@ -264,11 +285,23 @@ function CategoriesContent() {
                   />
                 </div>
                 
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="is_popular"
+                    checked={formData.is_popular}
+                    onCheckedChange={(checked) => setFormData({...formData, is_popular: checked})}
+                  />
+                  <Label htmlFor="is_popular" className="flex items-center space-x-2">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    <span>Mark as Popular Category</span>
+                  </Label>
+                </div>
+                
                 <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
                   <h3 className="font-medium mb-2">Category Information</h3>
                   <p className="text-sm text-muted-foreground">
                     Categories help organize your products and make them easier for customers to find. 
-                    The cover photo will be displayed on the homepage and category pages.
+                    Popular categories will be displayed on the homepage.
                   </p>
                 </div>
               </div>
@@ -325,6 +358,15 @@ function CategoriesContent() {
                 </div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+              
+              {/* Popular Badge */}
+              {category.is_popular && (
+                <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded flex items-center space-x-1">
+                  <Star className="h-3 w-3" />
+                  <span>Popular</span>
+                </div>
+              )}
+              
               <div className="absolute bottom-4 left-4 right-4">
                 <h3 className="text-white font-semibold text-lg drop-shadow-lg">
                   {category.name}
@@ -344,6 +386,17 @@ function CategoriesContent() {
                 </div>
                 
                 <div className="flex space-x-2">
+                  {/* Popular Toggle */}
+                  <Button
+                    size="sm"
+                    variant={category.is_popular ? "default" : "outline"}
+                    onClick={() => handlePopularToggle(category.id, category.is_popular || false)}
+                    disabled={!isSupabaseConfigured}
+                    className={category.is_popular ? "bg-yellow-500 hover:bg-yellow-600" : ""}
+                  >
+                    <Star className="h-3 w-3" />
+                  </Button>
+                  
                   <Button
                     size="sm"
                     variant="outline"

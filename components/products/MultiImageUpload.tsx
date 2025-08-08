@@ -5,6 +5,7 @@ import { Upload, X, Plus, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
+import { uploadProductImage } from "@/lib/products";
 
 interface MultiImageUploadProps {
   images: string[];
@@ -19,11 +20,15 @@ export function MultiImageUpload({
   maxImages = 5, 
   disabled = false 
 }: MultiImageUploadProps) {
+  console.log('🔄 MultiImageUpload rendered with images:', images);
+  
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [isUploading, setIsUploading] = useState(false);
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    console.log('🔄 Files selected:', files.length, files.map(f => f.name));
+    
     if (files.length === 0) return;
 
     // Check if adding these files would exceed the limit
@@ -54,47 +59,42 @@ export function MultiImageUpload({
         // Create a unique key for progress tracking
         const progressKey = `${file.name}-${Date.now()}`;
         
-        // Simulate upload progress
+        // Start progress tracking
         setUploadProgress(prev => ({ ...prev, [progressKey]: 0 }));
         
-        // Create preview URL (in a real app, you'd upload to your storage service)
-        const reader = new FileReader();
-        const imageUrl = await new Promise<string>((resolve) => {
-          reader.onload = (e) => {
-            // Simulate upload progress
-            let progress = 0;
-            const interval = setInterval(() => {
-              progress += 20;
-              setUploadProgress(prev => ({ ...prev, [progressKey]: progress }));
-              
-              if (progress >= 100) {
-                clearInterval(interval);
-                resolve(e.target?.result as string);
-              }
-            }, 200);
-          };
-          reader.readAsDataURL(file);
-        });
+        // Simulate progress updates
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => {
+            const current = prev[progressKey] || 0;
+            if (current < 90) {
+              return { ...prev, [progressKey]: current + 10 };
+            }
+            return prev;
+          });
+        }, 200);
+
+        // Actually upload the image to Supabase Storage
+        console.log('🔄 Starting upload for:', file.name);
+        const imageUrl = await uploadProductImage(file);
+        console.log('✅ Upload completed, URL:', imageUrl);
+        
+        // Complete progress
+        clearInterval(progressInterval);
+        setUploadProgress(prev => ({ ...prev, [progressKey]: 100 }));
 
         newImages.push(imageUrl);
-        
-        // Clean up progress tracking
-        setTimeout(() => {
-          setUploadProgress(prev => {
-            const updated = { ...prev };
-            delete updated[progressKey];
-            return updated;
-          });
-        }, 1000);
+        console.log('📝 Added to newImages array:', newImages);
 
       } catch (error) {
         console.error('Error uploading image:', error);
-        alert(`Failed to upload ${file.name}`);
+        alert(`Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
 
     if (newImages.length > 0) {
+      console.log('🔄 Calling onImagesChange with:', [...images, ...newImages]);
       onImagesChange([...images, ...newImages]);
+      console.log('✅ onImagesChange called successfully');
     }
 
     setIsUploading(false);

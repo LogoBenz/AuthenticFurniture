@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { Instagram, Twitter, MapPin, Phone, Mail } from "lucide-react";
+import { AdminAccess } from "@/components/ui/admin-access";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
     <footer className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+      <div className="container mx-auto px-4 py-8 sm:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
           <div>
-            <h3 className="text-lg font-bold mb-4">Authentic Furniture</h3>
-            <p className="text-muted-foreground mb-4">
+            <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Authentic Furniture</h3>
+            <p className="text-muted-foreground mb-4 text-sm sm:text-base">
               Imported from China. Designed for Nigerian homes, lounges & offices.
             </p>
             <div className="flex space-x-4">
@@ -21,7 +22,7 @@ export function Footer() {
                 className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
                 aria-label="Twitter"
               >
-                <Twitter size={20} />
+                <Twitter size={18} className="sm:w-5 sm:h-5" />
               </a>
               <a
                 href="https://instagram.com/authenticfurniture"
@@ -30,18 +31,18 @@ export function Footer() {
                 className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
                 aria-label="Instagram"
               >
-                <Instagram size={20} />
+                <Instagram size={18} className="sm:w-5 sm:h-5" />
               </a>
             </div>
           </div>
 
           <div>
-            <h3 className="text-lg font-bold mb-4">Quick Links</h3>
+            <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
                 <Link
                   href="/"
-                  className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                  className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors text-sm sm:text-base"
                 >
                   Home
                 </Link>
@@ -49,7 +50,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/products"
-                  className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                  className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors text-sm sm:text-base"
                 >
                   Products
                 </Link>
@@ -57,7 +58,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/about"
-                  className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                  className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors text-sm sm:text-base"
                 >
                   About Us
                 </Link>
@@ -65,7 +66,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/contact"
-                  className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                  className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors text-sm sm:text-base"
                 >
                   Contact
                 </Link>
@@ -73,22 +74,22 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-lg font-bold mb-4">Store Information</h3>
+          <div className="sm:col-span-2 lg:col-span-1">
+            <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Store Information</h3>
             
             {/* Lagos Store */}
-            <div className="mb-6">
-              <h4 className="font-semibold text-base mb-3 text-slate-900 dark:text-slate-100">Lagos:</h4>
+            <div className="mb-4 sm:mb-6">
+              <h4 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3 text-slate-900 dark:text-slate-100">Lagos:</h4>
               <div className="space-y-2 text-muted-foreground">
                 <div className="flex items-start">
-                  <MapPin className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Victoria Island, Lagos State</span>
+                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-2 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm">Victoria Island, Lagos State</span>
                 </div>
                 <div className="flex items-center">
-                  <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <Phone className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
                   <a
                     href="tel:+2348012345678"
-                    className="text-sm hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                    className="text-xs sm:text-sm hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
                   >
                     +2348012345678
                   </a>
@@ -97,18 +98,18 @@ export function Footer() {
             </div>
 
             {/* Abuja Store */}
-            <div className="mb-6">
-              <h4 className="font-semibold text-base mb-3 text-slate-900 dark:text-slate-100">Abuja:</h4>
+            <div className="mb-4 sm:mb-6">
+              <h4 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3 text-slate-900 dark:text-slate-100">Abuja:</h4>
               <div className="space-y-2 text-muted-foreground">
                 <div className="flex items-start">
-                  <MapPin className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Garki District, FCT Abuja</span>
+                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-2 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm">Garki District, FCT Abuja</span>
                 </div>
                 <div className="flex items-center">
-                  <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <Phone className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
                   <a
                     href="tel:+2348023456789"
-                    className="text-sm hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                    className="text-xs sm:text-sm hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
                   >
                     +2348023456789
                   </a>
@@ -119,10 +120,10 @@ export function Footer() {
             {/* General Contact */}
             <div>
               <div className="flex items-center mb-2">
-                <Mail className="h-4 w-4 mr-2 flex-shrink-0 text-muted-foreground" />
+                <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0 text-muted-foreground" />
                 <a
                   href="mailto:info@authenticfurniture.ng"
-                  className="text-sm text-muted-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                  className="text-xs sm:text-sm text-muted-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
                 >
                   info@authenticfurniture.ng
                 </a>
@@ -131,8 +132,13 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-slate-200 dark:border-slate-800 text-center text-sm text-muted-foreground">
-          <p>© {currentYear} Authentic Furniture. All rights reserved.</p>
+        <div className="mt-8 sm:mt-10 pt-4 sm:pt-6 border-t border-slate-200 dark:border-slate-800">
+          <div className="flex flex-col sm:flex-row items-center justify-between text-xs sm:text-sm text-muted-foreground">
+            <p>© {currentYear} Authentic Furniture. All rights reserved.</p>
+            <div className="mt-2 sm:mt-0">
+              <AdminAccess variant="subtle" />
+            </div>
+          </div>
         </div>
       </div>
     </footer>

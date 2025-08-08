@@ -169,6 +169,7 @@ function mapSupabaseRowToProduct(row: any): Product {
     description: row.description,
     features: row.features || [],
     imageUrl: row.image_url,
+    images: row.images || (row.image_url ? [row.image_url] : []),
     inStock: row.in_stock,
     isFeatured: row.is_featured,
   };
@@ -472,6 +473,7 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
         description: product.description,
         features: product.features,
         image_url: product.imageUrl,
+        images: product.images,
         in_stock: product.inStock,
         is_featured: product.isFeatured,
       })
@@ -536,6 +538,7 @@ export async function updateProduct(id: number, updates: Partial<Product>): Prom
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.features !== undefined) updateData.features = updates.features;
     if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl;
+    if (updates.images !== undefined) updateData.images = updates.images;
     if (updates.inStock !== undefined) updateData.in_stock = updates.inStock;
     if (updates.isFeatured !== undefined) updateData.is_featured = updates.isFeatured;
 
@@ -690,14 +693,26 @@ export async function getAllCategories() {
   return data;
 }
 
-export async function createCategory(category: { name: string; image_url: string; slug: string }) {
+export async function getPopularCategories() {
+  const { data, error } = await supabase.from('categories').select('*').eq('is_popular', true).order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createCategory(category: { name: string; image_url: string; slug: string; is_popular?: boolean }) {
   const { data, error } = await supabase.from('categories').insert([category]).single();
   if (error) throw error;
   return data;
 }
 
-export async function updateCategory(id: string, updates: { name?: string; image_url?: string; slug?: string }) {
+export async function updateCategory(id: string, updates: { name?: string; image_url?: string; slug?: string; is_popular?: boolean }) {
   const { data, error } = await supabase.from('categories').update(updates).eq('id', id).single();
+  if (error) throw error;
+  return data;
+}
+
+export async function toggleCategoryPopular(id: string, isPopular: boolean) {
+  const { data, error } = await supabase.from('categories').update({ is_popular: isPopular }).eq('id', id).single();
   if (error) throw error;
   return data;
 }
