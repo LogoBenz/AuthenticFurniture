@@ -35,7 +35,7 @@ const adminNavItems = [
   },
   {
     title: "Products",
-    href: "/admin",
+    href: "/admin/products",
     icon: Package,
     description: "Manage product catalog",
     category: "content"

@@ -46,17 +46,22 @@ function mapSupabaseRowToProduct(row: any): Product {
   }
 
   const product = {
-    id: row.id,
-    name: row.name,
-    slug: row.slug,
-    category: row.category,
-    price: parseFloat(row.price),
-    description: row.description,
-    features: row.features || [],
+    id: String(row.id || ''),
+    name: String(row.name || ''),
+    slug: String(row.slug || ''),
+    category: String(row.category || ''),
+    price: row.price ? parseFloat(row.price) : 0,
+    description: String(row.description || ''),
+    features: Array.isArray(row.features) ? row.features : [],
     images: images,
     imageUrl: images[0], // Backward compatibility - use first image
-    inStock: row.in_stock,
-    isFeatured: row.is_featured,
+    inStock: Boolean(row.in_stock),
+    isFeatured: Boolean(row.is_featured),
+    // New fields for promo and best seller functionality
+    original_price: row.original_price ? parseFloat(row.original_price) : (row.price ? parseFloat(row.price) : 0),
+    discount_percent: row.discount_percent ? parseFloat(row.discount_percent) : 0,
+    is_promo: Boolean(row.is_promo),
+    is_best_seller: Boolean(row.is_best_seller),
   };
   
   console.log('✅ Mapped product:', product);
@@ -102,6 +107,44 @@ function shouldUseFallback(error: any): boolean {
     errorCode === 'PGRST301' ||
     errorCode === 'NETWORK_ERROR'
   );
+}
+
+// Debug function to check database state
+export async function debugDatabaseState(): Promise<void> {
+  console.log('🔍 Debugging database state...');
+  
+  if (!isSupabaseConfigured()) {
+    console.log('⚠️ Supabase not configured');
+    return;
+  }
+
+  try {
+    // Check total products
+    const { data: allProducts, error: allError } = await supabase
+      .from('products')
+      .select('id, name, is_promo, is_best_seller, original_price, discount_percent');
+    
+    console.log('📊 All products:', { data: allProducts, error: allError });
+    
+    // Check promo products
+    const { data: promoProducts, error: promoError } = await supabase
+      .from('products')
+      .select('id, name, is_promo')
+      .eq('is_promo', true);
+    
+    console.log('🔥 Promo products:', { data: promoProducts, error: promoError });
+    
+    // Check best sellers
+    const { data: bestSellers, error: bestError } = await supabase
+      .from('products')
+      .select('id, name, is_best_seller')
+      .eq('is_best_seller', true);
+    
+    console.log('⭐ Best sellers:', { data: bestSellers, error: bestError });
+    
+  } catch (error) {
+    console.error('❌ Debug error:', error);
+  }
 }
 
 export async function getAllProducts(): Promise<Product[]> {
@@ -187,6 +230,85 @@ export async function getFeaturedProducts(): Promise<Product[]> {
   } catch (error) {
     console.warn('Using fallback data due to network error:', error);
     return fallbackProducts.filter(p => p.isFeatured);
+  }
+}
+
+export async function getPromoProducts(): Promise<any[]> {
+  console.log('🔍 Fetching promo products...');
+  
+  if (!isSupabaseConfigured()) {
+    console.log('⚠️ Supabase not configured, using fallback data');
+    return fallbackProducts
+      .filter(() => Math.random() > 0.5)
+      .map(p => ({ ...p, original_price: p.price, discount_percent: 10, is_promo: true }));
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_promo', true)
+      .order('created_at', { ascending: false });
+    
+    console.log('📊 Promo products query result:', { data, error });
+    
+    if (error) {
+      console.error('❌ Error fetching promo products:', error);
+      return [];
+    }
+    
+    const mappedProducts = (data || []).map(mapSupabaseRowToProduct).map((p: any) => ({
+      ...p,
+      original_price: Number((p as any).original_price ?? p.price),
+      discount_percent: Number((p as any).discount_percent ?? 0)
+    }));
+    
+    console.log('✅ Mapped promo products:', mappedProducts);
+    return mappedProducts;
+  } catch (error) {
+    console.error('❌ Exception in getPromoProducts:', error);
+    return [];
+  }
+}
+
+export async function getBestSellers(): Promise<any[]> {
+  console.log('🔍 Fetching best sellers...');
+  
+  if (!isSupabaseConfigured()) {
+    console.log('⚠️ Supabase not configured, using fallback data');
+    return fallbackProducts.slice(0, 8).map((p, i) => ({
+      ...p,
+      original_price: p.price,
+      discount_percent: i % 2 === 0 ? 0 : 15,
+      is_best_seller: true,
+    }));
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_best_seller', true)
+      .order('created_at', { ascending: false });
+    
+    console.log('📊 Best sellers query result:', { data, error });
+    
+    if (error) {
+      console.error('❌ Error fetching best sellers:', error);
+      return [];
+    }
+    
+    const mappedProducts = (data || []).map(mapSupabaseRowToProduct).map((p: any) => ({
+      ...p,
+      original_price: Number((p as any).original_price ?? p.price),
+      discount_percent: Number((p as any).discount_percent ?? 0)
+    }));
+    
+    console.log('✅ Mapped best sellers:', mappedProducts);
+    return mappedProducts;
+  } catch (error) {
+    console.error('❌ Exception in getBestSellers:', error);
+    return [];
   }
 }
 
@@ -303,6 +425,11 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
       image_url: product.imageUrl,
       in_stock: product.inStock,
       is_featured: product.isFeatured,
+      // New fields for promo and best seller functionality
+      original_price: product.original_price || product.price,
+      discount_percent: product.discount_percent || 0,
+      is_promo: product.is_promo || false,
+      is_best_seller: product.is_best_seller || false,
     };
 
     const { data, error } = await supabase
@@ -340,13 +467,17 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
   }
 }
 
-export async function updateProduct(id: number, updates: Partial<Product>): Promise<Product | null> {
+export async function updateProduct(id: string | number, updates: Partial<Product>): Promise<Product | null> {
   if (!isSupabaseConfigured()) {
     throw new Error('Supabase not configured. Cannot update products.');
   }
 
   // Validate ID
-  if (!id || typeof id !== 'number' || id <= 0) {
+  if (
+    id === null || id === undefined ||
+    (typeof id === 'string' && id.trim() === '') ||
+    (typeof id === 'number' && !Number.isFinite(id))
+  ) {
     throw new Error('Invalid product ID provided.');
   }
 
@@ -372,8 +503,27 @@ export async function updateProduct(id: number, updates: Partial<Product>): Prom
     if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl;
     if (updates.inStock !== undefined) updateData.in_stock = updates.inStock;
     if (updates.isFeatured !== undefined) updateData.is_featured = updates.isFeatured;
+    // New fields for promo and best seller functionality
+    if (updates.original_price !== undefined) updateData.original_price = updates.original_price;
+    if (updates.discount_percent !== undefined) updateData.discount_percent = updates.discount_percent;
+    if (updates.is_promo !== undefined) updateData.is_promo = updates.is_promo;
+    if (updates.is_best_seller !== undefined) updateData.is_best_seller = updates.is_best_seller;
 
     console.log('🔄 Updating product:', { id, updateData });
+
+    // First, let's check if the product exists
+    const { data: existingProduct, error: checkError } = await supabase
+      .from('products')
+      .select('id, name')
+      .eq('id', id)
+      .single();
+
+    if (checkError) {
+      console.error('❌ Product check error:', checkError);
+      throw new Error(`Product with ID ${id} not found: ${checkError.message}`);
+    }
+
+    console.log('✅ Found existing product:', existingProduct);
 
     const { data, error } = await supabase
       .from('products')
@@ -384,6 +534,7 @@ export async function updateProduct(id: number, updates: Partial<Product>): Prom
 
     if (error) {
       console.error('❌ Supabase update error:', error);
+      console.error('❌ Update data that failed:', updateData);
       
       // Check for CORS/network errors
       if (shouldUseFallback(error)) {
@@ -411,13 +562,17 @@ export async function updateProduct(id: number, updates: Partial<Product>): Prom
   }
 }
 
-export async function deleteProduct(id: number): Promise<boolean> {
+export async function deleteProduct(id: string | number): Promise<boolean> {
   if (!isSupabaseConfigured()) {
     throw new Error('Supabase not configured. Cannot delete products.');
   }
 
   // Validate ID
-  if (!id || typeof id !== 'number' || id <= 0) {
+  if (
+    id === null || id === undefined ||
+    (typeof id === 'string' && id.trim() === '') ||
+    (typeof id === 'number' && !Number.isFinite(id))
+  ) {
     throw new Error('Invalid product ID provided.');
   }
 

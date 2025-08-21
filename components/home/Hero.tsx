@@ -155,18 +155,7 @@ export function Hero() {
           </div>
         </div>
         
-        {/* Popular Categories Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          className="mt-12 sm:mt-16 text-center"
-        >
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-2">
-            Popular Categories
-          </h2>
-          <div className="w-16 h-1 bg-blue-600 mx-auto rounded-full"></div>
-        </motion.div>
+        {/* Popular Categories heading removed to avoid duplication; section is rendered by components/home/Categories */}
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
 {
   "products": [
     {
-      "id": 1,
+      "id": "1",
       "name": "Ergonomic Office Chair",
       "slug": "ergonomic-office-chair",
       "category": "Office Chairs",
@@ -21,10 +21,14 @@
       ],
       "imageUrl": "https://images.pexels.com/photos/1957477/pexels-photo-1957477.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       "inStock": true,
-      "isFeatured": true
+      "isFeatured": true,
+      "original_price": 75000,
+      "discount_percent": 0,
+      "is_promo": false,
+      "is_best_seller": true
     },
     {
-      "id": 2,
+      "id": "2",
       "name": "Luxury Lounge Chair",
       "slug": "luxury-lounge-chair",
       "category": "Lounge Chairs",
@@ -44,10 +48,14 @@
       ],
       "imageUrl": "https://images.pexels.com/photos/2762247/pexels-photo-2762247.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       "inStock": true,
-      "isFeatured": true
+      "isFeatured": true,
+      "original_price": 120000,
+      "discount_percent": 15,
+      "is_promo": true,
+      "is_best_seller": false
     },
     {
-      "id": 3,
+      "id": "3",
       "name": "Pro Gaming Chair",
       "slug": "pro-gaming-chair",
       "category": "Gaming Chairs",
@@ -66,10 +74,14 @@
       ],
       "imageUrl": "https://images.pexels.com/photos/5082573/pexels-photo-5082573.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       "inStock": true,
-      "isFeatured": false
+      "isFeatured": false,
+      "original_price": 95000,
+      "discount_percent": 0,
+      "is_promo": false,
+      "is_best_seller": true
     },
     {
-      "id": 4,
+      "id": "4",
       "name": "Airport 3-Seater Chair",
       "slug": "airport-3-seater-chair",
       "category": "Public Seating",
@@ -88,182 +100,37 @@
       ],
       "imageUrl": "https://images.pexels.com/photos/3771110/pexels-photo-3771110.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       "inStock": true,
-      "isFeatured": false
+      "isFeatured": false,
+      "original_price": 250000,
+      "discount_percent": 0,
+      "is_promo": false,
+      "is_best_seller": false
     },
     {
-      "id": 5,
+      "id": "5",
       "name": "Executive Conference Table",
       "slug": "executive-conference-table",
       "category": "Conference Furniture",
       "price": 450000,
       "description": "Premium 12-seater conference table with built-in power modules and elegant veneer finish. Perfect for corporate boardrooms and executive meeting spaces.",
       "features": [
-        "Seats 12 people comfortably",
-        "Built-in power and data modules",
-        "Premium wood veneer finish",
+        "Built-in power modules",
+        "Elegant veneer finish",
+        "12-seater capacity",
         "Cable management system",
-        "Customizable size options"
+        "Commercial-grade construction"
       ],
       "images": [
         "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        "https://images.pexels.com/photos/3184466/pexels-photo-3184466.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        "https://images.pexels.com/photos/3184467/pexels-photo-3184467.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+        "https://images.pexels.com/photos/3184466/pexels-photo-3184466.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
       ],
       "imageUrl": "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       "inStock": true,
-      "isFeatured": true
-    },
-    {
-      "id": 6,
-      "name": "Modern Bar Table",
-      "slug": "modern-bar-table",
-      "category": "Tables",
-      "price": 180000,
-      "description": "Contemporary high-gloss bar table, perfect for modern homes, restaurants, and lounges. Features a sleek design with durable construction.",
-      "features": [
-        "High-gloss finish",
-        "Durable construction",
-        "Stain resistant surface",
-        "Adjustable feet",
-        "Contemporary design"
-      ],
-      "images": [
-        "https://images.pexels.com/photos/2647714/pexels-photo-2647714.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        "https://images.pexels.com/photos/2647715/pexels-photo-2647715.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-      ],
-      "imageUrl": "https://images.pexels.com/photos/2647714/pexels-photo-2647714.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      "inStock": true,
-      "isFeatured": false
-    },
-    {
-      "id": 7,
-      "name": "Minimalist TV Console",
-      "slug": "minimalist-tv-console",
-      "category": "Living Room",
-      "price": 160000,
-      "description": "Sleek TV console with clean lines and ample storage. Features cable management system and durable construction for modern living spaces.",
-      "features": [
-        "Spacious storage drawers",
-        "Cable management system",
-        "Durable engineered wood construction",
-        "Modern matte finish",
-        "Adjustable shelving"
-      ],
-      "images": [
-        "https://images.pexels.com/photos/4352247/pexels-photo-4352247.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        "https://images.pexels.com/photos/4352248/pexels-photo-4352248.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-      ],
-      "imageUrl": "https://images.pexels.com/photos/4352247/pexels-photo-4352247.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      "inStock": true,
-      "isFeatured": false
-    },
-    {
-      "id": 8,
-      "name": "Premium Leather Sofa Set",
-      "slug": "premium-leather-sofa-set",
-      "category": "Living Room",
-      "price": 750000,
-      "description": "Luxurious 5-seater leather sofa set including 3-seater sofa and two armchairs. Crafted with premium leather and solid wood frame for lasting comfort and elegance.",
-      "features": [
-        "Genuine premium leather",
-        "Solid wood frame",
-        "High-density foam cushions",
-        "Customizable color options",
-        "10-year frame warranty"
-      ],
-      "images": [
-        "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        "https://images.pexels.com/photos/1571461/pexels-photo-1571461.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        "https://images.pexels.com/photos/1571462/pexels-photo-1571462.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        "https://images.pexels.com/photos/1571463/pexels-photo-1571463.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-      ],
-      "imageUrl": "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      "inStock": true,
-      "isFeatured": true
-    },
-    {
-      "id": 9,
-      "name": "Outdoor Garden Set",
-      "slug": "outdoor-garden-set",
-      "category": "Outdoor Furniture",
-      "price": 350000,
-      "description": "Weather-resistant garden furniture set including table and chairs. Perfect for patios, gardens, and outdoor entertainment areas.",
-      "features": [
-        "Weather-resistant materials",
-        "UV protected fabric",
-        "Rust-proof aluminum frame",
-        "Easy to clean",
-        "Stackable chairs for storage"
-      ],
-      "images": [
-        "https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        "https://images.pexels.com/photos/1643384/pexels-photo-1643384.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-      ],
-      "imageUrl": "https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      "inStock": true,
-      "isFeatured": false
-    },
-    {
-      "id": 10,
-      "name": "Executive Reception Desk",
-      "slug": "executive-reception-desk",
-      "category": "Office Furniture",
-      "price": 380000,
-      "description": "Impressive curved reception desk with premium wood finish. Designed to create a professional first impression for your office or business.",
-      "features": [
-        "Curved design for optimal workspace",
-        "Hidden cable management",
-        "Durable commercial-grade construction",
-        "Lockable storage compartments",
-        "Custom size options available"
-      ],
-      "images": [
-        "https://images.pexels.com/photos/1170412/pexels-photo-1170412.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        "https://images.pexels.com/photos/1170413/pexels-photo-1170413.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-      ],
-      "imageUrl": "https://images.pexels.com/photos/1170412/pexels-photo-1170412.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      "inStock": true,
-      "isFeatured": true
-    },
-    {
-      "id": 11,
-      "name": "Professional Pool Table",
-      "slug": "professional-pool-table",
-      "category": "Game Furniture",
-      "price": 850000,
-      "description": "Tournament-quality pool table with mahogany finish and premium felt surface. Perfect for luxury homes, hotels, and entertainment venues.",
-      "features": [
-        "Tournament standard dimensions",
-        "Mahogany wood finish",
-        "Premium wool-blend felt surface",
-        "Professional rubber cushions",
-        "Includes complete accessory kit"
-      ],
-      "images": [
-        "https://images.pexels.com/photos/60912/pexels-photo-60912.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        "https://images.pexels.com/photos/60913/pexels-photo-60913.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-      ],
-      "imageUrl": "https://images.pexels.com/photos/60912/pexels-photo-60912.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      "inStock": true,
-      "isFeatured": false
-    },
-    {
-      "id": 12,
-      "name": "Competition Foosball Table",
-      "slug": "competition-foosball-table",
-      "category": "Game Furniture",
-      "price": 320000,
-      "description": "Competition-grade foosball table with counterbalanced players and solid construction. Provides hours of entertainment for homes, offices, and recreational spaces.",
-      "features": [
-        "Competition-grade construction",
-        "Counterbalanced players",
-        "Solid steel rods",
-        "Adjustable leg levelers",
-        "Built-in scoring system"
-      ],
-      "imageUrl": "https://images.pexels.com/photos/2874761/pexels-photo-2874761.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      "inStock": true,
-      "isFeatured": false
+      "isFeatured": true,
+      "original_price": 450000,
+      "discount_percent": 20,
+      "is_promo": true,
+      "is_best_seller": true
     }
   ]
 }

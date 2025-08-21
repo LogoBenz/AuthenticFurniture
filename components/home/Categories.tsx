@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getPopularCategories } from "@/lib/db";
+import { HorizontalProductRow } from "@/components/products/HorizontalProductRow";
+import { getPromoProducts, getBestSellers, debugDatabaseState } from "@/lib/products";
 
 interface Category {
   id: string;
@@ -21,6 +23,9 @@ export function Categories() {
       try {
         const cats = await getPopularCategories();
         setCategories(Array.isArray(cats) ? cats : []);
+        
+        // Debug database state
+        await debugDatabaseState();
       } catch (error) {
         console.error('Error loading popular categories:', error);
         // Fallback to empty array if no popular categories
@@ -110,6 +115,10 @@ export function Categories() {
           ))}
         </div>
       </div>
+
+      {/* Horizontal product rows */}
+      <HorizontalProductRow title="Promo Products" fetcher={getPromoProducts} />
+      <HorizontalProductRow title="Best Sellers" fetcher={getBestSellers} />
     </section>
   );
 }

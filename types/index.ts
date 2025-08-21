@@ -1,5 +1,5 @@
 export interface Product {
-  id: number;
+  id: string; // Changed from number to string for UUID compatibility
   name: string;
   slug: string;
   category: string;
@@ -10,6 +10,11 @@ export interface Product {
   imageUrl: string; // Keep for backward compatibility - will be first image
   inStock: boolean;
   isFeatured: boolean;
+  // New fields for promo and best seller functionality
+  original_price?: number;
+  discount_percent?: number;
+  is_promo?: boolean;
+  is_best_seller?: boolean;
 }
 
 export interface ProductsData {

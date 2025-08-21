@@ -53,14 +53,14 @@ function createDummyClient() {
 }
 
 // Enhanced fetch wrapper with better error handling
-function createEnhancedFetch() {
-  return async (url: string, options: any = {}) => {
+function createEnhancedFetch(): typeof fetch {
+  return (async (input: RequestInfo | URL, init?: RequestInit) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased to 30 seconds
     
     try {
-      const response = await fetch(url, {
-        ...options,
+      const response = await fetch(input, {
+        ...(init || {}),
         signal: controller.signal,
         mode: 'cors',
         credentials: 'omit'
@@ -73,7 +73,7 @@ function createEnhancedFetch() {
       
       // Log the error for debugging but don't throw
       console.warn('Supabase connection failed:', {
-        url,
+        url: String(input),
         error: error.message,
         type: error.name,
         code: error.code
@@ -96,7 +96,7 @@ function createEnhancedFetch() {
         }
       );
     }
-  };
+  }) as typeof fetch;
 }
 
 // Create the Supabase client
@@ -107,7 +107,7 @@ if (!isValidSupabaseConfig()) {
   supabaseClient = createDummyClient();
 } else {
   try {
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    supabaseClient = createClient(supabaseUrl as string, supabaseAnonKey as string, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -126,7 +126,8 @@ if (!isValidSupabaseConfig()) {
   }
 }
 
-export const supabase = supabaseClient;
+// Cast to any to avoid complex union types between the real client and dummy fallback
+export const supabase: any = supabaseClient as any;
 
 // Admin client for server-side operations
 export const createAdminClient = () => {
@@ -136,5 +137,5 @@ export const createAdminClient = () => {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY or SUPABASE_URL environment variable.');
   }
   
-  return createClient(supabaseUrl, supabaseServiceKey);
+  return createClient(supabaseUrl as string, supabaseServiceKey);
 };

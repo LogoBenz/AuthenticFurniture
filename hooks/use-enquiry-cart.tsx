@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
-import { Product } from "@/types";
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import type { Product } from "../types";
 
 export interface EnquiryCartItem {
   product: Product;
@@ -23,11 +23,10 @@ interface EnquiryCartContextType {
 
 const EnquiryCartContext = createContext<EnquiryCartContextType | undefined>(undefined);
 
-export function EnquiryCartProvider({ children }: { children: ReactNode }) {
+export function EnquiryCartProvider({ children }: { children: ReactNode }): JSX.Element {
   const [cartItems, setCartItems] = useState<EnquiryCartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
     try {
       if (typeof window !== 'undefined') {
@@ -52,7 +51,7 @@ export function EnquiryCartProvider({ children }: { children: ReactNode }) {
           }
         }
       }
-    } catch (error) {
+    } catch (_) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem(CART_STORAGE_KEY);
       }
@@ -62,12 +61,11 @@ export function EnquiryCartProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes (but only after initial load)
   useEffect(() => {
     if (isLoaded && typeof window !== 'undefined') {
       try {
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
-      } catch (error) {}
+      } catch (_) {}
     }
   }, [cartItems, isLoaded]);
 
@@ -150,4 +148,4 @@ export function useEnquiryCart() {
     throw new Error('useEnquiryCart must be used within an EnquiryCartProvider');
   }
   return context;
-} 
+}
