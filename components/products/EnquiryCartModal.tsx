@@ -66,7 +66,7 @@ export function EnquiryCartModal({ isOpen, onClose }: EnquiryCartModalProps) {
     }
   };
 
-  const handleRemoveItem = (productId: number, productName: string) => {
+  const handleRemoveItem = (productId: string, productName: string) => {
     console.log('🗑️ Removing item from modal:', productName);
     removeFromCart(productId);
   };
@@ -120,9 +120,9 @@ export function EnquiryCartModal({ isOpen, onClose }: EnquiryCartModalProps) {
                 <Package className="h-10 w-10 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-medium mb-2">Your enquiry cart is empty</h3>
-              <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                Browse our furniture collection and add items you're interested in to get started with your enquiry.
-              </p>
+                     <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                       Browse our furniture collection and add items you&apos;re interested in to get started with your enquiry.
+                     </p>
               <Button onClick={onClose} asChild className="bg-blue-600 hover:bg-blue-700">
                 <Link href="/products">
                   <Plus className="h-4 w-4 mr-2" />

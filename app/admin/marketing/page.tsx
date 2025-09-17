@@ -54,11 +54,167 @@ function MarketingContent() {
   const [referralPrograms, setReferralPrograms] = useState<ReferralProgram[]>([]);
   const [activeTab, setActiveTab] = useState<'campaigns' | 'referrals' | 'promotions'>('campaigns');
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
+  const [isReferralModalOpen, setIsReferralModalOpen] = useState(false);
+  const [isPromotionModalOpen, setIsPromotionModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
+  // Campaign form state
+  const [campaignForm, setCampaignForm] = useState({
+    name: '',
+    type: 'email' as 'email' | 'sms' | 'whatsapp' | 'social',
+    audience: 'all',
+    message: '',
+    startDate: '',
+    endDate: '',
+    budget: ''
+  });
+  
+  // Referral form state
+  const [referralForm, setReferralForm] = useState({
+    customerName: '',
+    customerEmail: '',
+    customerPhone: '',
+    referralCode: ''
+  });
+  
+  // Promotion form state
+  const [promotionForm, setPromotionForm] = useState({
+    name: '',
+    description: '',
+    discountType: 'percentage' as 'percentage' | 'fixed',
+    discountValue: '',
+    startDate: '',
+    endDate: '',
+    targetAudience: 'all'
+  });
 
   useEffect(() => {
     loadMarketingData();
   }, []);
+
+  const resetForms = () => {
+    setCampaignForm({
+      name: '',
+      type: 'email',
+      audience: 'all',
+      message: '',
+      startDate: '',
+      endDate: '',
+      budget: ''
+    });
+    setReferralForm({
+      customerName: '',
+      customerEmail: '',
+      customerPhone: '',
+      referralCode: ''
+    });
+    setPromotionForm({
+      name: '',
+      description: '',
+      discountType: 'percentage',
+      discountValue: '',
+      startDate: '',
+      endDate: '',
+      targetAudience: 'all'
+    });
+  };
+
+  const handleCreateCampaign = async () => {
+    if (!campaignForm.name || !campaignForm.message) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      
+      // Generate unique ID
+      const newCampaign: Campaign = {
+        id: `CAMP-${Date.now()}`,
+        name: campaignForm.name,
+        type: campaignForm.type,
+        status: 'draft',
+        audience: campaignForm.audience,
+        sentCount: 0,
+        openRate: 0,
+        clickRate: 0,
+        conversionRate: 0,
+        startDate: campaignForm.startDate || new Date().toISOString().split('T')[0],
+        endDate: campaignForm.endDate || new Date().toISOString().split('T')[0],
+        budget: parseInt(campaignForm.budget) || 0,
+        revenue: 0
+      };
+
+      // In a real app, you'd save to database here
+      setCampaigns(prev => [newCampaign, ...prev]);
+      setIsCampaignModalOpen(false);
+      resetForms();
+      alert('Campaign created successfully!');
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      alert('Failed to create campaign');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddReferrer = async () => {
+    if (!referralForm.customerName || !referralForm.customerEmail) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      
+      // Generate unique referral code if not provided
+      const referralCode = referralForm.referralCode || 
+        `${referralForm.customerName.toUpperCase().replace(/\s+/g, '')}${Date.now().toString().slice(-4)}`;
+
+      const newReferral: ReferralProgram = {
+        id: `REF-${Date.now()}`,
+        customerName: referralForm.customerName,
+        referralCode: referralCode,
+        referralsCount: 0,
+        successfulReferrals: 0,
+        totalEarned: 0,
+        status: 'active'
+      };
+
+      // In a real app, you'd save to database here
+      setReferralPrograms(prev => [newReferral, ...prev]);
+      setIsReferralModalOpen(false);
+      resetForms();
+      alert('Referrer added successfully!');
+    } catch (error) {
+      console.error('Error adding referrer:', error);
+      alert('Failed to add referrer');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCreatePromotion = async () => {
+    if (!promotionForm.name || !promotionForm.description) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      
+      // In a real app, you'd save to database here
+      alert('Promotion created successfully!');
+      setIsPromotionModalOpen(false);
+      resetForms();
+    } catch (error) {
+      console.error('Error creating promotion:', error);
+      alert('Failed to create promotion');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const loadMarketingData = async () => {
     // Simulate marketing data
@@ -358,7 +514,7 @@ function MarketingContent() {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Referral Program</CardTitle>
-                <Button>
+                <Button onClick={() => setIsReferralModalOpen(true)}>
                   <Users className="h-4 w-4 mr-2" />
                   Add Referrer
                 </Button>
@@ -420,7 +576,7 @@ function MarketingContent() {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Seasonal Promotions</CardTitle>
-                <Button>
+                <Button onClick={() => setIsPromotionModalOpen(true)}>
                   <Gift className="h-4 w-4 mr-2" />
                   Create Promotion
                 </Button>
@@ -477,7 +633,10 @@ function MarketingContent() {
         )}
 
         {/* Campaign Creation Modal */}
-        <Dialog open={isCampaignModalOpen} onOpenChange={setIsCampaignModalOpen}>
+        <Dialog open={isCampaignModalOpen} onOpenChange={(open) => {
+          setIsCampaignModalOpen(open);
+          if (!open) resetForms();
+        }}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Campaign</DialogTitle>
@@ -485,14 +644,22 @@ function MarketingContent() {
             
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Campaign Name</label>
-                <Input placeholder="Enter campaign name" />
+                <label className="text-sm font-medium">Campaign Name *</label>
+                <Input 
+                  placeholder="Enter campaign name" 
+                  value={campaignForm.name}
+                  onChange={(e) => setCampaignForm(prev => ({ ...prev, name: e.target.value }))}
+                />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium">Campaign Type</label>
-                  <select className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm">
+                  <select 
+                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+                    value={campaignForm.type}
+                    onChange={(e) => setCampaignForm(prev => ({ ...prev, type: e.target.value as any }))}
+                  >
                     <option value="email">Email</option>
                     <option value="sms">SMS</option>
                     <option value="whatsapp">WhatsApp</option>
@@ -502,7 +669,11 @@ function MarketingContent() {
                 
                 <div>
                   <label className="text-sm font-medium">Target Audience</label>
-                  <select className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm">
+                  <select 
+                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+                    value={campaignForm.audience}
+                    onChange={(e) => setCampaignForm(prev => ({ ...prev, audience: e.target.value }))}
+                  >
                     <option value="all">All Customers</option>
                     <option value="retail">Retail Customers</option>
                     <option value="corporate">Corporate Customers</option>
@@ -512,36 +683,211 @@ function MarketingContent() {
               </div>
               
               <div>
-                <label className="text-sm font-medium">Campaign Message</label>
+                <label className="text-sm font-medium">Campaign Message *</label>
                 <Textarea 
                   placeholder="Enter your campaign message..."
                   rows={4}
+                  value={campaignForm.message}
+                  onChange={(e) => setCampaignForm(prev => ({ ...prev, message: e.target.value }))}
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium">Start Date</label>
-                  <Input type="date" />
+                  <Input 
+                    type="date" 
+                    value={campaignForm.startDate}
+                    onChange={(e) => setCampaignForm(prev => ({ ...prev, startDate: e.target.value }))}
+                  />
                 </div>
                 
                 <div>
                   <label className="text-sm font-medium">End Date</label>
-                  <Input type="date" />
+                  <Input 
+                    type="date" 
+                    value={campaignForm.endDate}
+                    onChange={(e) => setCampaignForm(prev => ({ ...prev, endDate: e.target.value }))}
+                  />
                 </div>
               </div>
               
               <div>
                 <label className="text-sm font-medium">Budget (NGN)</label>
-                <Input type="number" placeholder="Enter campaign budget" />
+                <Input 
+                  type="number" 
+                  placeholder="Enter campaign budget" 
+                  value={campaignForm.budget}
+                  onChange={(e) => setCampaignForm(prev => ({ ...prev, budget: e.target.value }))}
+                />
               </div>
               
               <div className="flex justify-end space-x-2 pt-4">
                 <Button variant="outline" onClick={() => setIsCampaignModalOpen(false)}>
                   Cancel
                 </Button>
-                <Button>
-                  Create Campaign
+                <Button onClick={handleCreateCampaign} disabled={saving}>
+                  {saving ? 'Creating...' : 'Create Campaign'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Referrer Modal */}
+        <Dialog open={isReferralModalOpen} onOpenChange={(open) => {
+          setIsReferralModalOpen(open);
+          if (!open) resetForms();
+        }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add New Referrer</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Customer Name *</label>
+                <Input 
+                  placeholder="Enter customer name" 
+                  value={referralForm.customerName}
+                  onChange={(e) => setReferralForm(prev => ({ ...prev, customerName: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Customer Email *</label>
+                <Input 
+                  type="email"
+                  placeholder="Enter customer email" 
+                  value={referralForm.customerEmail}
+                  onChange={(e) => setReferralForm(prev => ({ ...prev, customerEmail: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Customer Phone</label>
+                <Input 
+                  placeholder="Enter customer phone" 
+                  value={referralForm.customerPhone}
+                  onChange={(e) => setReferralForm(prev => ({ ...prev, customerPhone: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Referral Code (optional)</label>
+                <Input 
+                  placeholder="Leave empty to auto-generate" 
+                  value={referralForm.referralCode}
+                  onChange={(e) => setReferralForm(prev => ({ ...prev, referralCode: e.target.value }))}
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={() => setIsReferralModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddReferrer} disabled={saving}>
+                  {saving ? 'Adding...' : 'Add Referrer'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Promotion Modal */}
+        <Dialog open={isPromotionModalOpen} onOpenChange={(open) => {
+          setIsPromotionModalOpen(open);
+          if (!open) resetForms();
+        }}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Create New Promotion</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Promotion Name *</label>
+                <Input 
+                  placeholder="Enter promotion name" 
+                  value={promotionForm.name}
+                  onChange={(e) => setPromotionForm(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Description *</label>
+                <Textarea 
+                  placeholder="Enter promotion description..."
+                  rows={3}
+                  value={promotionForm.description}
+                  onChange={(e) => setPromotionForm(prev => ({ ...prev, description: e.target.value }))}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Discount Type</label>
+                  <select 
+                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+                    value={promotionForm.discountType}
+                    onChange={(e) => setPromotionForm(prev => ({ ...prev, discountType: e.target.value as any }))}
+                  >
+                    <option value="percentage">Percentage</option>
+                    <option value="fixed">Fixed Amount</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Discount Value</label>
+                  <Input 
+                    type="number"
+                    placeholder={promotionForm.discountType === 'percentage' ? 'Enter percentage' : 'Enter amount in NGN'}
+                    value={promotionForm.discountValue}
+                    onChange={(e) => setPromotionForm(prev => ({ ...prev, discountValue: e.target.value }))}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Start Date</label>
+                  <Input 
+                    type="date" 
+                    value={promotionForm.startDate}
+                    onChange={(e) => setPromotionForm(prev => ({ ...prev, startDate: e.target.value }))}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">End Date</label>
+                  <Input 
+                    type="date" 
+                    value={promotionForm.endDate}
+                    onChange={(e) => setPromotionForm(prev => ({ ...prev, endDate: e.target.value }))}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Target Audience</label>
+                <select 
+                  className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+                  value={promotionForm.targetAudience}
+                  onChange={(e) => setPromotionForm(prev => ({ ...prev, targetAudience: e.target.value }))}
+                >
+                  <option value="all">All Customers</option>
+                  <option value="retail">Retail Customers</option>
+                  <option value="corporate">Corporate Customers</option>
+                  <option value="vip">VIP Customers</option>
+                </select>
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={() => setIsPromotionModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreatePromotion} disabled={saving}>
+                  {saving ? 'Creating...' : 'Create Promotion'}
                 </Button>
               </div>
             </div>

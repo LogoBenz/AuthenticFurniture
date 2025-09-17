@@ -20,10 +20,12 @@ import {
   ChevronRight,
   Menu,
   X,
-  Tags
+  Tags,
+  Home
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useAdminSidebar } from "./AdminSidebarContext";
 
 const adminNavItems = [
   {
@@ -41,6 +43,13 @@ const adminNavItems = [
     category: "content"
   },
   {
+    title: "Spaces & Categories",
+    href: "/admin/spaces",
+    icon: Home,
+    description: "Manage spaces and subcategories",
+    category: "content"
+  },
+  {
     title: "Categories",
     href: "/admin/categories",
     icon: Tags,
@@ -52,6 +61,13 @@ const adminNavItems = [
     href: "/admin/inventory",
     icon: Warehouse,
     description: "Stock levels and tracking",
+    category: "content"
+  },
+  {
+    title: "Warehouses",
+    href: "/admin/warehouses",
+    icon: MapPin,
+    description: "Warehouse locations and management",
     category: "content"
   },
   {
@@ -122,8 +138,7 @@ const categories = {
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } = useAdminSidebar();
 
   const groupedItems = adminNavItems.reduce((acc, item) => {
     if (!acc[item.category]) {
@@ -244,7 +259,7 @@ export function AdminSidebar() {
 
       {/* Desktop Sidebar */}
       <div className={cn(
-        "hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:pt-16 lg:bg-white lg:dark:bg-slate-900 lg:border-r lg:border-slate-200 lg:dark:border-slate-700 transition-all duration-300",
+        "hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:bg-white lg:dark:bg-slate-900 lg:border-r lg:border-slate-200 lg:dark:border-slate-700 transition-all duration-300",
         isCollapsed ? "lg:w-16" : "lg:w-80"
       )}>
         <SidebarContent />

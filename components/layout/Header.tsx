@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Settings, LogOut, Lock, Facebook, Instagram, Linkedin, Twitter, Armchair, Gamepad2, Sofa, Table, Leaf, Puzzle, Search, User } from "lucide-react";
+import { Menu, X, Settings, LogOut, Lock, Facebook, Instagram, Linkedin, Twitter, Armchair, Gamepad2, Sofa, Table, Leaf, Puzzle, Search, User, ChevronDown, Home, Briefcase, Building, TreePine, Archive, Bed, GraduationCap, Users, Sun } from "lucide-react";
 
 function TikTokIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -21,11 +21,15 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { EnquiryCartModal } from "@/components/products/EnquiryCartModal";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter, usePathname } from "next/navigation";
+import { getSpacesForNavigation } from "@/lib/categories";
+import { Space, Subcategory } from "@/types";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+  const [spaces, setSpaces] = useState<Space[]>([]);
+  const [hoveredSpace, setHoveredSpace] = useState<Space | null>(null);
   const [showAdminHint, setShowAdminHint] = useState(false);
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -82,6 +86,19 @@ export function Header() {
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, loading, isAdminArea]);
+
+  // Load spaces for navigation
+  useEffect(() => {
+    const loadSpaces = async () => {
+      try {
+        const spacesData = await getSpacesForNavigation();
+        setSpaces(spacesData);
+      } catch (error) {
+        console.error('Error loading spaces:', error);
+      }
+    };
+    loadSpaces();
+  }, []);
 
   // Hidden admin access via keyboard shortcut (Ctrl+Shift+A)
   useEffect(() => {
@@ -149,6 +166,25 @@ export function Header() {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  // Helper function to get icon component
+  const getIconComponent = (iconName: string) => {
+    const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = {
+      'Home': Home,
+      'Briefcase': Briefcase,
+      'Building': Building,
+      'TreePine': TreePine,
+      'Sofa': Sofa,
+      'Bed': Bed,
+      'Archive': Archive,
+      'Table': Table,
+      'GraduationCap': GraduationCap,
+      'Users': Users,
+      'Armchair': Armchair,
+      'Sun': Sun,
+    };
+    return iconMap[iconName] || Table; // Default to Table icon
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -213,24 +249,32 @@ export function Header() {
           className={`transition-all duration-300 bg-slate-900 text-white ${
             isMobile && isScrolled ? "max-h-0 opacity-0" : "max-h-10 opacity-100"
           } overflow-hidden`}
-        >
+      >
           <div className="container mx-auto px-4">
-            <div className="flex items-center justify-center space-x-4 py-2 text-white/90">
-              <a href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                <Facebook className="h-4 w-4" />
-              </a>
-              <a href="#" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                <Twitter className="h-4 w-4" />
-              </a>
-              <a href="#" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a href="#" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                <Linkedin className="h-4 w-4" />
-              </a>
-              <a href="#" aria-label="TikTok" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                <TikTokIcon className="h-4 w-4" />
-              </a>
+            <div className="flex items-center justify-between py-2 text-white/90">
+              <div className="flex items-center space-x-4">
+                <a href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                  <Facebook className="h-4 w-4" />
+                </a>
+                <a href="#" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                  <Twitter className="h-4 w-4" />
+                </a>
+                <a href="#" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                  <Instagram className="h-4 w-4" />
+                </a>
+                <a href="#" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                  <Linkedin className="h-4 w-4" />
+                </a>
+                <a href="#" aria-label="TikTok" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                  <TikTokIcon className="h-4 w-4" />
+                </a>
+              </div>
+              <div className="hidden md:block text-xs sm:text-sm">
+                Bulk? Wholesale Quote Available. Contact: 09037725829
+              </div>
+              <div className="md:hidden text-[11px]">
+                Bulk Quote Available
+              </div>
             </div>
           </div>
         </div>
@@ -259,81 +303,68 @@ export function Header() {
                       <div className="p-4">
                         <Input placeholder="Search products, categories..." className="w-full h-10 rounded-md" />
                       </div>
-                      {/* Quick links */}
+                      {/* Navigation links */}
                       <nav className="px-2 space-y-1">
-                        <Link href="/" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">Home</Link>
                         <Link href="/products" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">Products</Link>
+                        <Link href="/blog" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">Blog</Link>
+                        <Link href="/e-catalogue" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">E-Catalogue</Link>
+                        <Link href="/showrooms" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">Showrooms</Link>
+                        <Link href="/about" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">About Us</Link>
+                        <Link href="/careers" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">Careers</Link>
                       </nav>
-                      {/* Categories accordion */}
+                      {/* Shop by Space accordion */}
                       <div className="px-2 py-3">
                         <Accordion type="single" collapsible className="w-full">
-                          <AccordionItem value="cat-1">
+                          <AccordionItem value="spaces">
                             <AccordionTrigger className="px-2">
                               <span className="flex items-center gap-3">
-                                <Armchair className="h-5 w-5 text-slate-600" />
-                                <span className="font-medium">Chairs</span>
+                                <Home className="h-5 w-5 text-slate-600" />
+                                <span className="font-medium">Shop by Space</span>
                               </span>
                             </AccordionTrigger>
                             <AccordionContent>
-                              <ul className="space-y-1 px-2">
-                                <li><Link href="/products?category=Office%20Chairs" className="flex items-center gap-3 text-sm py-2 rounded-md hover:bg-muted"><Armchair className="h-4 w-4 text-slate-500" />Office</Link></li>
-                                <li><Link href="/products?category=Gaming%20Chairs" className="flex items-center gap-3 text-sm py-2 rounded-md hover:bg-muted"><Gamepad2 className="h-4 w-4 text-slate-500" />Gaming</Link></li>
-                                <li><Link href="/products?category=Lounge%20Chairs" className="flex items-center gap-3 text-sm py-2 rounded-md hover:bg-muted"><Sofa className="h-4 w-4 text-slate-500" />Lounge</Link></li>
-                              </ul>
-                            </AccordionContent>
-                          </AccordionItem>
-                          <AccordionItem value="cat-2">
-                            <AccordionTrigger className="px-2">
-                              <span className="flex items-center gap-3">
-                                <Table className="h-5 w-5 text-slate-600" />
-                                <span className="font-medium">Tables</span>
-                              </span>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <ul className="space-y-1 px-2">
-                                <li><Link href="/products?category=Office%20Tables" className="flex items-center gap-3 text-sm py-2 rounded-md hover:bg-muted"><Table className="h-4 w-4 text-slate-500" />Office</Link></li>
-                                <li><Link href="/products?category=Dining%20Tables" className="flex items-center gap-3 text-sm py-2 rounded-md hover:bg-muted"><Table className="h-4 w-4 text-slate-500" />Dining</Link></li>
-                                <li><Link href="/products?category=Bar%20Tables" className="flex items-center gap-3 text-sm py-2 rounded-md hover:bg-muted"><Table className="h-4 w-4 text-slate-500" />Bar</Link></li>
-                              </ul>
-                            </AccordionContent>
-                          </AccordionItem>
-                          <AccordionItem value="cat-3">
-                            <AccordionTrigger className="px-2">
-                              <span className="flex items-center gap-3">
-                                <Sofa className="h-5 w-5 text-slate-600" />
-                                <span className="font-medium">Sofas & Living Room</span>
-                              </span>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <ul className="space-y-1 px-2">
-                                <li><Link href="/products?category=Living%20Room" className="flex items-center gap-3 text-sm py-2 rounded-md hover:bg-muted"><Sofa className="h-4 w-4 text-slate-500" />Living</Link></li>
-                              </ul>
-                            </AccordionContent>
-                          </AccordionItem>
-                          <AccordionItem value="cat-4">
-                            <AccordionTrigger className="px-2">
-                              <span className="flex items-center gap-3">
-                                <Leaf className="h-5 w-5 text-slate-600" />
-                                <span className="font-medium">Garden & Outdoor</span>
-                              </span>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <ul className="space-y-1 px-2">
-                                <li><Link href="/products?category=Outdoor%20Furniture" className="flex items-center gap-3 text-sm py-2 rounded-md hover:bg-muted"><Leaf className="h-4 w-4 text-slate-500" />Outdoor Furniture</Link></li>
-                              </ul>
-                            </AccordionContent>
-                          </AccordionItem>
-                          <AccordionItem value="cat-5">
-                            <AccordionTrigger className="px-2">
-                              <span className="flex items-center gap-3">
-                                <Puzzle className="h-5 w-5 text-slate-600" />
-                                <span className="font-medium">Accessories</span>
-                              </span>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <ul className="space-y-1 px-2">
-                                <li><Link href="/products?category=Accessories" className="flex items-center gap-3 text-sm py-2 rounded-md hover:bg-muted"><Puzzle className="h-4 w-4 text-slate-500" />All Accessories</Link></li>
-                              </ul>
+                              <div className="space-y-2 px-2">
+                                {spaces.map((space) => {
+                                  const IconComponent = getIconComponent(space.icon || 'Table');
+                                  return (
+                                    <Accordion key={space.id} type="single" collapsible className="w-full">
+                                      <AccordionItem value={space.id} className="border-none">
+                                        <AccordionTrigger className="px-2 py-2 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                          <span className="flex items-center gap-3">
+                                            <IconComponent className="h-4 w-4 text-slate-600" />
+                                            <span>{space.name}</span>
+                                          </span>
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                          <ul className="space-y-1 pl-6">
+                                            {space.subcategories?.map((subcategory) => {
+                                              const SubIconComponent = getIconComponent(subcategory.icon || 'Table');
+                                              return (
+                                                <li key={subcategory.id}>
+                                                  <Link 
+                                                    href={`/products?space=${space.slug}&subcategory=${subcategory.slug}`}
+                                                    className="flex items-center gap-3 text-sm py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                                  >
+                                                    <SubIconComponent className="h-4 w-4 text-slate-500" />
+                                                    <span>{subcategory.name}</span>
+                                                  </Link>
+                                                </li>
+                                              );
+                                            })}
+                                          </ul>
+                                        </AccordionContent>
+                                      </AccordionItem>
+                                    </Accordion>
+                                  );
+                                })}
+                                <div className="border-t border-slate-200 dark:border-slate-700 my-2"></div>
+                                <Link
+                                  href="/products"
+                                  className="flex items-center gap-3 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 py-2 rounded-md transition-colors"
+                                >
+                                  <span>View All Products</span>
+                                </Link>
+                              </div>
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
@@ -365,26 +396,92 @@ export function Header() {
                   </SheetContent>
                 </Sheet>
               </div>
-              <Link href="/" ref={logoRef} className="flex items-center">
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tighter text-foreground">
-                  Authentic <span className="text-blue-600 dark:text-blue-500">Furniture</span>
-                </h1>
-              </Link>
+            <Link href="/" ref={logoRef} className="flex items-center">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tighter text-foreground">
+                Authentic <span className="text-blue-600 dark:text-blue-500">Furniture</span>
+              </h1>
+            </Link>
             </div>
 
-            {/* Desktop Navigation (center area empty for now) */}
-            <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
+              <div className="relative group">
+                <button className="flex items-center space-x-1 text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors">
+                  <span>Shop by Space</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                
+                {/* Hover Dropdown */}
+                <div className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="p-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {spaces.map((space) => {
+                        const IconComponent = getIconComponent(space.icon || 'Table');
+                        return (
+                          <div key={space.id} className="space-y-2">
+                            <div className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-slate-900 dark:text-white">
+                              <IconComponent className="w-4 h-4" />
+                              <span>{space.name}</span>
+                            </div>
+                            <div className="space-y-1 ml-6">
+                              {space.subcategories?.map((subcategory) => {
+                                const SubIconComponent = getIconComponent(subcategory.icon || 'Table');
+                                return (
+                                  <Link
+                                    key={subcategory.id}
+                                    href={`/products?space=${space.slug}&subcategory=${subcategory.slug}`}
+                                    className="flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-600 dark:text-slate-300 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                  >
+                                    <SubIconComponent className="w-3 h-3" />
+                                    <span>{subcategory.name}</span>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="border-t border-slate-200 dark:border-slate-700 mt-4 pt-4">
+                      <Link
+                        href="/products"
+                        className="flex items-center justify-center space-x-2 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+                      >
+                        <span>View All Products</span>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <Link
-                href="/"
+                href="/blog"
                 className="text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
               >
-                Home
+                Blog
               </Link>
               <Link
-                href="/products"
+                href="/e-catalogue"
                 className="text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
               >
-                Products
+                E-Catalogue
+              </Link>
+              <Link
+                href="/showrooms"
+                className="text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+              >
+                Showrooms
+              </Link>
+              <Link
+                href="/about"
+                className="text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+              >
+                About Us
+              </Link>
+              <Link
+                href="/careers"
+                className="text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+              >
+                Careers
               </Link>
             </nav>
 

@@ -62,26 +62,51 @@ function mapSupabaseRowToProduct(row: any): Product {
     discount_percent: row.discount_percent ? parseFloat(row.discount_percent) : 0,
     is_promo: Boolean(row.is_promo),
     is_best_seller: Boolean(row.is_best_seller),
+    // New inventory fields
+    modelNo: String(row.model_no || ''),
+    warehouseLocation: String(row.warehouse_location || ''),
+    dimensions: String(row.dimensions || ''),
+    // Enhanced product view page fields
+    discount_enabled: Boolean(row.discount_enabled),
+    bulk_pricing_enabled: Boolean(row.bulk_pricing_enabled),
+    bulk_pricing_tiers: row.bulk_pricing_tiers ? (Array.isArray(row.bulk_pricing_tiers) ? row.bulk_pricing_tiers : JSON.parse(row.bulk_pricing_tiers)) : undefined,
+    ships_from: String(row.ships_from || ''),
+    popular_with: row.popular_with ? (Array.isArray(row.popular_with) ? row.popular_with : JSON.parse(row.popular_with)) : undefined,
+    badges: row.badges ? (Array.isArray(row.badges) ? row.badges : JSON.parse(row.badges)) : undefined,
+    materials: String(row.materials || ''),
+    weight_capacity: String(row.weight_capacity || ''),
+    warranty: String(row.warranty || ''),
+    delivery_timeframe: String(row.delivery_timeframe || ''),
+    stock_count: row.stock_count ? parseInt(row.stock_count) : undefined,
+    limited_time_deal: row.limited_time_deal ? (typeof row.limited_time_deal === 'string' ? JSON.parse(row.limited_time_deal) : row.limited_time_deal) : undefined,
   };
   
   console.log('✅ Mapped product:', product);
   return product;
 }
 
-// Check if Supabase is properly configured
+// Check if Supabase is properly configured - FIXED VERSION
 function isSupabaseConfigured(): boolean {
-  if (typeof window !== 'undefined') {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    return !!(supabaseUrl && 
-              supabaseKey && 
-              supabaseUrl.trim() !== '' && 
-              supabaseKey.trim() !== '' &&
-              supabaseUrl.startsWith('http') &&
-              supabaseUrl.includes('supabase.co'));
-  }
-  return false;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  const isConfigured = !!(
+    supabaseUrl && 
+    supabaseKey && 
+    supabaseUrl.trim() !== '' && 
+    supabaseKey.trim() !== '' &&
+    supabaseUrl.startsWith('http') &&
+    supabaseUrl.includes('supabase.co')
+  );
+  
+  console.log('🔍 Supabase config check:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseKey,
+    urlStart: supabaseUrl?.substring(0, 20) || 'missing',
+    isConfigured
+  });
+  
+  return isConfigured;
 }
 
 // Enhanced error handling - detect CORS and configuration issues
@@ -119,17 +144,21 @@ export async function debugDatabaseState(): Promise<void> {
   }
 
   try {
-    // Check total products
+    // Check total products with slugs
     const { data: allProducts, error: allError } = await supabase
       .from('products')
-      .select('id, name, is_promo, is_best_seller, original_price, discount_percent');
+      .select('id, name, slug, is_promo, is_best_seller, original_price, discount_percent');
     
-    console.log('📊 All products:', { data: allProducts, error: allError });
+    console.log('📊 All products with slugs:', { data: allProducts, error: allError });
+    
+    if (allProducts) {
+      console.log('📝 Product slugs:', allProducts.map((p: any) => ({ id: p.id, name: p.name, slug: p.slug })));
+    }
     
     // Check promo products
     const { data: promoProducts, error: promoError } = await supabase
       .from('products')
-      .select('id, name, is_promo')
+      .select('id, name, slug, is_promo')
       .eq('is_promo', true);
     
     console.log('🔥 Promo products:', { data: promoProducts, error: promoError });
@@ -137,7 +166,7 @@ export async function debugDatabaseState(): Promise<void> {
     // Check best sellers
     const { data: bestSellers, error: bestError } = await supabase
       .from('products')
-      .select('id, name, is_best_seller')
+      .select('id, name, slug, is_best_seller')
       .eq('is_best_seller', true);
     
     console.log('⭐ Best sellers:', { data: bestSellers, error: bestError });
@@ -148,15 +177,21 @@ export async function debugDatabaseState(): Promise<void> {
 }
 
 export async function getAllProducts(): Promise<Product[]> {
+  console.log('🔍 getAllProducts: Checking Supabase config...');
+  
   if (!isSupabaseConfigured()) {
+    console.log('⚠️ getAllProducts: Supabase not configured, using fallback data');
     return fallbackProducts;
   }
 
   try {
+    console.log('🔍 getAllProducts: Querying Supabase...');
     const { data, error } = await supabase
       .from('products')
       .select('*')
       .order('created_at', { ascending: false });
+
+    console.log('📊 getAllProducts: Supabase query result:', { data, error });
 
     if (error && shouldUseFallback(error)) {
       console.warn('Using fallback data due to Supabase connection issue:', error.message);
@@ -167,8 +202,11 @@ export async function getAllProducts(): Promise<Product[]> {
       throw error;
     }
 
-    return data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : fallbackProducts;
+    const products = data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : fallbackProducts;
+    console.log('✅ getAllProducts: Returning', products.length, 'products');
+    return products;
   } catch (error) {
+    console.error('❌ getAllProducts: Error:', error);
     if (shouldUseFallback(error)) {
       console.warn('Using fallback data due to network error:', error);
       return fallbackProducts;
@@ -178,30 +216,68 @@ export async function getAllProducts(): Promise<Product[]> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
+  console.log('🔍 Looking for product with slug:', slug);
+  
   if (!isSupabaseConfigured()) {
-    return fallbackProducts.find(p => p.slug === slug) || null;
+    console.log('⚠️ Supabase not configured, using fallback data');
+    const found = fallbackProducts.find(p => p.slug === slug) || null;
+    console.log('📦 Fallback result:', found ? 'Found' : 'Not found');
+    return found;
   }
 
   try {
+    console.log('🔍 Querying Supabase for slug:', slug);
     const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('slug', slug)
       .single();
 
+    console.log('📊 Supabase query result:', { data, error });
+
     if (error && shouldUseFallback(error)) {
       console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return fallbackProducts.find(p => p.slug === slug) || null;
+      const found = fallbackProducts.find(p => p.slug === slug) || null;
+      console.log('📦 Fallback result:', found ? 'Found' : 'Not found');
+      return found;
     }
 
     if (error) {
+      console.error('❌ Supabase error:', error);
+      
+      // If it's a "not found" error, try to find by ID as fallback
+      if (error.code === 'PGRST116' || error.message?.includes('No rows found')) {
+        console.log('🔄 No product found with slug, trying to find by ID...');
+        
+        // Check if slug might be an ID
+        const { data: idData, error: idError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', slug)
+          .single();
+          
+        if (idData && !idError) {
+          console.log('✅ Found product by ID:', idData.name);
+          return mapSupabaseRowToProduct(idData);
+        }
+      }
+      
       throw error;
     }
 
-    return data ? mapSupabaseRowToProduct(data) : null;
+    if (data) {
+      console.log('✅ Product found:', data.name);
+      return mapSupabaseRowToProduct(data);
+    } else {
+      console.log('❌ No product found with slug:', slug);
+      return null;
+    }
   } catch (error) {
+    console.error('❌ Error in getProductBySlug:', error);
     console.warn('Using fallback data due to network error:', error);
-    return fallbackProducts.find(p => p.slug === slug) || null;
+    const found = fallbackProducts.find(p => p.slug === slug) || null;
+    console.log('📦 Fallback result:', found ? 'Found' : 'Not found');
+    return found;
   }
 }
 
@@ -430,6 +506,23 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
       discount_percent: product.discount_percent || 0,
       is_promo: product.is_promo || false,
       is_best_seller: product.is_best_seller || false,
+      // New inventory fields
+      model_no: product.modelNo || '',
+      warehouse_location: product.warehouseLocation || '',
+      dimensions: product.dimensions || '',
+      // Enhanced product view page fields
+      discount_enabled: product.discount_enabled || false,
+      bulk_pricing_enabled: product.bulk_pricing_enabled || false,
+      bulk_pricing_tiers: product.bulk_pricing_tiers ? JSON.stringify(product.bulk_pricing_tiers) : null,
+      ships_from: product.ships_from || null,
+      popular_with: product.popular_with ? JSON.stringify(product.popular_with) : null,
+      badges: product.badges ? JSON.stringify(product.badges) : null,
+      materials: product.materials || null,
+      weight_capacity: product.weight_capacity || null,
+      warranty: product.warranty || null,
+      delivery_timeframe: product.delivery_timeframe || null,
+      stock_count: product.stock_count || null,
+      limited_time_deal: product.limited_time_deal ? JSON.stringify(product.limited_time_deal) : null,
     };
 
     const { data, error } = await supabase
@@ -454,7 +547,8 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
     }
 
     console.log('✅ Product created successfully:', data);
-    return mapSupabaseRowToProduct(data);
+    const mapped = mapSupabaseRowToProduct(data);
+    return mapped;
   } catch (error) {
     console.error('❌ Create product error:', error);
     
@@ -508,6 +602,23 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
     if (updates.discount_percent !== undefined) updateData.discount_percent = updates.discount_percent;
     if (updates.is_promo !== undefined) updateData.is_promo = updates.is_promo;
     if (updates.is_best_seller !== undefined) updateData.is_best_seller = updates.is_best_seller;
+    // New inventory fields
+    if (updates.modelNo !== undefined) updateData.model_no = updates.modelNo;
+    if (updates.warehouseLocation !== undefined) updateData.warehouse_location = updates.warehouseLocation;
+    if (updates.dimensions !== undefined) updateData.dimensions = updates.dimensions;
+    // Enhanced product view page fields
+    if (updates.discount_enabled !== undefined) updateData.discount_enabled = updates.discount_enabled;
+    if (updates.bulk_pricing_enabled !== undefined) updateData.bulk_pricing_enabled = updates.bulk_pricing_enabled;
+    if (updates.bulk_pricing_tiers !== undefined) updateData.bulk_pricing_tiers = updates.bulk_pricing_tiers ? JSON.stringify(updates.bulk_pricing_tiers) : null;
+    if (updates.ships_from !== undefined) updateData.ships_from = updates.ships_from;
+    if (updates.popular_with !== undefined) updateData.popular_with = updates.popular_with ? JSON.stringify(updates.popular_with) : null;
+    if (updates.badges !== undefined) updateData.badges = updates.badges ? JSON.stringify(updates.badges) : null;
+    if (updates.materials !== undefined) updateData.materials = updates.materials;
+    if (updates.weight_capacity !== undefined) updateData.weight_capacity = updates.weight_capacity;
+    if (updates.warranty !== undefined) updateData.warranty = updates.warranty;
+    if (updates.delivery_timeframe !== undefined) updateData.delivery_timeframe = updates.delivery_timeframe;
+    if (updates.stock_count !== undefined) updateData.stock_count = updates.stock_count;
+    if (updates.limited_time_deal !== undefined) updateData.limited_time_deal = updates.limited_time_deal ? JSON.stringify(updates.limited_time_deal) : null;
 
     console.log('🔄 Updating product:', { id, updateData });
 

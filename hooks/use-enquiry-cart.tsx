@@ -13,9 +13,9 @@ const CART_STORAGE_KEY = "authentic-furniture-enquiry-cart";
 interface EnquiryCartContextType {
   cartItems: EnquiryCartItem[];
   addToCart: (product: Product) => boolean;
-  removeFromCart: (productId: number) => boolean;
+  removeFromCart: (productId: string) => boolean;
   clearCart: () => void;
-  isInCart: (productId: number) => boolean;
+  isInCart: (productId: string) => boolean;
   getCartCount: () => number;
   generateWhatsAppMessage: () => string;
   isLoaded: boolean;
@@ -38,7 +38,7 @@ export function EnquiryCartProvider({ children }: { children: ReactNode }): JSX.
               .filter(item => {
                 const isValid = item && 
                   item.product && 
-                  typeof item.product.id === 'number' &&
+                  typeof item.product.id === 'string' &&
                   item.product.name &&
                   item.product.slug;
                 return isValid;
@@ -70,7 +70,7 @@ export function EnquiryCartProvider({ children }: { children: ReactNode }): JSX.
   }, [cartItems, isLoaded]);
 
   const addToCart = useCallback((product: Product) => {
-    if (!product || typeof product.id !== 'number') return false;
+    if (!product || typeof product.id !== 'string') return false;
     setCartItems(prev => {
       const exists = prev.find(item => item.product.id === product.id);
       if (exists) return prev;
@@ -80,8 +80,8 @@ export function EnquiryCartProvider({ children }: { children: ReactNode }): JSX.
     return true;
   }, []);
 
-  const removeFromCart = useCallback((productId: number) => {
-    if (typeof productId !== 'number') return false;
+  const removeFromCart = useCallback((productId: string) => {
+    if (typeof productId !== 'string') return false;
     setCartItems(prev => prev.filter(item => item.product.id !== productId));
     return true;
   }, []);
@@ -90,8 +90,8 @@ export function EnquiryCartProvider({ children }: { children: ReactNode }): JSX.
     setCartItems([]);
   }, []);
 
-  const isInCart = useCallback((productId: number) => {
-    if (typeof productId !== 'number') return false;
+  const isInCart = useCallback((productId: string) => {
+    if (typeof productId !== 'string') return false;
     return cartItems.some(item => item.product.id === productId);
   }, [cartItems]);
 

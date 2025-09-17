@@ -1,9 +1,10 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import { getProductBySlug, formatPrice } from "@/lib/products";
-import { ProductPageClient } from "@/components/products/ProductPageClient";
-import { ProductImageGallery } from "@/components/products/ProductImageGallery";
+import { getProductBySlug, getAllProducts } from "@/lib/products";
+import { EnhancedProductGallery } from "@/components/products/EnhancedProductGallery";
+import { EnhancedProductInfo } from "@/components/products/EnhancedProductInfo";
+import { EnhancedProductTabs } from "@/components/products/EnhancedProductTabs";
+import { RelatedProducts } from "@/components/products/RelatedProducts";
 
 interface ProductPageProps {
   params: Promise<{
@@ -13,15 +14,19 @@ interface ProductPageProps {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
+  console.log('🔍 generateMetadata: Looking for product with slug:', slug);
+  
   const product = await getProductBySlug(slug);
   
   if (!product) {
+    console.log('❌ generateMetadata: Product not found for slug:', slug);
     return {
       title: 'Product Not Found | Authentic Furniture',
       description: 'The requested product could not be found.'
     };
   }
 
+  console.log('✅ generateMetadata: Found product:', product.name);
   return {
     title: `${product.name} | Authentic Furniture`,
     description: product.description,
@@ -30,63 +35,55 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  console.log('🔍 ProductPage: Looking for product with slug:', slug);
+  
+  let product = await getProductBySlug(slug);
+  
+  // If not found by slug, try to find by ID as fallback
+  if (!product) {
+    console.log('🔄 ProductPage: Not found by slug, trying to find by ID...');
+    const allProducts = await getAllProducts();
+    product = allProducts.find(p => p.id === slug) || null;
+    
+    if (product) {
+      console.log('✅ ProductPage: Found product by ID:', product.name);
+    } else {
+      console.log('❌ ProductPage: Product not found by slug or ID:', slug);
+    }
+  } else {
+    console.log('✅ ProductPage: Found product by slug:', product.name);
+  }
   
   if (!product) {
+    console.log('❌ ProductPage: Calling notFound() for slug:', slug);
     notFound();
   }
 
   return (
     <div className="pt-24 pb-16">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Product Image Gallery - Completely isolated container */}
-          <div className="flex flex-col">
-            {/* Main image container */}
-            <div className="relative h-96 md:h-[500px] bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden mb-4">
-              <ProductImageGallery 
-                images={product.images}
-                productName={product.name}
-                className="h-full w-full"
-              />
-            </div>
+        
+        {/* Main Product Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
+          {/* Product Gallery */}
+          <div>
+            <EnhancedProductGallery 
+              images={product.images}
+              productName={product.name}
+            />
           </div>
 
-          {/* Product Details */}
-          <div className="space-y-6">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">{product.category}</p>
-              <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
-              <p className="text-2xl font-semibold mt-2">{formatPrice(product.price)}</p>
-            </div>
-
-            <div className="border-t border-b py-6 border-slate-200 dark:border-slate-800">
-              <h2 className="font-medium text-lg mb-2">Description</h2>
-              <p className="text-muted-foreground">{product.description}</p>
-            </div>
-
-            {product.features && product.features.length > 0 && (
-              <div>
-                <h2 className="font-medium text-lg mb-2">Features</h2>
-                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                  {product.features.map((feature, index) => (
-                    <li key={index}>{feature}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Client-side cart functionality */}
-            <ProductPageClient product={product} />
-
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg mt-8">
-              <p className="text-sm text-muted-foreground">
-                For custom orders, bulk purchases, or more information about this product,
-                please contact our sales team using the cart enquiry system or visit our showroom.
-              </p>
-            </div>
+          {/* Product Info */}
+          <div>
+            <EnhancedProductInfo product={product} />
           </div>
         </div>
+
+        {/* Product Tabs */}
+        <EnhancedProductTabs product={product} />
+
+        {/* Related Products */}
+        <RelatedProducts currentProduct={product} />
       </div>
     </div>
   );

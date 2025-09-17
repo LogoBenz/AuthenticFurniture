@@ -107,11 +107,14 @@ if (!isValidSupabaseConfig()) {
   supabaseClient = createDummyClient();
 } else {
   try {
+    // Use non-persistent, non-refreshing auth to avoid background retryable
+    // auth fetches in anonymous sessions which can spam the console with
+    // AuthRetryableFetchError when environments are misconfigured.
     supabaseClient = createClient(supabaseUrl as string, supabaseAnonKey as string, {
       auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
       },
       global: {
         headers: {

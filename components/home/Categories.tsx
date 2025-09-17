@@ -1,118 +1,117 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getPopularCategories } from "@/lib/db";
+import { 
+  Sofa, 
+  Table, 
+  Armchair, 
+  GraduationCap, 
+  Bed, 
+  Archive,
+  Home,
+  Briefcase
+} from "lucide-react";
 import { HorizontalProductRow } from "@/components/products/HorizontalProductRow";
-import { getPromoProducts, getBestSellers, debugDatabaseState } from "@/lib/products";
+import { getPromoProducts, getBestSellers } from "@/lib/products";
 
 interface Category {
-  id: string;
   name: string;
-  image_url: string;
-  slug: string;
-  is_popular: boolean;
+  icon: React.ComponentType<{ className?: string }>;
+  href: string;
 }
 
+const categories: Category[] = [
+  {
+    name: "Office Chairs",
+    icon: GraduationCap,
+    href: "/products?category=office-chairs"
+  },
+  {
+    name: "Sofas",
+    icon: Sofa,
+    href: "/products?category=sofas"
+  },
+  {
+    name: "Cabinets",
+    icon: Archive,
+    href: "/products?category=cabinets"
+  },
+  {
+    name: "Wardrobes",
+    icon: Bed,
+    href: "/products?category=wardrobes"
+  },
+  {
+    name: "Tables",
+    icon: Table,
+    href: "/products?category=tables"
+  },
+  {
+    name: "Armchairs",
+    icon: Armchair,
+    href: "/products?category=armchairs"
+  }
+];
+
 export function Categories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const cats = await getPopularCategories();
-        setCategories(Array.isArray(cats) ? cats : []);
-        
-        // Debug database state
-        await debugDatabaseState();
-      } catch (error) {
-        console.error('Error loading popular categories:', error);
-        // Fallback to empty array if no popular categories
-        setCategories([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadCategories();
-  }, []);
-  
-  const categoryIcons: Record<string, string> = {
-    "Office Chairs": "https://images.pexels.com/photos/1957477/pexels-photo-1957477.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "Lounge Chairs": "https://images.pexels.com/photos/2762247/pexels-photo-2762247.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "Gaming Chairs": "https://images.pexels.com/photos/5082573/pexels-photo-5082573.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "Public Seating": "https://images.pexels.com/photos/3771110/pexels-photo-3771110.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "Conference Furniture": "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "Tables": "https://images.pexels.com/photos/2647714/pexels-photo-2647714.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "Living Room": "https://images.pexels.com/photos/4352247/pexels-photo-4352247.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "Outdoor Furniture": "https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "Office Furniture": "https://images.pexels.com/photos/1170412/pexels-photo-1170412.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "Game Furniture": "https://images.pexels.com/photos/60912/pexels-photo-60912.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-  };
-
-  if (isLoading) {
-    return (
-      <section className="py-12 sm:py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2 text-center">
-            Popular Categories
-          </h2>
-          <div className="text-center text-muted-foreground text-sm sm:text-base">Loading popular categories...</div>
-        </div>
-      </section>
-    );
-  }
-
-  // Don't render the section if there are no popular categories
-  if (categories.length === 0) {
-    return null;
-  }
-
   return (
     <section className="py-12 sm:py-16">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2 text-center">
-          Popular Categories
+        <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4 text-center">
+          Shop by Category
         </h2>
-        <p className="text-center text-muted-foreground mb-8 sm:mb-10 max-w-2xl mx-auto text-sm sm:text-base">
-          Find the perfect furniture for every space, from luxury homes to corporate offices.
+        <p className="text-center text-slate-600 mb-12 max-w-2xl mx-auto text-lg">
+          Discover our carefully curated furniture collections designed for every space and style
         </p>
         
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
-          {categories.map((category) => (
-            <Link 
-              href={`/products?category=${encodeURIComponent(category.name)}`}
-              key={category.id}
-              className="group relative overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:shadow-md"
-            >
-              <div className="aspect-square relative bg-slate-50 dark:bg-slate-900">
-                {category.image_url ? (
-                  <div 
-                    className="w-full h-full bg-cover bg-center opacity-70 group-hover:opacity-90 transition-opacity duration-300"
-                    style={{ backgroundImage: `url(${category.image_url})` }}
+        {/* Desktop: Centered grid layout */}
+        <div className="hidden md:block">
+          <div className="flex justify-center">
+            <div className="grid grid-cols-6 gap-6 max-w-5xl">
+              {categories.map((category) => {
+                const IconComponent = category.icon;
+                return (
+                  <Link 
+                    href={category.href}
+                    key={category.name}
+                    className="group flex flex-col items-center p-6 rounded-2xl bg-white border-2 border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300 hover:scale-105"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-                  </div>
-                ) : (
-                  // Fallback to hardcoded images if no image_url
-                  categoryIcons[category.name] && (
-                    <div 
-                      className="w-full h-full bg-cover bg-center opacity-70 group-hover:opacity-90 transition-opacity duration-300"
-                      style={{ backgroundImage: `url(${categoryIcons[category.name]})` }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                    <div className="w-16 h-16 mb-4 flex items-center justify-center rounded-full bg-slate-50 group-hover:bg-blue-50 transition-colors duration-300">
+                      <IconComponent className="w-8 h-8 text-slate-700 group-hover:text-blue-600 transition-colors duration-300 group-hover:scale-110 transition-transform duration-300" />
                     </div>
-                  )
-                )}
-                <div className="absolute inset-0 flex items-end p-3 sm:p-4">
-                  <h3 className="text-white font-medium text-sm sm:text-base lg:text-lg group-hover:text-amber-100 transition-colors leading-tight">
-                    {category.name}
-                  </h3>
-                </div>
-              </div>
-            </Link>
-          ))}
+                    <span className="text-sm font-semibold text-center text-slate-900 group-hover:text-blue-600 transition-colors duration-300">
+                      {category.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile: Horizontal slider */}
+        <div className="md:hidden">
+          <div className="flex justify-center px-4">
+            <div className="flex space-x-4 overflow-x-auto scrollbar-hide pb-4 max-w-full">
+              {categories.map((category) => {
+                const IconComponent = category.icon;
+                return (
+                  <Link 
+                    href={category.href}
+                    key={category.name}
+                    className="flex-shrink-0 group flex flex-col items-center p-4 rounded-xl bg-white border-2 border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300 min-w-[120px]"
+                  >
+                    <div className="w-12 h-12 mb-3 flex items-center justify-center rounded-full bg-slate-50 group-hover:bg-blue-50 transition-colors duration-300">
+                      <IconComponent className="w-6 h-6 text-slate-700 group-hover:text-blue-600 transition-colors duration-300 group-hover:scale-110 transition-transform duration-300" />
+                    </div>
+                    <span className="text-xs font-semibold text-center text-slate-900 group-hover:text-blue-600 transition-colors duration-300">
+                      {category.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 

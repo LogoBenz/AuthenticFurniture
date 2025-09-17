@@ -7,10 +7,14 @@ import { ProductGrid } from "@/components/products/ProductGrid";
 import { ProductFilters } from "@/components/products/ProductFilters";
 import { EnquiryCartModal } from "@/components/products/EnquiryCartModal";
 import { Product } from "@/types";
+import { getSpacesForNavigation } from "@/lib/categories";
+import type { Space, Subcategory } from "@/types";
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
   const urlCategory = searchParams?.get("category") ?? undefined;
+  const urlSpace = searchParams?.get("space") ?? undefined;
+  const urlSubcategory = searchParams?.get("subcategory") ?? undefined;
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -20,6 +24,12 @@ export default function ProductsPage() {
   const [isCartModalOpen, setIsCartModalOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [spaces, setSpaces] = useState<Space[]>([]);
+  const activeSpace = useMemo(() => spaces.find(s => s.slug === urlSpace), [spaces, urlSpace]);
+  const activeSubcategory = useMemo<Subcategory | undefined>(() => {
+    if (!activeSpace || !urlSubcategory) return undefined;
+    return activeSpace.subcategories?.find(sc => sc.slug === urlSubcategory);
+  }, [activeSpace, urlSubcategory]);
   
   // Ensure component is mounted before showing cart functionality
   useEffect(() => {
@@ -30,17 +40,20 @@ export default function ProductsPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [productsData, categoriesData] = await Promise.all([
+        const [productsData, categoriesData, spacesData] = await Promise.all([
           getAllProducts(),
-          getProductCategories()
+          getProductCategories(),
+          getSpacesForNavigation()
         ]);
         
         setProducts(productsData);
         setCategories(categoriesData);
+        setSpaces(spacesData);
       } catch (error) {
         console.error('Error loading data:', error);
         setProducts([]);
         setCategories([]);
+        setSpaces([]);
       } finally {
         setIsLoading(false);
       }
@@ -66,6 +79,20 @@ export default function ProductsPage() {
       );
     }
     
+    // Filter by Space and Subcategory (Space → Subspace enforcement)
+    if (urlSpace) {
+      filtered = filtered.filter(product => {
+        const productSpaceSlug = (product.space?.slug || "").toLowerCase();
+        return productSpaceSlug === urlSpace.toLowerCase();
+      });
+    }
+    if (urlSubcategory) {
+      filtered = filtered.filter(product => {
+        const productSubSlug = (product.subcategory?.slug || "").toLowerCase();
+        return productSubSlug === urlSubcategory.toLowerCase();
+      });
+    }
+
     // Filter by category
     if (selectedCategory !== "all") {
       filtered = filtered.filter(product => product.category === selectedCategory);
@@ -77,7 +104,7 @@ export default function ProductsPage() {
     }
     
     return filtered;
-  }, [products, selectedCategory, searchQuery, showAvailableOnly]);
+  }, [products, selectedCategory, searchQuery, showAvailableOnly, urlSpace, urlSubcategory]);
 
   // Update the selected category when the URL parameter changes
   useEffect(() => {
@@ -110,6 +137,23 @@ export default function ProductsPage() {
     <div className="pt-20 sm:pt-24 pb-12 sm:pb-16">
       <div className="container mx-auto px-4">
         <div className="mb-6 sm:mb-8">
+          {activeSpace || activeSubcategory ? (
+            <div className="text-sm text-slate-600 dark:text-slate-300 mb-2">
+              <span className="hover:underline cursor-pointer" onClick={() => window.location.assign('/products')}>All</span>
+              {activeSpace && (
+                <>
+                  <span className="mx-2">/</span>
+                  <span className="font-medium">{activeSpace.name}</span>
+                </>
+              )}
+              {activeSubcategory && (
+                <>
+                  <span className="mx-2">/</span>
+                  <span className="font-semibold">{activeSubcategory.name}</span>
+                </>
+              )}
+            </div>
+          ) : null}
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2">Our Products</h1>
           <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
             Browse our collection of high-quality furniture, perfect for homes, offices, 

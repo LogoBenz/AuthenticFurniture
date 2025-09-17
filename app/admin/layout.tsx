@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminSidebarProvider } from "@/components/admin/AdminSidebarContext";
+import { AdminMainContent } from "@/components/admin/AdminMainContent";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard | Authentic Furniture",
@@ -12,13 +14,13 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <AdminSidebar />
-      <main className="lg:pl-80 pt-16">
-        <div className="px-4 lg:px-8 py-8">
+    <AdminSidebarProvider>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+        <AdminSidebar />
+        <AdminMainContent>
           {children}
-        </div>
-      </main>
-    </div>
+        </AdminMainContent>
+      </div>
+    </AdminSidebarProvider>
   );
 }
