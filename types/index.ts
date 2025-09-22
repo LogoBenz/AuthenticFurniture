@@ -47,6 +47,8 @@ export interface Product {
     end_date: string;
     discount_percent: number;
   };
+  // Color variants
+  variants?: ProductVariant[];
 }
 
 export interface Space {
@@ -207,4 +209,76 @@ export interface ReferralProgram {
   successfulReferrals: number;
   totalEarned: number;
   status: 'active' | 'inactive';
+}
+
+// Blog system interfaces
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  featured_image: string;
+  video_url?: string;
+  author: string;
+  category: string;
+  likes: number;
+  views: number;
+  published: boolean;
+  featured: boolean;
+  created_at: string;
+  updated_at: string;
+  category_info?: BlogCategory;
+}
+
+export interface BlogCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  color: string;
+  created_at: string;
+}
+
+export interface BlogLike {
+  id: string;
+  post_id: string;
+  user_ip: string;
+  user_agent?: string;
+  created_at: string;
+}
+
+export interface BlogComment {
+  id: string;
+  post_id: string;
+  author_name: string;
+  author_email: string;
+  content: string;
+  approved: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Color variant system interfaces
+export interface ProductVariant {
+  id: string;
+  product_id: string;
+  color_id: string;
+  color_name: string;
+  color_hex: string;
+  images: string[];
+  price?: number;
+  sku?: string;
+  is_available: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ColorOption {
+  id: string;
+  name: string;
+  hex_code: string;
+  display_order: number;
+  created_at: string;
 }

@@ -509,13 +509,13 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
   }
 }
 
-export async function updateProduct(id: number, updates: Partial<Product>): Promise<Product | null> {
+export async function updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
   if (!isSupabaseConfigured()) {
     throw new Error('Supabase not configured. Cannot update products.');
   }
 
   // Validate ID
-  if (!id || typeof id !== 'number' || id <= 0) {
+  if (!id || typeof id !== 'string') {
     throw new Error('Invalid product ID provided.');
   }
 
@@ -580,13 +580,13 @@ export async function updateProduct(id: number, updates: Partial<Product>): Prom
   }
 }
 
-export async function deleteProduct(id: number): Promise<boolean> {
+export async function deleteProduct(id: string): Promise<boolean> {
   if (!isSupabaseConfigured()) {
     throw new Error('Supabase not configured. Cannot delete products.');
   }
 
   // Validate ID
-  if (!id || typeof id !== 'number' || id <= 0) {
+  if (!id || typeof id !== 'string') {
     throw new Error('Invalid product ID provided.');
   }
 

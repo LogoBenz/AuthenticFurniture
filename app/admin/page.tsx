@@ -132,7 +132,7 @@ function AdminPageContent() {
     }
 
     // Validate product ID for updates
-    if (editingProduct && (!editingProduct.id || typeof editingProduct.id !== 'number')) {
+    if (editingProduct && !editingProduct.id) {
       alert("Invalid product ID. Cannot update product.");
       return;
     }
@@ -219,7 +219,7 @@ function AdminPageContent() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!isSupabaseConfigured) {
       alert("Supabase is not configured. Please set up your environment variables to delete products.");
       return;

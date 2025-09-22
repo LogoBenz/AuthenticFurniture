@@ -292,8 +292,8 @@ export async function createSubcategory(subcategoryData: Partial<Subcategory>): 
       .single();
 
     if (error) {
-      console.error('Error creating subcategory:', error);
-      return null;
+      console.error('Error creating subcategory:', error.message || error);
+      throw new Error(`Failed to create subcategory: ${error.message || 'Unknown error'}`);
     }
 
     return mapSupabaseRowToSubcategory(data);

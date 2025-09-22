@@ -113,6 +113,13 @@ const adminNavItems = [
     category: "management"
   },
   {
+    title: "Blog",
+    href: "/admin/blog",
+    icon: FileText,
+    description: "Blog posts and content management",
+    category: "content"
+  },
+  {
     title: "Reviews",
     href: "/admin/reviews",
     icon: MessageSquare,

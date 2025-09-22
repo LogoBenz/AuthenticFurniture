@@ -11,10 +11,12 @@ export default function AboutPage() {
   return (
     <div className="pt-24 pb-16">
       <div className="container mx-auto px-4">
-        <h1 className="text-4xl font-bold tracking-tight mb-2">About Us</h1>
-        <p className="text-muted-foreground mb-8 max-w-3xl">
-          Get to know Authentic Furniture, Nigeria's trusted provider of high-quality imported furniture.
-        </p>
+        <h1 className="text-4xl font-bold tracking-tight mb-2">From Alaba's Heart, To Your Home.</h1>
+        <div className="text-muted-foreground mb-8 max-w-3xl space-y-3">
+          <p>For over two decades, since the late 1990s, the name 'Authentic Furnitures' has been synonymous with quality and trust in the bustling lanes of Alaba International Market. We started as a family business with a simple promise: to provide durable, beautiful furniture that turns a house into a home.</p>
+          <p>We've furnished thousands of homes, offices, and businesses, building our reputation one happy customer at a time. Now, as Nigeria embraces the convenience of online shopping, we are bringing our legacy of excellence online.</p>
+          <p>Our mission remains the same: to offer you the finest craftsmanship and timeless designs, now delivered directly to your doorstep, anywhere in Nigeria. Welcome to the family.</p>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
           <div className="relative h-[400px] rounded-lg overflow-hidden">
@@ -27,15 +29,9 @@ export default function AboutPage() {
           </div>
           <div>
             <h2 className="text-2xl font-bold mb-4">Our Story</h2>
-            <p className="text-muted-foreground mb-4">
-              Authentic Furniture was founded with a simple mission: to provide Nigerian homes and businesses with high-quality, stylish furniture at fair prices. What started as a small family business has grown into a trusted name in the Nigerian furniture market.
-            </p>
-            <p className="text-muted-foreground mb-4">
-              We directly import premium furniture from China and other global markets, carefully selecting pieces that combine durability, style, and comfort. By cutting out middlemen, we're able to offer exceptional quality at competitive prices.
-            </p>
-            <p className="text-muted-foreground">
-              Today, we're proud to serve a diverse clientele including homeowners, corporate offices, hotels, restaurants, and government institutions across Nigeria.
-            </p>
+            <p className="text-muted-foreground mb-4">Authentic Furniture was founded with a simple mission: to provide Nigerian homes and businesses with high-quality, stylish furniture at fair prices. What started as a small family business has grown into a trusted name in the Nigerian furniture market.</p>
+            <p className="text-muted-foreground mb-4">We directly import premium furniture from China and other global markets, carefully selecting pieces that combine durability, style, and comfort. By cutting out middlemen, we're able to offer exceptional quality at competitive prices.</p>
+            <p className="text-muted-foreground">Today, we're proud to serve a diverse clientele including homeowners, corporate offices, hotels, restaurants, and government institutions across Nigeria.</p>
           </div>
         </div>
 

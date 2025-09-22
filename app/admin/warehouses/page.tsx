@@ -155,19 +155,45 @@ export default function AdminWarehousesPage() {
     }
 
     try {
+      console.log('🔄 Deleting warehouse:', warehouse.id);
+      
       const response = await fetch(`/api/inventory/warehouses/${warehouse.id}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
+      console.log('📊 Delete response status:', response.status);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Delete successful:', result);
+        
+        // Remove from UI state
         setWarehouses(prev => prev.filter(w => w.id !== warehouse.id));
         toast.success('Warehouse deleted successfully');
+        
+        // Refresh data from server to ensure consistency
+        setTimeout(async () => {
+          try {
+            const refreshResponse = await fetch('/api/inventory/warehouses');
+            if (refreshResponse.ok) {
+              const { warehouses: refreshedWarehouses } = await refreshResponse.json();
+              setWarehouses(refreshedWarehouses || []);
+              console.log('✅ Data refreshed after deletion');
+            }
+          } catch (refreshError) {
+            console.error('❌ Error refreshing data:', refreshError);
+          }
+        }, 1000);
       } else {
         const error = await response.json();
+        console.error('❌ Delete failed:', error);
         toast.error(error.error || 'Failed to delete warehouse');
       }
     } catch (error) {
-      console.error('Error deleting warehouse:', error);
+      console.error('❌ Error deleting warehouse:', error);
       toast.error('Failed to delete warehouse');
     }
   };

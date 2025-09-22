@@ -33,6 +33,7 @@ export function Header() {
   const [showAdminHint, setShowAdminHint] = useState(false);
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [showPromoHeader, setShowPromoHeader] = useState(false);
   const logoRef = useRef<HTMLAnchorElement>(null);
   const { isAuthenticated, signOut, loading } = useAuth();
   const router = useRouter();
@@ -237,12 +238,33 @@ export function Header() {
   // Regular header for public pages
   return (
     <>
+      {/* Promotional Header - Desktop Only */}
+      {showPromoHeader && (
+        <div className="hidden lg:block bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border-b border-amber-200 dark:border-amber-800">
+          <div className="container mx-auto px-4 py-2">
+            <div className="flex items-center justify-center relative">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200 text-center">
+                🏠 Furnish your Home, Office, WorkSpace, Hotel, Bar & Lounge with us!
+              </p>
+              <button
+                onClick={() => setShowPromoHeader(false)}
+                className="absolute right-0 p-1 hover:bg-amber-200 dark:hover:bg-amber-800 rounded-full transition-colors"
+                aria-label="Dismiss promotional message"
+              >
+                <X className="h-4 w-4 text-amber-700 dark:text-amber-300" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header id="site-header"
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${
           isScrolled
             ? "bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm"
             : "bg-transparent"
         }`}
+        style={{ top: showPromoHeader ? '40px' : '0' }}
       >
         {/* Top social bar */}
         <div
@@ -308,7 +330,7 @@ export function Header() {
                         <Link href="/products" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">Products</Link>
                         <Link href="/blog" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">Blog</Link>
                         <Link href="/e-catalogue" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">E-Catalogue</Link>
-                        <Link href="/showrooms" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">Showrooms</Link>
+                        <Link href="/showroom" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">Showroom</Link>
                         <Link href="/about" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">About Us</Link>
                         <Link href="/careers" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">Careers</Link>
                       </nav>
@@ -411,43 +433,49 @@ export function Header() {
                   <ChevronDown className="w-4 h-4" />
                 </button>
                 
-                {/* Hover Dropdown */}
-                <div className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <div className="p-4">
-                    <div className="grid grid-cols-2 gap-4">
+                {/* Professional Mega Menu Dropdown */}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[600px] bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                  <div className="p-6">
+                    <div className="grid grid-cols-3 gap-6">
                       {spaces.map((space) => {
                         const IconComponent = getIconComponent(space.icon || 'Table');
                         return (
-                          <div key={space.id} className="space-y-2">
-                            <div className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-slate-900 dark:text-white">
-                              <IconComponent className="w-4 h-4" />
+                          <div key={space.id} className="group/space">
+                            <div className="flex items-center space-x-3 px-4 py-3 text-base font-semibold text-slate-900 dark:text-white group-hover/space:bg-slate-50 dark:group-hover/space:bg-slate-700 rounded-lg transition-colors">
+                              <IconComponent className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                               <span>{space.name}</span>
                             </div>
-                            <div className="space-y-1 ml-6">
-                              {space.subcategories?.map((subcategory) => {
+                            <div className="space-y-1 ml-7">
+                              {space.subcategories?.slice(0, 4).map((subcategory) => {
                                 const SubIconComponent = getIconComponent(subcategory.icon || 'Table');
                                 return (
                                   <Link
                                     key={subcategory.id}
                                     href={`/products?space=${space.slug}&subcategory=${subcategory.slug}`}
-                                    className="flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-600 dark:text-slate-300 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                    className="flex items-center space-x-2 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-300 transition-all duration-200"
                                   >
-                                    <SubIconComponent className="w-3 h-3" />
+                                    <SubIconComponent className="w-4 h-4" />
                                     <span>{subcategory.name}</span>
                                   </Link>
                                 );
                               })}
+                              {space.subcategories && space.subcategories.length > 4 && (
+                                <div className="text-xs text-slate-500 dark:text-slate-400 px-3 py-1">
+                                  +{space.subcategories.length - 4} more
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
                       })}
                     </div>
-                    <div className="border-t border-slate-200 dark:border-slate-700 mt-4 pt-4">
+                    <div className="border-t border-slate-200 dark:border-slate-700 mt-6 pt-4">
                       <Link
                         href="/products"
-                        className="flex items-center justify-center space-x-2 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+                        className="flex items-center justify-center space-x-2 px-6 py-3 text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-lg transition-colors shadow-lg hover:shadow-xl"
                       >
                         <span>View All Products</span>
+                        <ChevronDown className="w-4 h-4 rotate-[-90deg]" />
                       </Link>
                     </div>
                   </div>
@@ -466,10 +494,10 @@ export function Header() {
                 E-Catalogue
               </Link>
               <Link
-                href="/showrooms"
+                href="/showroom"
                 className="text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
               >
-                Showrooms
+                Showroom
               </Link>
               <Link
                 href="/about"

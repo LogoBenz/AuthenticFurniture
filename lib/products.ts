@@ -45,6 +45,30 @@ function mapSupabaseRowToProduct(row: any): Product {
     console.log('🔄 Using placeholder image');
   }
 
+  // Handle videos - similar to images
+  let videos: string[] = [];
+  
+  if (row.videos) {
+    console.log('📝 Found videos field:', row.videos, 'Type:', typeof row.videos);
+    // If videos is already an array
+    if (Array.isArray(row.videos)) {
+      videos = row.videos;
+      console.log('✅ Videos is already an array:', videos);
+    }
+    // If videos is a JSON string
+    else if (typeof row.videos === 'string') {
+      try {
+        const parsed = JSON.parse(row.videos);
+        videos = Array.isArray(parsed) ? parsed : [row.videos];
+        console.log('✅ Parsed JSON videos:', videos);
+      } catch {
+        // If JSON parsing fails, treat as comma-separated string
+        videos = row.videos.split(',').map((url: string) => url.trim()).filter(Boolean);
+        console.log('✅ Treated as comma-separated string:', videos);
+      }
+    }
+  }
+
   const product = {
     id: String(row.id || ''),
     name: String(row.name || ''),
@@ -55,6 +79,7 @@ function mapSupabaseRowToProduct(row: any): Product {
     features: Array.isArray(row.features) ? row.features : [],
     images: images,
     imageUrl: images[0], // Backward compatibility - use first image
+    videos: videos,
     inStock: Boolean(row.in_stock),
     isFeatured: Boolean(row.is_featured),
     // New fields for promo and best seller functionality
@@ -499,6 +524,7 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
       features: product.features,
       images: JSON.stringify(product.images),
       image_url: product.imageUrl,
+      videos: product.videos ? JSON.stringify(product.videos) : null,
       in_stock: product.inStock,
       is_featured: product.isFeatured,
       // New fields for promo and best seller functionality
@@ -506,10 +532,14 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
       discount_percent: product.discount_percent || 0,
       is_promo: product.is_promo || false,
       is_best_seller: product.is_best_seller || false,
+      is_new: product.is_new || false,
       // New inventory fields
       model_no: product.modelNo || '',
       warehouse_location: product.warehouseLocation || '',
       dimensions: product.dimensions || '',
+      // Space and subcategory fields
+      space_id: product.space_id || null,
+      subcategory_id: product.subcategory_id || null,
       // Enhanced product view page fields
       discount_enabled: product.discount_enabled || false,
       bulk_pricing_enabled: product.bulk_pricing_enabled || false,
@@ -524,6 +554,8 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
       stock_count: product.stock_count || null,
       limited_time_deal: product.limited_time_deal ? JSON.stringify(product.limited_time_deal) : null,
     };
+
+    console.log('🔄 Creating product with data:', productData);
 
     const { data, error } = await supabase
       .from('products')
@@ -595,6 +627,7 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
     if (updates.features !== undefined) updateData.features = updates.features;
     if (updates.images !== undefined) updateData.images = JSON.stringify(updates.images);
     if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl;
+    if (updates.videos !== undefined) updateData.videos = JSON.stringify(updates.videos);
     if (updates.inStock !== undefined) updateData.in_stock = updates.inStock;
     if (updates.isFeatured !== undefined) updateData.is_featured = updates.isFeatured;
     // New fields for promo and best seller functionality
@@ -606,6 +639,9 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
     if (updates.modelNo !== undefined) updateData.model_no = updates.modelNo;
     if (updates.warehouseLocation !== undefined) updateData.warehouse_location = updates.warehouseLocation;
     if (updates.dimensions !== undefined) updateData.dimensions = updates.dimensions;
+    // Space and subcategory fields
+    if (updates.space_id !== undefined) updateData.space_id = updates.space_id;
+    if (updates.subcategory_id !== undefined) updateData.subcategory_id = updates.subcategory_id;
     // Enhanced product view page fields
     if (updates.discount_enabled !== undefined) updateData.discount_enabled = updates.discount_enabled;
     if (updates.bulk_pricing_enabled !== undefined) updateData.bulk_pricing_enabled = updates.bulk_pricing_enabled;
@@ -773,6 +809,69 @@ export async function uploadProductImage(file: File): Promise<string> {
     return publicUrl;
   } catch (error) {
     console.error('❌ Upload image error:', error);
+    
+    // Check if it's a network error and provide better error message
+    if (shouldUseFallback(error)) {
+      throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
+    }
+    
+    throw error;
+  }
+}
+
+// Video upload helper function
+export async function uploadProductVideo(file: File): Promise<string> {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase not configured. Cannot upload videos.');
+  }
+
+  // Validate file
+  const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('Invalid file type. Please upload MP4, WebM, OGG, or MOV videos.');
+  }
+
+  const maxSize = 100 * 1024 * 1024; // 100MB
+  if (file.size > maxSize) {
+    throw new Error('File size must be less than 100MB.');
+  }
+
+  try {
+    // Generate unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `products/${fileName}`;
+
+    console.log('🔄 Uploading video:', fileName);
+
+    // Upload to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('product-videos')
+      .upload(filePath, file, {
+        cacheControl: '7200', // Longer cache for videos
+        upsert: false
+      });
+
+    if (error) {
+      console.error('❌ Video upload error:', error);
+      
+      // Check for CORS/network errors
+      if (shouldUseFallback(error)) {
+        throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
+      }
+      
+      throw new Error(`Video upload failed: ${error.message}`);
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('product-videos')
+      .getPublicUrl(filePath);
+
+    console.log('✅ Video uploaded successfully:', publicUrl);
+    return publicUrl;
+  } catch (error) {
+    console.error('❌ Upload video error:', error);
     
     // Check if it's a network error and provide better error message
     if (shouldUseFallback(error)) {

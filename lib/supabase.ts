@@ -112,9 +112,9 @@ if (!isValidSupabaseConfig()) {
     // AuthRetryableFetchError when environments are misconfigured.
     supabaseClient = createClient(supabaseUrl as string, supabaseAnonKey as string, {
       auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
       },
       global: {
         headers: {

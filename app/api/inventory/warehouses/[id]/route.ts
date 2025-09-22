@@ -4,9 +4,10 @@ import { updateWarehouse, deleteWarehouse } from '@/lib/warehouses';
 // PUT /api/inventory/warehouses/[id] - Update warehouse
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { name, state, address, contactPhone, contactEmail, mapLink, capacity, notes, isAvailable } = body;
 
@@ -17,7 +18,7 @@ export async function PUT(
       );
     }
 
-    const warehouse = await updateWarehouse(params.id, {
+    const warehouse = await updateWarehouse(id, {
       name,
       state,
       address,
@@ -49,23 +50,49 @@ export async function PUT(
 // DELETE /api/inventory/warehouses/[id] - Delete warehouse
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const success = await deleteWarehouse(params.id);
+    const { id } = await params;
+    
+    console.log('🔄 API: Deleting warehouse with ID:', id);
+    
+    // Validate ID
+    if (!id || id.trim() === '') {
+      console.error('❌ Invalid warehouse ID provided');
+      return NextResponse.json(
+        { error: 'Invalid warehouse ID' },
+        { status: 400 }
+      );
+    }
+
+    const success = await deleteWarehouse(id);
 
     if (!success) {
+      console.error('❌ Warehouse deletion failed in database');
       return NextResponse.json(
-        { error: 'Failed to delete warehouse' },
+        { error: 'Failed to delete warehouse from database' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    console.log('✅ Warehouse deleted successfully:', id);
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Warehouse deleted successfully',
+      deletedId: id 
+    });
   } catch (error) {
     console.error('❌ Error deleting warehouse:', error);
+    
+    // Provide more specific error messages
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
     return NextResponse.json(
-      { error: 'Failed to delete warehouse' },
+      { 
+        error: 'Failed to delete warehouse',
+        details: errorMessage 
+      },
       { status: 500 }
     );
   }

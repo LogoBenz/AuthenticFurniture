@@ -187,7 +187,8 @@ export async function getInventoryByWarehouse(warehouseId: string): Promise<any[
         name,
         model_no,
         price,
-        images
+        images,
+        in_stock
       )
     `)
     .eq('warehouse_id', warehouseId);
@@ -198,6 +199,83 @@ export async function getInventoryByWarehouse(warehouseId: string): Promise<any[
   }
 
   return data || [];
+}
+
+// Get total inventory across all warehouses for a product
+export async function getProductTotalInventory(productId: string): Promise<{
+  totalStock: number;
+  totalReserved: number;
+  availableStock: number;
+}> {
+  if (!isSupabaseConfigured()) {
+    return { totalStock: 0, totalReserved: 0, availableStock: 0 };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .rpc('get_product_total_inventory', { product_id_param: parseInt(productId) });
+
+    if (error) {
+      console.error('❌ Get product inventory error:', error);
+      return { totalStock: 0, totalReserved: 0, availableStock: 0 };
+    }
+
+    return data?.[0] || { totalStock: 0, totalReserved: 0, availableStock: 0 };
+  } catch (error) {
+    console.error('❌ Get product inventory error:', error);
+    return { totalStock: 0, totalReserved: 0, availableStock: 0 };
+  }
+}
+
+// Update inventory on sale
+export async function updateInventoryOnSale(
+  productId: string, 
+  warehouseId: string, 
+  quantity: number
+): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  try {
+    // First check if we have enough stock
+    const { data: currentStock, error: fetchError } = await supabase
+      .from('warehouse_products')
+      .select('stock_quantity, reserved_quantity')
+      .eq('warehouse_id', warehouseId)
+      .eq('product_id', productId)
+      .single();
+
+    if (fetchError) {
+      console.error('❌ Error fetching current stock:', fetchError);
+      return false;
+    }
+
+    const availableStock = (currentStock?.stock_quantity || 0) - (currentStock?.reserved_quantity || 0);
+    
+    if (availableStock < quantity) {
+      console.error('❌ Insufficient stock available');
+      return false;
+    }
+
+    // Update the inventory
+    const { error: updateError } = await supabase
+      .from('warehouse_products')
+      .update({
+        stock_quantity: (currentStock?.stock_quantity || 0) - quantity,
+        last_updated: new Date().toISOString()
+      })
+      .eq('warehouse_id', warehouseId)
+      .eq('product_id', productId);
+
+    if (updateError) {
+      console.error('❌ Error updating inventory:', updateError);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ Update inventory on sale error:', error);
+    return false;
+  }
 }
 
 export async function upsertWarehouseProductStock(stockUpdates: Array<{ 

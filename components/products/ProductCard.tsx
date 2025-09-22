@@ -149,6 +149,18 @@ interface ProductCardProps {
             )}
           </div>
 
+          {/* Product Tags */}
+          {product.popular_with && product.popular_with.length > 0 && (
+            <div className="mt-2">
+              <div className="inline-flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded-full px-2 py-1">
+                <span className="text-yellow-600 text-xs">🔥</span>
+                <span className="text-xs font-medium text-gray-700">
+                  {product.popular_with[0]}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Pricing */}
           <div className="flex items-center space-x-2">
             <span className="text-lg font-bold text-slate-900">

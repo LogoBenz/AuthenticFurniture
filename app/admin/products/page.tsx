@@ -16,6 +16,7 @@ import { Search, Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import { formatPrice } from "@/lib/products";
 import { MultiImageUpload } from "@/components/products/MultiImageUpload";
+import { EnhancedMediaUpload } from "@/components/products/EnhancedMediaUpload";
 import { Badge } from "@/components/ui/badge";
 import { WarehouseSelector } from "@/components/ui/warehouse-selector";
 import MultiWarehouseStockEditor from "@/components/admin/MultiWarehouseStockEditor";
@@ -34,6 +35,7 @@ export default function AdminProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [customCategory, setCustomCategory] = useState("");
   const [productImages, setProductImages] = useState<string[]>([]);
+  const [productVideos, setProductVideos] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [initialStock, setInitialStock] = useState<string>("");
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("");
@@ -87,7 +89,7 @@ export default function AdminProductsPage() {
         setFilteredProducts(productsData);
         setCategories(categoriesData);
         setSpaces(spacesData);
-        setAllWarehouses(warehousesData.map(w => ({ id: w.id, name: w.name })) as MWarehouse[]);
+        setAllWarehouses(warehousesData.map(w => ({ id: w.id, name: w.name })) as Warehouse[]);
       } finally { 
         setLoading(false); 
       }
@@ -146,6 +148,7 @@ export default function AdminProductsPage() {
     setEditingProduct(null);
     setCustomCategory("");
     setProductImages([]);
+    setProductVideos([]);
     setIsUploading(false);
     setInitialStock("");
     setSelectedWarehouseId("");
@@ -190,12 +193,19 @@ export default function AdminProductsPage() {
     setCustomCategory("");
     // Use the full images array if available, otherwise fallback to single imageUrl
     setProductImages(product.images && product.images.length > 0 ? product.images : (product.imageUrl ? [product.imageUrl] : []));
+    // Set videos if available
+    setProductVideos((product as any).videos || []);
     setIsDialogOpen(true);
   };
 
   const handleImagesChange = (newImages: string[]) => {
     console.log('🔄 Admin: Images changed to:', newImages);
     setProductImages(newImages);
+  };
+
+  const handleVideosChange = (newVideos: string[]) => {
+    console.log('🔄 Admin: Videos changed to:', newVideos);
+    setProductVideos(newVideos);
   };
 
   const handleCategoryChange = (value: string) => {
@@ -221,14 +231,19 @@ export default function AdminProductsPage() {
       return;
     }
 
-    // Determine the final category
+    // Determine the final category (legacy flat category retained for now)
     let finalCategory = formData.category;
     if (formData.category === "custom" && customCategory.trim()) {
       finalCategory = customCategory.trim();
     }
 
-    if (!finalCategory) {
-      alert("Please select or enter a category.");
+    // Enforce Space → Subspace selection
+    if (!formData.space_id) {
+      alert("Please select a Space.");
+      return;
+    }
+    if (!formData.subcategory_id) {
+      alert("Please select a Subcategory.");
       return;
     }
     
@@ -279,6 +294,7 @@ export default function AdminProductsPage() {
       features: formData.features.split('\n').filter(f => f.trim()),
       images: productImages,
       imageUrl: productImages[0],
+      videos: productVideos,
       inStock: formData.inStock,
       isFeatured: formData.isFeatured,
       original_price: priceValue,
@@ -911,13 +927,17 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Right Column - Images */}
+              {/* Right Column - Media */}
               <div className="space-y-4">
-                <MultiImageUpload
+                <EnhancedMediaUpload
                   images={productImages}
                   onImagesChange={handleImagesChange}
-                  maxImages={5}
+                  videos={productVideos}
+                  onVideosChange={handleVideosChange}
+                  maxImages={8}
+                  maxVideos={3}
                   disabled={isUploading}
+                  enableCropping={true}
                 />
               </div>
             </div>
