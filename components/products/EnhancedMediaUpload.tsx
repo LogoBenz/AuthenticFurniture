@@ -63,6 +63,7 @@ export function EnhancedMediaUpload({
     for (const file of files) {
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
       if (!allowedTypes.includes(file.type)) {
         alert(`File ${file.name} is not a valid image type. Please use JPEG, PNG, GIF, or WebP.`);
         continue;
@@ -124,6 +125,8 @@ export function EnhancedMediaUpload({
 
   const uploadImageFile = async (file: File) => {
     try {
+
+      console.log("file is", file);
       // Create a unique key for progress tracking
       const progressKey = `${file.name}-${Date.now()}`;
       
@@ -274,7 +277,10 @@ export function EnhancedMediaUpload({
           type="file"
           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
           multiple
-          onChange={handleImageFileSelect}
+          onChange={e => {
+            console.log('Files:', e.target.files);
+            handleImageFileSelect(e);
+          }}
           className="hidden"
           disabled={disabled || isUploading}
         />
@@ -493,7 +499,8 @@ export function EnhancedMediaUpload({
               </DialogTitle>
             </DialogHeader>
             <ImageCropper
-              imageUrl={cropImage.url}
+              image={cropImage.url}
+              imageRef={cropImage.file}
               onCropComplete={handleCropComplete}
               onCancel={() => setCropImage(null)}
             />
