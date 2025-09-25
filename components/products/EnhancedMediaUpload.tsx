@@ -16,6 +16,7 @@ interface MediaFile {
   url: string;
   thumbnail?: string;
   name: string;
+  index?: number;
 }
 
 interface EnhancedMediaUploadProps {
@@ -39,124 +40,34 @@ export function EnhancedMediaUpload({
   disabled = false,
   enableCropping = true
 }: EnhancedMediaUploadProps) {
-  console.log('🔄 EnhancedMediaUpload rendered with images:', images, 'videos:', videos);
-  
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [isUploading, setIsUploading] = useState(false);
-  const [cropImage, setCropImage] = useState<{ file: File; url: string } | null>(null);
+  const [cropImage, setCropImage] = useState<{ file: File | null; url: string; index?: number } | null>(null);
   const [previewVideo, setPreviewVideo] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    console.log('🔄 Image files selected:', files.length, files.map(f => f.name));
-    
-    if (files.length === 0) return;
-
-    // Check if adding these files would exceed the limit
-    if (images.length + files.length > maxImages) {
-      alert(`You can only upload up to ${maxImages} images. Currently you have ${images.length} images.`);
-      return;
-    }
-
-    for (const file of files) {
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        alert(`File ${file.name} is not a valid image type. Please use JPEG, PNG, GIF, or WebP.`);
-        continue;
-      }
-
-      // Validate file size (10MB limit for images)
-      const maxSize = 10 * 1024 * 1024;
-      if (file.size > maxSize) {
-        alert(`File ${file.name} is too large. Maximum size is 10MB.`);
-        continue;
-      }
-
-      // If cropping is enabled, show crop dialog
-      if (enableCropping) {
-        const url = URL.createObjectURL(file);
-        setCropImage({ file, url });
-      } else {
-        await uploadImageFile(file);
-      }
-    }
-
-    // Clear the input
-    e.target.value = '';
-  }, [images, maxImages, enableCropping]);
-
-  const handleVideoFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    console.log('🔄 Video files selected:', files.length, files.map(f => f.name));
-    
-    if (files.length === 0) return;
-
-    // Check if adding these files would exceed the limit
-    if (videos.length + files.length > maxVideos) {
-      alert(`You can only upload up to ${maxVideos} videos. Currently you have ${videos.length} videos.`);
-      return;
-    }
-
-    for (const file of files) {
-      // Validate file type
-      const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/avi', 'video/mov'];
-      if (!allowedTypes.includes(file.type)) {
-        alert(`File ${file.name} is not a valid video type. Please use MP4, WebM, OGG, AVI, or MOV.`);
-        continue;
-      }
-
-      // Validate file size (100MB limit for videos)
-      const maxSize = 100 * 1024 * 1024;
-      if (file.size > maxSize) {
-        alert(`File ${file.name} is too large. Maximum size is 100MB.`);
-        continue;
-      }
-
-      await uploadVideoFile(file);
-    }
-
-    // Clear the input
-    e.target.value = '';
-  }, [videos, maxVideos]);
-
-  const uploadImageFile = async (file: File) => {
+  const uploadImageFile = useCallback(async (file: File) => {
     try {
-      // Create a unique key for progress tracking
       const progressKey = `${file.name}-${Date.now()}`;
-      
-      // Start progress tracking
       setUploadProgress(prev => ({ ...prev, [progressKey]: 0 }));
       setIsUploading(true);
       
-      // Simulate progress updates
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           const current = prev[progressKey] || 0;
-          if (current < 90) {
-            return { ...prev, [progressKey]: current + 10 };
-          }
-          return prev;
+          return current < 90 ? { ...prev, [progressKey]: current + 10 } : prev;
         });
       }, 200);
 
-      // Actually upload the image to Supabase Storage
-      console.log('🔄 Starting image upload for:', file.name);
       const imageUrl = await uploadProductImage(file);
-      console.log('✅ Image upload completed, URL:', imageUrl);
       
-      // Complete progress
       clearInterval(progressInterval);
       setUploadProgress(prev => ({ ...prev, [progressKey]: 100 }));
 
-      // Add to images array
       const newImages = [...images, imageUrl];
       onImagesChange(newImages);
-      console.log('📝 Updated images array:', newImages);
 
-      // Clean up progress tracking
       setTimeout(() => {
         setUploadProgress(prev => {
           const { [progressKey]: _, ...rest } = prev;
@@ -170,43 +81,29 @@ export function EnhancedMediaUpload({
     } finally {
       setIsUploading(false);
     }
-  };
+  }, [images, onImagesChange]);
 
-  const uploadVideoFile = async (file: File) => {
+  const uploadVideoFile = useCallback(async (file: File) => {
     try {
-      // Create a unique key for progress tracking
       const progressKey = `${file.name}-${Date.now()}`;
-      
-      // Start progress tracking
       setUploadProgress(prev => ({ ...prev, [progressKey]: 0 }));
       setIsUploading(true);
       
-      // Simulate progress updates
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           const current = prev[progressKey] || 0;
-          if (current < 90) {
-            return { ...prev, [progressKey]: current + 10 };
-          }
-          return prev;
+          return current < 90 ? { ...prev, [progressKey]: current + 10 } : prev;
         });
       }, 200);
 
-      // Actually upload the video to Supabase Storage
-      console.log('🔄 Starting video upload for:', file.name);
       const videoUrl = await uploadProductVideo(file);
-      console.log('✅ Video upload completed, URL:', videoUrl);
       
-      // Complete progress
       clearInterval(progressInterval);
       setUploadProgress(prev => ({ ...prev, [progressKey]: 100 }));
 
-      // Add to videos array
       const newVideos = [...videos, videoUrl];
       onVideosChange?.(newVideos);
-      console.log('📝 Updated videos array:', newVideos);
 
-      // Clean up progress tracking
       setTimeout(() => {
         setUploadProgress(prev => {
           const { [progressKey]: _, ...rest } = prev;
@@ -220,22 +117,98 @@ export function EnhancedMediaUpload({
     } finally {
       setIsUploading(false);
     }
-  };
+  }, [videos, onVideosChange]);
+
+  const handleImageFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    console.log('📁 Selected files:', files.map(f => ({ name: f.name, size: f.size, type: f.type })));
+
+    if (images.length + files.length > maxImages) {
+      alert(`You can only upload up to ${maxImages} images.`);
+      return;
+    }
+
+    for (const file of files) {
+      console.log('🔄 Processing file:', file.name, file.type, file.size);
+
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        alert(`File ${file.name} is not a valid image type. Supported types: JPEG, PNG, GIF, WebP`);
+        continue;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+        continue;
+      }
+
+      if (enableCropping) {
+        console.log('✂️ Opening crop dialog for:', file.name);
+        const url = URL.createObjectURL(file);
+        setCropImage({ file, url });
+        break; // Handle one file at a time when cropping
+      } else {
+        console.log('⬆️ Uploading file directly:', file.name);
+        await uploadImageFile(file);
+      }
+    }
+
+    // Clear the input
+    e.target.value = '';
+  }, [images, maxImages, enableCropping, uploadImageFile]);
+
+  const handleVideoFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    if (videos.length + files.length > maxVideos) {
+      alert(`You can only upload up to ${maxVideos} videos.`);
+      return;
+    }
+
+    for (const file of files) {
+      if (file.size > 100 * 1024 * 1024) {
+        alert(`File ${file.name} is too large. Maximum size is 100MB.`);
+        continue;
+      }
+
+      await uploadVideoFile(file);
+    }
+
+    e.target.value = '';
+  }, [videos, maxVideos, uploadVideoFile]);
 
   const handleCropComplete = async (croppedFile: File) => {
-    await uploadImageFile(croppedFile);
-    setCropImage(null);
+    try {
+      if (cropImage?.index !== undefined) {
+        // Replace existing image
+        const imageUrl = await uploadProductImage(croppedFile);
+        const newImages = [...images];
+        newImages[cropImage.index] = imageUrl;
+        onImagesChange(newImages);
+      } else {
+        // Upload new image
+        await uploadImageFile(croppedFile);
+      }
+    } catch (error) {
+      console.error('Error handling crop:', error);
+      alert('Failed to process cropped image');
+    } finally {
+      setCropImage(null);
+    }
   };
+
+  const handleEditImage = useCallback((imageUrl: string, index: number) => {
+    console.log('✂️ Opening standalone crop for image:', imageUrl, 'at index:', index);
+    setCropImage({ file: null, url: imageUrl, index });
+  }, []);
 
   const removeImage = useCallback((index: number) => {
     const newImages = images.filter((_, i) => i !== index);
     onImagesChange(newImages);
   }, [images, onImagesChange]);
-
-  const removeVideo = useCallback((index: number) => {
-    const newVideos = videos.filter((_, i) => i !== index);
-    onVideosChange?.(newVideos);
-  }, [videos, onVideosChange]);
 
   const moveImage = useCallback((fromIndex: number, toIndex: number) => {
     const newImages = [...images];
@@ -244,16 +217,21 @@ export function EnhancedMediaUpload({
     onImagesChange(newImages);
   }, [images, onImagesChange]);
 
+  const removeVideo = useCallback((index: number) => {
+    const newVideos = videos.filter((_, i) => i !== index);
+    onVideosChange?.(newVideos);
+  }, [videos, onVideosChange]);
+
   const generateVideoThumbnail = (videoUrl: string): string => {
-    // For now, return a placeholder. In a real implementation, you'd generate a thumbnail
+    // For now, return a placeholder. In the future, this could generate actual thumbnails
     return '/placeholder-video-thumbnail.jpg';
   };
 
   return (
     <div className="space-y-6">
-      {/* Images Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      {/* Image Upload Section */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
           <Label>Product Images ({images.length}/{maxImages})</Label>
           {images.length < maxImages && (
             <Button
@@ -279,36 +257,12 @@ export function EnhancedMediaUpload({
           disabled={disabled || isUploading}
         />
 
-        {/* Upload Progress */}
-        {Object.keys(uploadProgress).length > 0 && (
-          <div className="space-y-2">
-            {Object.entries(uploadProgress).map(([key, progress]) => (
-              <div key={key} className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="flex items-center">
-                    <Upload className="h-4 w-4 mr-1" />
-                    Uploading...
-                  </span>
-                  <span>{progress}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Image Grid */}
         {images.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {images.map((image, index) => (
               <div
                 key={index}
-                className="relative group aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden border-2 border-dashed border-slate-300 dark:border-slate-600"
+                className="group relative aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden border-2 border-slate-300 dark:border-slate-600"
               >
                 <Image
                   src={image}
@@ -317,37 +271,44 @@ export function EnhancedMediaUpload({
                   className="object-cover"
                 />
                 
-                {/* Primary Badge */}
-                {index === 0 && (
-                  <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                    Primary
-                  </div>
-                )}
-
-                {/* Remove Button */}
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => removeImage(index)}
-                  disabled={disabled}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
+                {/* Control Buttons */}
+                <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {enableCropping && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => handleEditImage(image, index)}
+                      disabled={disabled}
+                    >
+                      <Crop className="h-3 w-3" />
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => removeImage(index)}
+                    disabled={disabled}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
 
                 {/* Move Buttons */}
-                <div className="absolute bottom-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute left-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {index > 0 && (
                     <Button
                       type="button"
                       variant="secondary"
                       size="sm"
-                      className="h-6 w-6 p-0 text-xs"
+                      className="h-6 w-6 p-0"
                       onClick={() => moveImage(index, index - 1)}
                       disabled={disabled}
                     >
-                      ←
+                      <span className="rotate-90">←</span>
                     </Button>
                   )}
                   {index < images.length - 1 && (
@@ -355,18 +316,25 @@ export function EnhancedMediaUpload({
                       type="button"
                       variant="secondary"
                       size="sm"
-                      className="h-6 w-6 p-0 text-xs"
+                      className="h-6 w-6 p-0"
                       onClick={() => moveImage(index, index + 1)}
                       disabled={disabled}
                     >
-                      →
+                      <span className="rotate-90">→</span>
                     </Button>
                   )}
                 </div>
 
+                {/* Primary Badge */}
+                {index === 0 && (
+                  <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                    Primary
+                  </div>
+                )}
+
                 {/* Image Index */}
                 <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-1 rounded">
-                  {index + 1}
+                  Image {index + 1}
                 </div>
               </div>
             ))}
@@ -385,12 +353,25 @@ export function EnhancedMediaUpload({
             </p>
           </div>
         )}
+
+        {/* Upload Progress Indicators */}
+        {Object.entries(uploadProgress).map(([key, progress]) => (
+          <div key={key} className="mt-2">
+            <div className="text-sm text-slate-600 mb-1">{key.split('-')[0]}</div>
+            <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-blue-500 h-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Videos Section */}
+      {/* Video Upload Section */}
       {onVideosChange && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
+        <div>
+          <div className="flex justify-between items-center mb-4">
             <Label>Product Videos ({videos.length}/{maxVideos})</Label>
             {videos.length < maxVideos && (
               <Button
@@ -416,7 +397,6 @@ export function EnhancedMediaUpload({
             disabled={disabled || isUploading}
           />
 
-          {/* Video Grid */}
           {videos.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {videos.map((video, index) => (
@@ -484,21 +464,11 @@ export function EnhancedMediaUpload({
 
       {/* Image Cropping Dialog */}
       {cropImage && (
-        <Dialog open={!!cropImage} onOpenChange={() => setCropImage(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Crop className="w-5 h-5" />
-                Crop Image
-              </DialogTitle>
-            </DialogHeader>
-            <ImageCropper
-              imageUrl={cropImage.url}
-              onCropComplete={handleCropComplete}
-              onCancel={() => setCropImage(null)}
-            />
-          </DialogContent>
-        </Dialog>
+        <ImageCropper
+          imageUrl={cropImage.url}
+          onCropComplete={handleCropComplete}
+          onCancel={() => setCropImage(null)}
+        />
       )}
 
       {/* Video Preview Dialog */}
@@ -509,8 +479,8 @@ export function EnhancedMediaUpload({
               <DialogTitle>Video Preview</DialogTitle>
             </DialogHeader>
             <VideoPlayer
-              src={previewVideo}
-              controls
+              videoUrl={previewVideo}
+              showControls={true}
               autoPlay={false}
               className="w-full aspect-video"
             />
@@ -520,7 +490,7 @@ export function EnhancedMediaUpload({
 
       <p className="text-xs text-muted-foreground">
         The first image will be used as the primary product image. You can reorder images using the arrow buttons.
-        {enableCropping && " Images can be cropped before upload."}
+        {enableCropping && " Images can be cropped before upload or edited later using the crop button."}
       </p>
     </div>
   );

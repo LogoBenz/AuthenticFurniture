@@ -8,6 +8,7 @@ export interface Product {
   features: string[];
   images: string[];
   imageUrl: string; // Keep for backward compatibility - will be first image
+  videos?: string[]; // Optional videos array
   inStock: boolean;
   isFeatured: boolean;
   // New fields for promo and best seller functionality

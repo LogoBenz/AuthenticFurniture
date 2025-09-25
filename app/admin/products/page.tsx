@@ -217,7 +217,7 @@ export default function AdminProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate price format
     const priceValue = parseFloat(formData.price);
     if (isNaN(priceValue) || priceValue < 0) {
@@ -231,13 +231,7 @@ export default function AdminProductsPage() {
       return;
     }
 
-    // Determine the final category (legacy flat category retained for now)
-    let finalCategory = formData.category;
-    if (formData.category === "custom" && customCategory.trim()) {
-      finalCategory = customCategory.trim();
-    }
-
-    // Enforce Space → Subspace selection
+    // Validate Space and Subspace
     if (!formData.space_id) {
       alert("Please select a Space.");
       return;
@@ -246,7 +240,18 @@ export default function AdminProductsPage() {
       alert("Please select a Subcategory.");
       return;
     }
-    
+
+    // Validate Initial Stock and Warehouse
+    const qty = parseInt(initialStock);
+    if (isNaN(qty) || qty < 0) {
+      alert("Please enter a valid initial stock quantity.");
+      return;
+    }
+    if (!selectedWarehouseId) {
+      alert("Please select a Warehouse.");
+      return;
+    }
+
     // Parse bulk pricing tiers
     let bulkPricingTiers = undefined;
     if (formData.bulk_pricing_tiers.trim()) {
@@ -273,17 +278,6 @@ export default function AdminProductsPage() {
       end_date: formData.limited_time_deal_end_date,
       discount_percent: Number(formData.limited_time_deal_discount_percent) || 0
     } : undefined;
-
-    // Generate a robust slug
-    const generateSlug = (name: string) => {
-      return name
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
-        .replace(/\s+/g, '-') // Replace spaces with hyphens
-        .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-        .replace(/(^-|-$)/g, ''); // Remove leading/trailing hyphens
-    };
 
     const productData = {
       name: formData.name,
@@ -330,33 +324,17 @@ export default function AdminProductsPage() {
       
       if (editingProduct) {
         console.log('🔄 Updating product:', editingProduct.id);
-        
-        // Prefer ID; if missing/invalid, resolve via slug
-        let targetId: string | number | null = editingProduct.id as any;
-        const idInvalid = !targetId || (typeof targetId === 'string' && targetId.trim() === '') || (typeof targetId === 'number' && !Number.isFinite(targetId));
-        if (idInvalid) {
-          console.warn('⚠️ Missing/invalid product ID. Attempting lookup by slug:', editingProduct.slug);
-          const bySlug = await getProductBySlug(editingProduct.slug);
-          if (!bySlug || !bySlug.id) {
-            throw new Error('Could not resolve product ID by slug.');
-          }
-          targetId = bySlug.id as any;
-          console.log('✅ Resolved ID via slug:', targetId);
-        }
-
-        const updated = await updateProduct(targetId as any, productData);
+        const updated = await updateProduct(editingProduct.id, productData);
         
         if (updated) {
-          // Optional: upsert initial stock if provided
-          const qty = parseInt(initialStock);
-          if (!isNaN(qty) && selectedWarehouseId && (updated as any).id) {
-            try {
-              await fetch('/api/inventory/upsert', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ entries: [{ warehouse_id: selectedWarehouseId, product_id: (updated as any).id, stock_count: qty }] })
-              });
-            } catch (e) { console.warn('Stock upsert failed', e); }
+          try {
+            await fetch('/api/inventory/upsert', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ entries: [{ warehouse_id: selectedWarehouseId, product_id: updated.id, stock_count: qty }] })
+            });
+          } catch (e) {
+            console.warn('Stock upsert failed', e);
           }
           setProducts(products.map(p => p.id === editingProduct.id ? updated : p));
           alert('Product updated successfully!');
@@ -369,18 +347,16 @@ export default function AdminProductsPage() {
         console.log('🔄 Creating new product');
         const created = await createProduct(productData);
         if (created) {
-          setProducts([created, ...products]);
-          // Optional: upsert initial stock if provided
-          const qty = parseInt(initialStock);
-          if (!isNaN(qty) && selectedWarehouseId) {
-            try {
-              await fetch('/api/inventory/upsert', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ entries: [{ warehouse_id: selectedWarehouseId, product_id: (created as any).id, stock_count: qty }] })
-              });
-            } catch (e) { console.warn('Stock upsert failed', e); }
+          try {
+            await fetch('/api/inventory/upsert', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ entries: [{ warehouse_id: selectedWarehouseId, product_id: created.id, stock_count: qty }] })
+            });
+          } catch (e) {
+            console.warn('Stock upsert failed', e);
           }
+          setProducts([created, ...products]);
           alert('Product created successfully!');
           setIsDialogOpen(false);
           resetForm();
@@ -393,16 +369,8 @@ export default function AdminProductsPage() {
       const updatedCategories = await getProductCategories();
       setCategories(updatedCategories);
     } catch (error) {
-      let errorMessage = 'Unknown error occurred';
-      
-      if (error && typeof error === 'object' && 'message' in error) {
-        errorMessage = String(error.message);
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
-      console.error('❌ Product save error:', error);
-      alert(`Error saving product: ${errorMessage}`);
+      console.error('Error submitting product:', error);
+      alert('An error occurred while saving the product. Please try again.');
     } finally {
       setSavingId(null);
     }
@@ -440,6 +408,22 @@ export default function AdminProductsPage() {
       resetForm();
     }
   };
+
+  // Define generateSlug function
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .replace(/(^-|-$)/g, ''); // Remove leading/trailing hyphens
+  };
+
+  // Define finalCategory
+  const finalCategory = formData.category === "custom" && customCategory.trim()
+    ? customCategory.trim()
+    : formData.category;
 
   if (loading) return (
     <div className="text-center">Loading products...</div>

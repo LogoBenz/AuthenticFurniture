@@ -37,16 +37,10 @@ export function ImageCropper({
   }, []);
 
   const handleCrop = useCallback(async () => {
-    if (!croppedAreaPixels) {
-      console.error('No cropped area available');
-      return;
-    }
+    if (!croppedAreaPixels) return;
 
     try {
-      console.log('🔄 Starting crop process for:', imageUrl);
       const image = await createImage(imageUrl);
-      console.log('✅ Image loaded, dimensions:', image.width, 'x', image.height);
-
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('No 2d context');
@@ -55,13 +49,9 @@ export function ImageCropper({
       canvas.width = croppedAreaPixels.width;
       canvas.height = croppedAreaPixels.height;
 
-      console.log('📐 Canvas size:', canvas.width, 'x', canvas.height);
-      console.log('🔄 Crop area:', croppedAreaPixels);
-      console.log('🔄 Transform: zoom=', zoom, 'rotation=', rotation);
-
       // Move the origin to the center of the canvas
       ctx.translate(canvas.width / 2, canvas.height / 2);
-
+      
       // Rotate the canvas if needed
       if (rotation) {
         ctx.rotate((rotation * Math.PI) / 180);
@@ -70,7 +60,7 @@ export function ImageCropper({
       // Draw the cropped image
       ctx.scale(1/zoom, 1/zoom);
       ctx.translate(
-        -croppedAreaPixels.x - croppedAreaPixels.width / 2,
+        -croppedAreaPixels.x - croppedAreaPixels.width / 2, 
         -croppedAreaPixels.y - croppedAreaPixels.height / 2
       );
       ctx.drawImage(image, 0, 0);
@@ -79,12 +69,8 @@ export function ImageCropper({
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(
           (blob) => {
-            if (blob) {
-              console.log('✅ Canvas converted to blob, size:', blob.size);
-              resolve(blob);
-            } else {
-              reject(new Error('Canvas to Blob conversion failed'));
-            }
+            if (blob) resolve(blob);
+            else reject(new Error('Canvas to Blob conversion failed'));
           },
           'image/jpeg',
           0.9
@@ -94,11 +80,9 @@ export function ImageCropper({
       // Create a File from the blob
       const fileName = imageUrl.split('/').pop() || 'cropped-image.jpg';
       const croppedFile = new File([blob], fileName, { type: 'image/jpeg' });
-      console.log('✅ Cropped file created:', croppedFile.name, croppedFile.size);
       onCropComplete(croppedFile);
     } catch (error) {
-      console.error('❌ Error cropping image:', error);
-      alert(`Error cropping image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error cropping image:', error);
     }
   }, [croppedAreaPixels, imageUrl, rotation, zoom, onCropComplete]);
 

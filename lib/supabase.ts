@@ -38,7 +38,7 @@ function createDummyClient() {
     from: () => builder(dummyResponse),
     storage: {
       from: () => ({
-        upload: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+        upload: () => Promise.resolve({ data: null, error: new Error('Supabase not configured - check your environment variables') }),
         getPublicUrl: () => ({ data: { publicUrl: '' } })
       })
     },
@@ -107,6 +107,7 @@ if (!isValidSupabaseConfig()) {
   supabaseClient = createDummyClient();
 } else {
   try {
+    console.log('🔧 Creating Supabase client with URL:', supabaseUrl);
     // Use non-persistent, non-refreshing auth to avoid background retryable
     // auth fetches in anonymous sessions which can spam the console with
     // AuthRetryableFetchError when environments are misconfigured.
@@ -123,8 +124,9 @@ if (!isValidSupabaseConfig()) {
         fetch: createEnhancedFetch()
       }
     });
+    console.log('✅ Supabase client created successfully');
   } catch (error) {
-    console.warn('Failed to create Supabase client:', error);
+    console.warn('❌ Failed to create Supabase client:', error);
     supabaseClient = createDummyClient();
   }
 }

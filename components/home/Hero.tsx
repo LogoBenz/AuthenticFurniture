@@ -7,17 +7,17 @@ import { motion } from "framer-motion";
 
 export function Hero() {
   return (
-    <section className="relative py-8 sm:py-12 lg:py-16 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <section className="relative pt-2 pb-8 sm:pb-12 lg:pb-16 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <div className="container mx-auto px-4">
         {/* Two-column layout: Large hero card on left, smaller cards on right */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
           
           {/* Large Hero Card - Left side */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="lg:col-span-2 relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-900 via-blue-700 to-blue-800 min-h-[400px] sm:min-h-[500px] lg:h-auto"
+            className="lg:col-span-3 relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-900 via-blue-700 to-blue-800 min-h-[400px] sm:min-h-[500px] lg:h-[520px]"
           >
             {/* Background Image */}
             <div className="absolute inset-0">
@@ -76,14 +76,14 @@ export function Hero() {
           </motion.div>
 
           {/* Right Column - Two smaller cards stacked */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className="lg:col-span-2 space-y-4">
             
             {/* Living Room Card - Top */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 aspect-[4/3]"
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 h-[260px]"
             >
               <div className="absolute inset-0">
                 <img
@@ -118,7 +118,7 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 aspect-[4/3]"
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 h-[260px]"
             >
               <div className="absolute inset-0">
                 <img
