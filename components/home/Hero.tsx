@@ -1,154 +1,98 @@
 "use client";
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ChevronRight, Sofa, Home, Briefcase } from "lucide-react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
+// Static images for right cards
+const mainHeroImages = [
+  "promoHero/gamingChairsHero.png",
+  "promoHero/newOfficeC.png"
+];
+
+const topRightImage = "promoHero/officeTableHero.png";
+const bottomRightImage = "promoHero/sideStudentC.png";
+
 export function Hero() {
+  // State for main hero slideshow only
+  const [mainCurrentImageIndex, setMainCurrentImageIndex] = useState(0);
+
+  // Auto-rotate main hero images only
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMainCurrentImageIndex((prev) => (prev + 1) % mainHeroImages.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <section className="relative pt-2 pb-8 sm:pb-12 lg:pb-16 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <div className="container mx-auto px-4">
-        {/* Two-column layout: Large hero card on left, smaller cards on right */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
-          
-          {/* Large Hero Card - Left side */}
-          <motion.div 
+        {/* Layout with exact pixel dimensions */}
+        <div className="flex flex-col lg:flex-row gap-6 max-w-none mx-auto">
+
+          {/* Left Main Card - 883 x 500 px */}
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="lg:col-span-3 relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-900 via-blue-700 to-blue-800 min-h-[400px] sm:min-h-[500px] lg:h-[520px]"
+            className="relative overflow-hidden rounded-lg w-[883px] h-[500px]"
           >
-            {/* Background Image */}
+            {/* Background Image Slideshow */}
             <div className="absolute inset-0">
               <img
-                src="https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=900&q=80"
+                src={mainHeroImages[mainCurrentImageIndex]}
                 alt="Modern Nigerian Living Room Furniture"
-                className="w-full h-full object-cover object-center opacity-70"
+                className="w-full h-full object-cover object-center transition-opacity duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/60"></div>
             </div>
-            
-            {/* Content */}
-            <div className="relative p-6 sm:p-8 lg:p-12 flex flex-col justify-between h-full">
-              <div className="text-white">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <Sofa className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-blue-200 font-semibold text-sm">Living Room</span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 leading-tight">
-                  Authentic Furniture for Nigerian Homes
-                </h1>
-                <p className="text-blue-100 text-base sm:text-lg mb-6 lg:mb-8 max-w-md">
-                  Discover sofas, sectionals, and lounge sets designed for comfort, style, and durability—perfect for your home and family gatherings.
-                </p>
-                <Button 
-                  asChild
-                  size="lg" 
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6 sm:px-8 shadow-xl hover:shadow-2xl transition-all duration-300 w-full sm:w-auto"
-                >
-                  <Link href="/products?category=living-room">
-                    Shop Living Room
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-              
-              {/* Product Image Overlay - Bottom left */}
-              <div className="relative lg:ml-8 hidden lg:block">
-                <img
-                  src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80"
-                  alt="Sofa Set"
-                  className="w-64 h-48 lg:w-80 lg:h-60 object-cover rounded-xl border-4 border-white/20 shadow-lg"
+
+            {/* Dot Counter - Bottom Left Corner */}
+            <div className="absolute bottom-6 left-4 flex items-center gap-2">
+              {mainHeroImages.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === mainCurrentImageIndex
+                      ? 'bg-white shadow-lg'
+                      : 'bg-white/40'
+                  }`}
                 />
-              </div>
-            </div>
-            
-            {/* Brand/Tagline */}
-            <div className="absolute bottom-4 left-4 flex items-center gap-2">
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                <span className="text-blue-900 font-bold text-sm">AF</span>
-              </div>
-              <span className="text-white font-bold text-sm hidden sm:inline">AFRIFURNITURE</span>
+              ))}
             </div>
           </motion.div>
 
-          {/* Right Column - Two smaller cards stacked */}
-          <div className="lg:col-span-2 space-y-4">
-            
-            {/* Living Room Card - Top */}
-            <motion.div 
+          {/* Right Column - Two cards: 429 x 240 px each */}
+          <div className="flex flex-col gap-4 w-[429px]">
+            {/* Top Right Card - 429 x 240 px */}
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 h-[260px]"
+              className="relative overflow-hidden rounded-lg w-[429px] h-[240px]"
             >
-              <div className="absolute inset-0">
-                <img
-                  src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=600&q=80"
-                  alt="Living Room Furniture"
-                  className="w-full h-full object-cover object-center opacity-60"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-              </div>
-              <div className="relative p-4 h-full flex flex-col justify-between">
-                <div className="text-center">
-                  <div className="w-8 h-8 bg-blue-500/20 rounded-full mx-auto mb-2 flex items-center justify-center">
-                    <Sofa className="w-4 h-4 text-blue-400" />
-                  </div>
-                  <h3 className="text-white font-semibold text-sm mb-1">Living Room</h3>
-                  <p className="text-blue-100 text-xs">Comfortable sofas, coffee tables & entertainment units</p>
-                </div>
-                <Button 
-                  asChild
-                  size="sm" 
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-full text-xs"
-                >
-                  <Link href="/products?category=living-room">
-                    Shop Living Room
-                  </Link>
-                </Button>
-              </div>
+              <img
+                src={topRightImage}
+                alt="Office Furniture"
+                className="w-full h-full object-cover object-center"
+              />
+              {/* Ready for your GIF - just replace the img src with: */}
+              {/* "promoHero/your-animation.gif" when you upload it */}
             </motion.div>
 
-            {/* Home Office Card - Bottom */}
-            <motion.div 
+            {/* Bottom Right Card - 429 x 240 px */}
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 h-[260px]"
+              className="relative overflow-hidden rounded-lg w-[429px] h-[240px]"
             >
-              <div className="absolute inset-0">
-                <img
-                  src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=600&q=80"
-                  alt="Home Office Furniture"
-                  className="w-full h-full object-cover object-center opacity-60"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-              </div>
-              <div className="relative p-4 h-full flex flex-col justify-between">
-                <div className="text-center">
-                  <div className="w-8 h-8 bg-blue-500/20 rounded-full mx-auto mb-2 flex items-center justify-center">
-                    <Briefcase className="w-4 h-4 text-blue-400" />
-                  </div>
-                  <h3 className="text-white font-semibold text-sm mb-1">Home Office</h3>
-                  <p className="text-blue-100 text-xs">Desks, chairs & storage for productive workspaces</p>
-                </div>
-                <Button 
-                  asChild
-                  size="sm" 
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-full text-xs"
-                >
-                  <Link href="/products?category=office">
-                    Shop Office
-                  </Link>
-                </Button>
-              </div>
+              <img
+                src={bottomRightImage}
+                alt="Student Furniture"
+                className="w-full h-full object-cover object-center"
+              />
             </motion.div>
-
-
           </div>
         </div>
       </div>

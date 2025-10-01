@@ -19,6 +19,7 @@ interface ProductCardProps {
   const originalPrice = product.original_price || product.price;
   const discountPercent = product.discount_percent || 0;
   const currentPrice = discountPercent > 0 ? originalPrice * (1 - discountPercent / 100) : originalPrice;
+  const savingsAmount = discountPercent > 0 ? originalPrice - currentPrice : 0;
   
   const imageUrl = product.imageUrl || product.images?.[0] || "/placeholder-product.jpg";
   
@@ -52,11 +53,11 @@ interface ProductCardProps {
 
   return (
     <div 
-      className="bg-white rounded-2xl border-2 border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer overflow-hidden relative"
+      className="bg-white rounded-2xl border-2 border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer overflow-hidden relative flex flex-col h-full min-w-[300px] w-full"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link href={`/products/${product.slug}`} className="block">
+      <Link href={`/products/${product.slug}`} className="block flex flex-col h-full">
         {/* Image Container */}
         <div className="relative overflow-hidden aspect-square bg-slate-50">
           <Image
@@ -138,38 +139,30 @@ interface ProductCardProps {
         </div>
 
         {/* Product Info */}
-        <div className="p-4 space-y-2">
-          {/* Product Name & ID */}
-          <div>
+        <div className="p-4 flex flex-col">
+          {/* Product Name */}
+          <div className="mb-3">
             <h3 className="font-semibold text-slate-900 text-sm line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
               {product.name}
             </h3>
-            {product.modelNo && (
-              <p className="text-xs text-slate-500 mt-1">#{product.modelNo}</p>
-            )}
           </div>
 
-          {/* Product Tags */}
-          {product.popular_with && product.popular_with.length > 0 && (
-            <div className="mt-2">
-              <div className="inline-flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded-full px-2 py-1">
-                <span className="text-yellow-600 text-xs">🔥</span>
-                <span className="text-xs font-medium text-gray-700">
-                  {product.popular_with[0]}
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* Pricing */}
-          <div className="flex items-center space-x-2">
-            <span className="text-lg font-bold text-slate-900">
-              {formatPrice(currentPrice)}
-            </span>
-            {discountPercent > 0 && (
-              <span className="text-slate-500 line-through text-sm">
-                {formatPrice(originalPrice)}
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="text-lg font-bold text-slate-900">
+                {formatPrice(currentPrice)}
               </span>
+              {discountPercent > 0 && (
+                <span className="text-slate-500 line-through text-sm">
+                  {formatPrice(originalPrice)}
+                </span>
+              )}
+            </div>
+            {discountPercent > 0 && (
+              <div className="text-green-600 text-sm font-medium mt-1">
+                You save {formatPrice(originalPrice - currentPrice)}
+              </div>
             )}
           </div>
         </div>

@@ -91,6 +91,11 @@ function mapSupabaseRowToProduct(row: any): Product {
     modelNo: String(row.model_no || ''),
     warehouseLocation: String(row.warehouse_location || ''),
     dimensions: String(row.dimensions || ''),
+    // Space and subcategory data from joins
+    space_id: row.space_id || undefined,
+    subcategory_id: row.subcategory_id || undefined,
+    space: row.space || undefined,
+    subcategory: row.subcategory || undefined,
     // Enhanced product view page fields
     discount_enabled: Boolean(row.discount_enabled),
     bulk_pricing_enabled: Boolean(row.bulk_pricing_enabled),
@@ -203,17 +208,21 @@ export async function debugDatabaseState(): Promise<void> {
 
 export async function getAllProducts(): Promise<Product[]> {
   console.log('🔍 getAllProducts: Checking Supabase config...');
-  
+
   if (!isSupabaseConfigured()) {
     console.log('⚠️ getAllProducts: Supabase not configured, using fallback data');
     return fallbackProducts;
   }
 
   try {
-    console.log('🔍 getAllProducts: Querying Supabase...');
+    console.log('🔍 getAllProducts: Querying Supabase with space/subcategory joins...');
     const { data, error } = await supabase
       .from('products')
-      .select('*')
+      .select(`
+        *,
+        space:spaces(*),
+        subcategory:subcategories(*)
+      `)
       .order('created_at', { ascending: false });
 
     console.log('📊 getAllProducts: Supabase query result:', { data, error });
@@ -374,7 +383,7 @@ export async function getPromoProducts(): Promise<any[]> {
 
 export async function getBestSellers(): Promise<any[]> {
   console.log('🔍 Fetching best sellers...');
-  
+
   if (!isSupabaseConfigured()) {
     console.log('⚠️ Supabase not configured, using fallback data');
     return fallbackProducts.slice(0, 8).map((p, i) => ({
@@ -391,26 +400,133 @@ export async function getBestSellers(): Promise<any[]> {
       .select('*')
       .eq('is_best_seller', true)
       .order('created_at', { ascending: false });
-    
+
     console.log('📊 Best sellers query result:', { data, error });
-    
+
     if (error) {
       console.error('❌ Error fetching best sellers:', error);
       return [];
     }
-    
+
     const mappedProducts = (data || []).map(mapSupabaseRowToProduct).map((p: any) => ({
       ...p,
       original_price: Number((p as any).original_price ?? p.price),
       discount_percent: Number((p as any).discount_percent ?? 0)
     }));
-    
+
     console.log('✅ Mapped best sellers:', mappedProducts);
     return mappedProducts;
   } catch (error) {
     console.error('❌ Exception in getBestSellers:', error);
     return [];
   }
+}
+
+export async function getFeaturedDeals(): Promise<Product[]> {
+  console.log('🔍 Fetching featured deals...');
+
+  if (!isSupabaseConfigured()) {
+    console.log('⚠️ Supabase not configured, using fallback promo products');
+    // Return first 6 promo products as fallback with stock data
+    return fallbackProducts
+      .filter(() => Math.random() > 0.3) // Randomly select some products
+      .slice(0, 6)
+      .map((p, index) => ({
+        ...p,
+        original_price: p.price,
+        discount_percent: Math.floor(Math.random() * 30) + 5, // 5-35% discount
+        // Add stock data for the stock counter
+        stock_count: Math.floor(Math.random() * 100) + 20, // 20-120 stock
+        sold_count: Math.floor(Math.random() * 80) + 10,  // 10-90 sold
+        // Add badges for big cards
+        badges: index < 2 ? ['Selling Fast'] : undefined,
+      }));
+  }
+
+  try {
+    // First, try to get products specifically marked as featured deals
+    const { data: featuredData, error: featuredError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_featured_deal', true)
+      .order('deal_priority', { ascending: false })
+      .order('deal_position', { ascending: true });
+
+    console.log('📊 Featured deals query result:', { data: featuredData, error: featuredError });
+
+    if (featuredError) {
+      console.error('❌ Error fetching featured deals:', featuredError);
+      // Fall back to regular promo products
+      return await getPromoProductsWithStockData();
+    }
+
+    let products: Product[] = [];
+
+    if (featuredData && featuredData.length > 0) {
+      // Map featured deals and add stock data
+      products = featuredData.map(row => {
+        const product = mapSupabaseRowToProduct(row);
+        // Add stock data if not present
+        return {
+          ...product,
+          stock_count: (product as any).stock_count || Math.floor(Math.random() * 100) + 20,
+          sold_count: (product as any).sold_count || Math.floor(Math.random() * 80) + 10,
+          // Add "Selling Fast" badge to first 2 products (big cards)
+          badges: featuredData.indexOf(row) < 2 ? ['Selling Fast'] : (product as any).badges,
+        };
+      });
+    }
+
+    // If we don't have enough featured deals (need 6 total), fill with promo products
+    if (products.length < 6) {
+      console.log('📝 Not enough featured deals, filling with promo products...');
+      const promoProducts = await getPromoProductsWithStockData();
+
+      // Add promo products to fill up to 6 total
+      const remainingSlots = 6 - products.length;
+      const additionalProducts = promoProducts
+        .filter(p => !products.find(existing => existing.id === p.id)) // Avoid duplicates
+        .slice(0, remainingSlots);
+
+      products = [...products, ...additionalProducts];
+    }
+
+    // Ensure we return exactly 6 products
+    const finalProducts = products.slice(0, 6);
+
+    console.log('✅ Returning featured deals:', finalProducts.length, 'products');
+    return finalProducts;
+
+  } catch (error) {
+    console.error('❌ Exception in getFeaturedDeals:', error);
+    // Fall back to promo products
+    return await getPromoProductsWithStockData();
+  }
+}
+
+// Helper function to get promo products with badges
+async function getPromoProductsWithBadges(): Promise<Product[]> {
+  const promoProducts = await getPromoProducts();
+
+  return promoProducts.map((p: any, index: number) => ({
+    ...p,
+    // Add "Selling Fast" badge to first 2 products
+    badges: index < 2 ? ['Selling Fast'] : undefined,
+  }));
+}
+
+// Helper function to get promo products with stock data
+async function getPromoProductsWithStockData(): Promise<Product[]> {
+  const promoProducts = await getPromoProducts();
+
+  return promoProducts.map((p: any, index: number) => ({
+    ...p,
+    // Add stock data for the stock counter
+    stock_count: Math.floor(Math.random() * 100) + 20, // 20-120 stock
+    sold_count: Math.floor(Math.random() * 80) + 10,  // 10-90 sold
+    // Add "Selling Fast" badge to first 2 products (big cards)
+    badges: index < 2 ? ['Selling Fast'] : undefined,
+  }));
 }
 
 export async function getProductCategories(): Promise<string[]> {
@@ -758,3 +874,112 @@ export async function deleteProduct(id: string | number): Promise<boolean> {
 
 // Import upload functions from uploadMedia module
 export { uploadProductImage, uploadProductVideo } from './uploadMedia';
+
+// Enhanced getAllProducts with filtering support
+export async function getFilteredProducts(searchParams?: URLSearchParams): Promise<Product[]> {
+  console.log('🔍 getFilteredProducts: Checking Supabase config...');
+
+  if (!isSupabaseConfigured()) {
+    console.log('⚠️ getFilteredProducts: Supabase not configured, using fallback data');
+    return fallbackProducts;
+  }
+
+  try {
+    console.log('🔍 getFilteredProducts: Querying Supabase with space/subcategory joins...');
+    let query = supabase
+      .from('products')
+      .select(`
+        *,
+        space:spaces(*),
+        subcategory:subcategories(*)
+      `)
+      .eq('is_active', true);
+
+    // Apply filters from search params
+    if (searchParams) {
+      // Sort by
+      const sortBy = searchParams.get('sort');
+      switch (sortBy) {
+        case 'newest':
+          query = query.order('created_at', { ascending: false });
+          break;
+        case 'oldest':
+          query = query.order('created_at', { ascending: true });
+          break;
+        case 'price_low':
+          query = query.order('price', { ascending: true });
+          break;
+        case 'price_high':
+          query = query.order('price', { ascending: false });
+          break;
+        case 'name_asc':
+          query = query.order('name', { ascending: true });
+          break;
+        case 'name_desc':
+          query = query.order('name', { ascending: false });
+          break;
+        default:
+          query = query.order('created_at', { ascending: false });
+      }
+
+      // Price range
+      const minPrice = searchParams.get('minPrice');
+      const maxPrice = searchParams.get('maxPrice');
+      if (minPrice) {
+        query = query.gte('price', parseFloat(minPrice));
+      }
+      if (maxPrice) {
+        query = query.lte('price', parseFloat(maxPrice));
+      }
+
+      // Space filter
+      const space = searchParams.get('space');
+      if (space) {
+        query = query.eq('space_id', space);
+      }
+
+      // Subcategory filter
+      const subcategory = searchParams.get('subcategory');
+      if (subcategory) {
+        query = query.eq('subcategory_id', subcategory);
+      }
+
+      // Availability filter
+      const availability = searchParams.get('availability');
+      if (availability) {
+        const availArray = availability.split(',');
+        if (availArray.includes('in_stock')) {
+          query = query.eq('in_stock', true);
+        }
+        if (availArray.includes('out_of_stock')) {
+          query = query.eq('in_stock', false);
+        }
+      }
+    } else {
+      query = query.order('created_at', { ascending: false });
+    }
+
+    const { data, error } = await query;
+
+    console.log('📊 getFilteredProducts: Supabase query result:', { data, error });
+
+    if (error && shouldUseFallback(error)) {
+      console.warn('Using fallback data due to Supabase connection issue:', error.message);
+      return fallbackProducts;
+    }
+
+    if (error) {
+      console.warn('❌ getFilteredProducts: Supabase error:', error);
+      // Don't throw error, just return fallback data
+      return fallbackProducts;
+    }
+
+    const products = data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : fallbackProducts;
+    console.log('✅ getFilteredProducts: Returning', products.length, 'products');
+    return products;
+  } catch (error) {
+    console.warn('❌ getFilteredProducts: Caught error:', error);
+    // Don't throw error, just return fallback data
+    return fallbackProducts;
+  }
+}

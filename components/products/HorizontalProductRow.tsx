@@ -31,11 +31,14 @@ export function HorizontalProductRow({ title, fetcher }: RowProps) {
   }, [fetcher]);
 
   return (
-    <section className="py-8 sm:py-10">
+    <section className="py-16 bg-slate-50 dark:bg-slate-900/50">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2 text-center">
+        <h2 className="text-3xl font-bold tracking-tight mb-2 text-center">
           {title}
         </h2>
+        <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
+          Discover our {title.toLowerCase()}, perfect for homes, offices, and commercial spaces.
+        </p>
         <div className="relative">
           <div className="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4">
             {loading && (
@@ -73,5 +76,3 @@ export function HorizontalProductRow({ title, fetcher }: RowProps) {
     </section>
   );
 }
-
-

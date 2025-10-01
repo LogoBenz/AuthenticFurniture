@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { getAllProducts, getProductCategories } from "@/lib/products";
+import { getFilteredProducts, getProductCategories } from "@/lib/products";
 import { ProductGrid } from "@/components/products/ProductGrid";
 import { ProductFilters } from "@/components/products/ProductFilters";
 import { EnquiryCartModal } from "@/components/products/EnquiryCartModal";
@@ -41,7 +41,7 @@ export default function ProductsPage() {
     const loadData = async () => {
       try {
         const [productsData, categoriesData, spacesData] = await Promise.all([
-          getAllProducts(),
+          getFilteredProducts(),
           getProductCategories(),
           getSpacesForNavigation()
         ]);
@@ -65,20 +65,20 @@ export default function ProductsPage() {
   // Enhanced filtering with proper search implementation
   const filteredProducts = useMemo(() => {
     let filtered = products;
-    
+
     // Apply search filter first if there's a search query
     if (searchQuery.trim()) {
       const searchTerm = searchQuery.toLowerCase().trim();
-      filtered = products.filter(product => 
+      filtered = products.filter(product =>
         product.name.toLowerCase().includes(searchTerm) ||
         product.category.toLowerCase().includes(searchTerm) ||
         product.description.toLowerCase().includes(searchTerm) ||
-        product.features.some(feature => 
+        product.features.some(feature =>
           feature.toLowerCase().includes(searchTerm)
         )
       );
     }
-    
+
     // Filter by Space and Subcategory (Space → Subspace enforcement)
     if (urlSpace) {
       filtered = filtered.filter(product => {
@@ -93,16 +93,16 @@ export default function ProductsPage() {
       });
     }
 
-    // Filter by category
+    // Filter by category (fallback to old category system if no space/subcategory)
     if (selectedCategory !== "all") {
       filtered = filtered.filter(product => product.category === selectedCategory);
     }
-    
+
     // Filter by availability
     if (showAvailableOnly) {
       filtered = filtered.filter(product => product.inStock);
     }
-    
+
     return filtered;
   }, [products, selectedCategory, searchQuery, showAvailableOnly, urlSpace, urlSubcategory]);
 
@@ -161,19 +161,21 @@ export default function ProductsPage() {
           </p>
         </div>
         
-        <div className="mb-6 sm:mb-8">
-          <ProductFilters
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            showAvailableOnly={showAvailableOnly}
-            onAvailableOnlyChange={setShowAvailableOnly}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6 sm:mb-8">
+          {/* Filters Sidebar */}
+          <div className="lg:col-span-1">
+            <ProductFilters
+              spaces={spaces}
+              totalProducts={filteredProducts.length}
+              isAdmin={false}
+            />
+          </div>
+
+          {/* Products Grid */}
+          <div className="lg:col-span-3">
+            <ProductGrid products={filteredProducts} />
+          </div>
         </div>
-        
-        <ProductGrid products={filteredProducts} />
         
         {/* Results Summary */}
         <div className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-muted-foreground">

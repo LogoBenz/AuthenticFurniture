@@ -27,17 +27,21 @@ interface EnhancedMediaUploadProps {
   maxVideos?: number;
   disabled?: boolean;
   enableCropping?: boolean;
+  existingImages?: string[];
+  onCropExisting?: (imageIndex: number) => Promise<void>;
 }
 
-export function EnhancedMediaUpload({ 
-  images, 
+export function EnhancedMediaUpload({
+  images,
   onImagesChange,
   videos = [],
   onVideosChange,
-  maxImages = 8, 
+  maxImages = 8,
   maxVideos = 3,
   disabled = false,
-  enableCropping = true
+  enableCropping = true,
+  existingImages,
+  onCropExisting
 }: EnhancedMediaUploadProps) {
   console.log('🔄 EnhancedMediaUpload rendered with images:', images, 'videos:', videos);
 
@@ -277,8 +281,7 @@ export function EnhancedMediaUpload({
           type="file"
           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
           multiple
-          onChange={handleImageFileSelect}
-          onChange={e => {
+          onChange={(e) => {
             console.log('Files:', e.target.files);
             handleImageFileSelect(e);
           }}
@@ -329,6 +332,29 @@ export function EnhancedMediaUpload({
                   <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
                     Primary
                   </div>
+                )}
+
+                {/* Crop Button */}
+                {enableCropping && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="absolute top-2 left-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      // For existing images, we need to handle cropping differently
+                      // This will be implemented by the parent component
+                      if (onCropExisting) {
+                        onCropExisting(index);
+                      } else {
+                        alert('Crop functionality for existing images needs to be implemented by the parent component.');
+                      }
+                    }}
+                    disabled={disabled}
+                    title="Crop this image"
+                  >
+                    <Crop className="h-3 w-3" />
+                  </Button>
                 )}
 
                 {/* Remove Button */}
@@ -501,8 +527,6 @@ export function EnhancedMediaUpload({
             </DialogHeader>
             <ImageCropper
               imageUrl={cropImage.url}
-              image={cropImage.url}
-              imageRef={cropImage.file}
               onCropComplete={handleCropComplete}
               onCancel={() => setCropImage(null)}
             />
@@ -534,3 +558,5 @@ export function EnhancedMediaUpload({
     </div>
   );
 }
+
+

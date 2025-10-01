@@ -123,17 +123,17 @@ export function Footer() {
             <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Get in Touch</h3>
             <div className="space-y-3">
               <div className="flex items-start text-sm text-slate-600 dark:text-slate-300">
-                <MapPin className="w-5 h-5 mr-3 text-yellow-500 flex-shrink-0 mt-0.5" />
+                <MapPin className="w-5 h-5 mr-3 text-slate-600 dark:text-slate-300 flex-shrink-0 mt-0.5" />
                 <span>No. 22b, Sunny Bus Stop, Olojo Drive, Alaba International Market, Ojo, Lagos, Nigeria</span>
               </div>
               <div className="flex items-center text-sm text-slate-600 dark:text-slate-300">
-                <Phone className="w-5 h-5 mr-3 text-yellow-500" />
+                <Phone className="w-5 h-5 mr-3 text-slate-600 dark:text-slate-300" />
                 <a href="tel:+23490377725829" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                   090377725829
                 </a>
               </div>
               <div className="flex items-center text-sm text-slate-600 dark:text-slate-300">
-                <Mail className="w-5 h-5 mr-3 text-yellow-500" />
+                <Mail className="w-5 h-5 mr-3 text-slate-600 dark:text-slate-300" />
                 <a href="mailto:authenticfurnituresltd@gmail.com" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                   authenticfurnituresltd@gmail.com
                 </a>

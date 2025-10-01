@@ -62,13 +62,26 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <div className="pt-24 pb-16">
       <div className="container mx-auto px-4">
-        
+
+        {/* Popular Tag - Only show if product has popular_with data */}
+        {product.popular_with && product.popular_with.length > 0 && (
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-full px-4 py-2">
+              <span className="text-yellow-600 text-lg">🔥</span>
+              <span className="text-sm font-medium text-gray-700">
+                Popular with {product.popular_with[0]}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Main Product Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
           {/* Product Gallery */}
           <div>
-            <EnhancedProductGallery 
+            <EnhancedProductGallery
               images={product.images}
+              videos={product.videos}
               productName={product.name}
             />
           </div>

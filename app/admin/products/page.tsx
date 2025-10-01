@@ -8,11 +8,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Eye, EyeOff, Crop } from "lucide-react";
 import Image from "next/image";
 import { formatPrice } from "@/lib/products";
 import { MultiImageUpload } from "@/components/products/MultiImageUpload";
@@ -22,6 +22,7 @@ import { WarehouseSelector } from "@/components/ui/warehouse-selector";
 import MultiWarehouseStockEditor from "@/components/admin/MultiWarehouseStockEditor";
 import { getAllWarehouses } from "@/lib/warehouses";
 import { Warehouse } from "@/types";
+import { ImageCropper } from "@/components/ui/image-cropper";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -40,7 +41,8 @@ export default function AdminProductsPage() {
   const [initialStock, setInitialStock] = useState<string>("");
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("");
   const [allWarehouses, setAllWarehouses] = useState<Warehouse[]>([]);
-  
+  const [cropExistingImage, setCropExistingImage] = useState<{ index: number; url: string } | null>(null);
+
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -59,6 +61,10 @@ export default function AdminProductsPage() {
     // New category system
     space_id: "",
     subcategory_id: "",
+    // Featured deals system
+    is_featured_deal: false,
+    deal_position: "",
+    deal_priority: "1",
     // Enhanced product view page fields
     discount_enabled: false,
     bulk_pricing_enabled: false,
@@ -129,6 +135,10 @@ export default function AdminProductsPage() {
       // New category system
       space_id: "",
       subcategory_id: "",
+      // Featured deals system
+      is_featured_deal: false,
+      deal_position: "",
+      deal_priority: "1",
       // Enhanced product view page fields
       discount_enabled: false,
       bulk_pricing_enabled: false,
@@ -174,6 +184,10 @@ export default function AdminProductsPage() {
       // New category system
       space_id: String((product as any).space_id ?? ""),
       subcategory_id: String((product as any).subcategory_id ?? ""),
+      // Featured deals system
+      is_featured_deal: Boolean((product as any).is_featured_deal),
+      deal_position: String((product as any).deal_position ?? ""),
+      deal_priority: String((product as any).deal_priority ?? "1"),
       // Enhanced product view page fields
       discount_enabled: Boolean((product as any).discount_enabled),
       bulk_pricing_enabled: Boolean((product as any).bulk_pricing_enabled),
@@ -201,6 +215,33 @@ export default function AdminProductsPage() {
   const handleImagesChange = (newImages: string[]) => {
     console.log('🔄 Admin: Images changed to:', newImages);
     setProductImages(newImages);
+  };
+
+  const handleCropComplete = (croppedFile: File) => {
+    console.log('🔄 Admin: Crop completed, file:', croppedFile);
+    // The EnhancedMediaUpload component should handle the upload automatically
+  };
+
+  const handleCropExistingImage = async (imageIndex: number) => {
+    console.log('🔄 Admin: Crop existing image at index:', imageIndex);
+    const imageUrl = productImages[imageIndex];
+    setCropExistingImage({ index: imageIndex, url: imageUrl });
+  };
+
+  const handleExistingCropComplete = async (croppedFile: File) => {
+    console.log('🔄 Admin: Uploading cropped existing image:', croppedFile.name, croppedFile.size, 'bytes');
+    try {
+      const croppedImageUrl = await uploadProductImage(croppedFile);
+      const newImages = [...productImages];
+      newImages[cropExistingImage!.index] = croppedImageUrl;
+      setProductImages(newImages);
+      console.log('✅ Image cropped and uploaded successfully:', croppedImageUrl);
+      // Success - no alert needed, UI updates automatically
+    } catch (error) {
+      console.error('❌ Error uploading cropped image:', error);
+      // Silent error handling - no annoying popups
+    }
+    setCropExistingImage(null);
   };
 
   const handleVideosChange = (newVideos: string[]) => {
@@ -458,6 +499,9 @@ export default function AdminProductsPage() {
             <DialogTitle>
               {editingProduct ? "Edit Product" : "Add New Product"}
             </DialogTitle>
+            <DialogDescription>
+              {editingProduct ? "Update product information and media." : "Create a new product with details and images."}
+            </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -711,7 +755,7 @@ export default function AdminProductsPage() {
                     />
                     <Label htmlFor="is_promo">Promo Product</Label>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="is_best_seller"
@@ -720,7 +764,7 @@ export default function AdminProductsPage() {
                     />
                     <Label htmlFor="is_best_seller">Best Seller</Label>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="is_new"
@@ -729,6 +773,60 @@ export default function AdminProductsPage() {
                     />
                     <Label htmlFor="is_new">New Product</Label>
                   </div>
+                </div>
+
+                {/* Featured Deals Section */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">Featured Deals Settings</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="is_featured_deal"
+                        checked={formData.is_featured_deal}
+                        onCheckedChange={(checked) => setFormData({...formData, is_featured_deal: checked})}
+                      />
+                      <Label htmlFor="is_featured_deal">Feature in Deals of the Week</Label>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="deal_priority">Priority (1-10, higher = first)</Label>
+                      <Input
+                        id="deal_priority"
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={formData.deal_priority}
+                        onChange={(e) => setFormData({...formData, deal_priority: e.target.value})}
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+
+                  {formData.is_featured_deal && (
+                    <div className="mb-4">
+                      <Label htmlFor="deal_position">Card Position</Label>
+                      <Select
+                        value={formData.deal_position}
+                        onValueChange={(value) => setFormData({...formData, deal_position: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select card position" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="big-1">Big Card 1 (Top Left)</SelectItem>
+                          <SelectItem value="big-2">Big Card 2 (Top Right)</SelectItem>
+                          <SelectItem value="small-1">Small Card 1 (Bottom Left)</SelectItem>
+                          <SelectItem value="small-2">Small Card 2 (Bottom Middle Left)</SelectItem>
+                          <SelectItem value="small-3">Small Card 3 (Bottom Middle Right)</SelectItem>
+                          <SelectItem value="small-4">Small Card 4 (Bottom Right)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Big cards get "Selling Fast" badges automatically
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Enhanced Product Features */}
@@ -922,6 +1020,7 @@ export default function AdminProductsPage() {
                   maxVideos={3}
                   disabled={isUploading}
                   enableCropping={true}
+                  onCropExisting={handleCropExistingImage}
                 />
               </div>
             </div>
@@ -1071,8 +1170,28 @@ export default function AdminProductsPage() {
           </Button>
         </div>
       )}
+
+      {/* Existing Image Cropping Dialog */}
+      {cropExistingImage && (
+        <Dialog open={!!cropExistingImage} onOpenChange={() => setCropExistingImage(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Crop className="w-5 h-5" />
+                Crop Image
+              </DialogTitle>
+              <DialogDescription>
+                Adjust the crop area and confirm to apply changes to the image.
+              </DialogDescription>
+            </DialogHeader>
+            <ImageCropper
+              imageUrl={cropExistingImage.url}
+              onCropComplete={handleExistingCropComplete}
+              onCancel={() => setCropExistingImage(null)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
-
-
