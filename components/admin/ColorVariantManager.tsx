@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Upload, X } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ColorOption {
