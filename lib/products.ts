@@ -464,7 +464,7 @@ export async function getFeaturedDeals(): Promise<Product[]> {
 
     if (featuredData && featuredData.length > 0) {
       // Map featured deals and add stock data
-      products = featuredData.map(row => {
+      products = featuredData.map((row: any) => {
         const product = mapSupabaseRowToProduct(row);
         // Add stock data if not present
         return {

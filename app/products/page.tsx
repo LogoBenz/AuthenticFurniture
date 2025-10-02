@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { getFilteredProducts, getProductCategories } from "@/lib/products";
 import { ProductGrid } from "@/components/products/ProductGrid";
@@ -10,7 +10,7 @@ import { Product } from "@/types";
 import { getSpacesForNavigation } from "@/lib/categories";
 import type { Space, Subcategory } from "@/types";
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const searchParams = useSearchParams();
   const urlCategory = searchParams?.get("category") ?? undefined;
   const urlSpace = searchParams?.get("space") ?? undefined;
@@ -187,10 +187,18 @@ export default function ProductsPage() {
       </div>
 
       {/* Enquiry Cart Modal */}
-      <EnquiryCartModal 
-        isOpen={isCartModalOpen} 
-        onClose={() => setIsCartModalOpen(false)} 
+      <EnquiryCartModal
+        isOpen={isCartModalOpen}
+        onClose={() => setIsCartModalOpen(false)}
       />
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <ProductsPageContent />
+    </Suspense>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getFeaturedProducts } from "@/lib/products";
-import { ProductCard } from "@/components/products/ProductCard";
+import ProductCard from "@/components/products/ProductCard";
 import { Product } from "@/types";
 
 export function FeaturedProducts() {

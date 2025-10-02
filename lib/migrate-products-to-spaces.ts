@@ -129,7 +129,7 @@ export async function migrateProductsToSpaces(): Promise<void> {
 
     if (!verifyError && migratedProducts) {
       console.log('✅ Sample migrated products:');
-      migratedProducts.forEach(product => {
+      migratedProducts.forEach((product: any) => {
         console.log(`  - ${product.name}: ${product.category} → space_id: ${product.space_id}, subcategory_id: ${product.subcategory_id}`);
       });
     }

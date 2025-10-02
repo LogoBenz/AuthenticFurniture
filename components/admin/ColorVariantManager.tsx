@@ -87,9 +87,10 @@ export function ColorVariantManager({
       return;
     }
 
-    const newVariants = selectedColors.map(colorId => {
+    const newVariants = selectedColors.map((colorId, index) => {
       const color = colorOptions.find(c => c.id === colorId);
       return {
+        id: `temp-${Date.now()}-${index}`,
         product_id: productId,
         color_id: colorId,
         color_name: color?.name || '',
@@ -98,8 +99,10 @@ export function ColorVariantManager({
         price: basePrice,
         sku: `${productId}-${color?.name?.toLowerCase().replace(/\s+/g, '-')}`,
         is_available: true,
-        display_order: 0
-      };
+        display_order: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as ProductVariant;
     });
 
     setVariants(prev => [...prev, ...newVariants]);

@@ -91,10 +91,10 @@ interface ProductCardProps {
                 e.stopPropagation();
                 // Compare functionality - placeholder for now
               }}
-              className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200 shadow-sm"
+              className="w-8 h-8 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-slate-800 transition-colors duration-200 shadow-sm"
               title="Compare"
             >
-              <RotateCcw className="w-4 h-4 text-slate-600" />
+              <RotateCcw className="w-4 h-4 text-slate-600 dark:text-slate-300" />
             </button>
             <button
               onClick={(e) => {
@@ -102,10 +102,10 @@ interface ProductCardProps {
                 e.stopPropagation();
                 onQuickView?.(product);
               }}
-              className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200 shadow-sm"
+              className="w-8 h-8 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-slate-800 transition-colors duration-200 shadow-sm"
               title="Quick View"
             >
-              <Eye className="w-4 h-4 text-slate-600" />
+              <Eye className="w-4 h-4 text-slate-600 dark:text-slate-300" />
             </button>
             <button
               onClick={(e) => {
@@ -113,57 +113,60 @@ interface ProductCardProps {
                 e.stopPropagation();
                 setIsWishlisted(!isWishlisted);
               }}
-              className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200 shadow-sm"
+              className="w-8 h-8 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-slate-800 transition-colors duration-200 shadow-sm"
               title="Add to Wishlist"
             >
-              <Heart 
+              <Heart
                 className={`w-4 h-4 transition-colors duration-200 ${
-                  isWishlisted ? 'text-red-500 fill-red-500' : 'text-slate-600'
-                }`} 
+                  isWishlisted ? 'text-red-500 fill-red-500' : 'text-slate-600 dark:text-slate-300'
+                }`}
               />
             </button>
           </div>
-
-          {/* Add to Cart Button - Circular */}
-          <button 
-            onClick={handleAddToCart}
-            className={`absolute bottom-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 ${
-              isInCart(product.id) 
-                ? 'bg-red-500 hover:bg-red-600 text-white' 
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-            title={isInCart(product.id) ? 'Remove from cart' : 'Add to cart'}
-          >
-            <ShoppingCart className="w-4 h-4" />
-          </button>
         </div>
 
         {/* Product Info */}
-        <div className="p-4 flex flex-col">
+        <div className="p-4 flex flex-col flex-grow">
           {/* Product Name */}
           <div className="mb-3">
-            <h3 className="font-semibold text-slate-900 text-sm line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
+            <h3 className="font-semibold text-slate-900 dark:text-white text-sm line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200 min-h-[40px]">
               {product.name}
             </h3>
           </div>
 
           {/* Pricing */}
-          <div>
+          <div className="mb-3">
             <div className="flex items-center space-x-2">
-              <span className="text-lg font-bold text-slate-900">
+              <span className="text-lg font-bold text-slate-900 dark:text-white">
                 {formatPrice(currentPrice)}
               </span>
               {discountPercent > 0 && (
-                <span className="text-slate-500 line-through text-sm">
+                <span className="text-slate-500 dark:text-slate-400 line-through text-sm">
                   {formatPrice(originalPrice)}
                 </span>
               )}
             </div>
             {discountPercent > 0 && (
-              <div className="text-green-600 text-sm font-medium mt-1">
+              <div className="text-green-600 dark:text-green-400 text-sm font-medium mt-1">
                 You save {formatPrice(originalPrice - currentPrice)}
               </div>
             )}
+          </div>
+
+          {/* Add to Cart Button - Moved outside image, at bottom */}
+          <div className="mt-auto">
+            <button
+              onClick={handleAddToCart}
+              className={`w-full py-2.5 rounded-lg flex items-center justify-center gap-2 font-semibold text-sm shadow-md transition-all duration-200 hover:shadow-lg ${
+                isInCart(product.id)
+                  ? 'bg-red-500 hover:bg-red-600 text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+              title={isInCart(product.id) ? 'Remove from cart' : 'Add to cart'}
+            >
+              <ShoppingCart className="w-4 h-4" />
+              <span>{isInCart(product.id) ? 'Remove from Cart' : 'Add to Cart'}</span>
+            </button>
           </div>
         </div>
       </Link>
