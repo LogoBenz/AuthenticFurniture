@@ -1,0 +1,388 @@
+"use client";
+
+import React, { useState, useRef, useCallback } from "react";
+import { Button } from "./button";
+import { X, Check } from "lucide-react";
+
+interface ImageCropperProps {
+  imageUrl: string;
+  onCropComplete: (croppedFile: File) => void;
+  onCancel: () => void;
+  aspectRatio?: number;
+}
+
+export function ImageCropper({
+  imageUrl,
+  onCropComplete,
+  onCancel,
+  aspectRatio = 1,
+}: ImageCropperProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [cropBox, setCropBox] = useState({
+    x: 50,
+    y: 50,
+    width: 400,
+    height: 300,
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState<string | null>(null);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  // Convert Supabase URL to proxy URL
+  const getProxyUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      // Extract path from Supabase storage URL
+      const pathMatch = url.match(
+        /\/storage\/v1\/object\/public\/([^/]+)\/(.+)/
+      );
+      if (pathMatch) {
+        const bucket = pathMatch[1];
+        const path = pathMatch[2];
+        return `/api/proxy-image?bucket=${encodeURIComponent(
+          bucket
+        )}&path=${encodeURIComponent(path)}`;
+      }
+    } catch (e) {
+      console.error("Failed to parse image URL:", e);
+    }
+    return url; // Fallback to original URL
+  };
+
+  const proxyImageUrl = getProxyUrl(imageUrl);
+
+  const handleImageLoad = useCallback(() => {
+    console.log("🖼️ Image load event triggered");
+    const img = imageRef.current;
+    if (!img) {
+      console.error("❌ Image ref is null");
+      return;
+    }
+
+    const width = img.naturalWidth || img.width || 800;
+    const height = img.naturalHeight || img.height || 600;
+
+    console.log("✅ Image loaded:", { width, height, src: img.src });
+
+    setImageSize({ width, height });
+    setImageLoaded(true);
+
+    // Initialize crop box in center - rectangular for furniture
+    const cropWidth = Math.min(width * 0.8, 600);
+    const cropHeight = Math.min(height * 0.8, 450);
+    setCropBox({
+      x: (width - cropWidth) / 2,
+      y: (height - cropHeight) / 2,
+      width: cropWidth,
+      height: cropHeight,
+    });
+  }, []);
+
+  // Debug on mount
+  React.useEffect(() => {
+    console.log("🔍 ImageCropper mounted");
+    console.log("Original URL:", imageUrl);
+    console.log("Proxy URL:", proxyImageUrl);
+  }, [imageUrl, proxyImageUrl]);
+
+  const handleCrop = useCallback(async () => {
+    setIsLoading(true);
+
+    try {
+      const img = imageRef.current;
+      if (!img) {
+        console.error("Image ref is null");
+        throw new Error("Image not loaded");
+      }
+
+      console.log("Starting crop with box:", cropBox);
+      console.log("Image size:", imageSize);
+
+      // Create canvas for cropping
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not get canvas context");
+
+      // Use natural image coordinates
+      canvas.width = Math.round(cropBox.width);
+      canvas.height = Math.round(cropBox.height);
+
+      console.log("Canvas size:", canvas.width, "x", canvas.height);
+
+      // Draw the cropped portion from natural coordinates
+      ctx.drawImage(
+        img,
+        Math.round(cropBox.x),
+        Math.round(cropBox.y),
+        Math.round(cropBox.width),
+        Math.round(cropBox.height),
+        0,
+        0,
+        Math.round(cropBox.width),
+        Math.round(cropBox.height)
+      );
+
+      // Convert to blob
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error("Failed to create image blob"));
+          },
+          "image/jpeg",
+          0.9
+        );
+      });
+
+      // Create file
+      const fileName = imageUrl.split("/").pop() || "cropped-image.jpg";
+      const croppedFile = new File([blob], fileName, { type: "image/jpeg" });
+
+      onCropComplete(croppedFile);
+    } catch (error) {
+      console.error("Error cropping image:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cropBox, imageUrl, onCropComplete]);
+
+  const updateCropBox = useCallback(
+    (deltaWidth: number, deltaHeight: number) => {
+      setCropBox((prev) => {
+        const newWidth = Math.max(
+          100,
+          Math.min(prev.width + deltaWidth, imageSize.width)
+        );
+        const newHeight = Math.max(
+          75,
+          Math.min(prev.height + deltaHeight, imageSize.height)
+        );
+        const newX = Math.max(0, Math.min(prev.x, imageSize.width - newWidth));
+        const newY = Math.max(
+          0,
+          Math.min(prev.y, imageSize.height - newHeight)
+        );
+
+        return { x: newX, y: newY, width: newWidth, height: newHeight };
+      });
+    },
+    [imageSize]
+  );
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/80 flex items-center justify-center"
+      style={{ zIndex: 9999 }}
+    >
+      <div
+        className="bg-white rounded-lg flex flex-col !w-[95vw] !h-[95vh] !max-w-[95vw] !max-h-[95vh] overflow-hidden shadow-2xl"
+        style={{
+          width: "95vw",
+          height: "95vh",
+          maxWidth: "95vw",
+          maxHeight: "95vh",
+          position: "relative",
+        }}
+      >
+        {/* Header */}
+        <div className="p-3 border-b flex justify-between items-center flex-shrink-0">
+          <h2 className="text-lg font-semibold">Crop Image</h2>
+          <Button variant="ghost" size="sm" onClick={onCancel}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-50 relative">
+          {/* Loading Overlay */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-10">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading image...</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Proxy URL: {proxyImageUrl.substring(0, 60)}...
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Image Container - Always rendered */}
+          <div
+            className={`relative ${!imageLoaded ? "opacity-0" : "opacity-100"}`}
+            onMouseMove={(e) => {
+              if ((!isDragging && !isResizing) || !imageRef.current) return;
+
+              const imgRect = imageRef.current.getBoundingClientRect();
+              const x = e.clientX - imgRect.left;
+              const y = e.clientY - imgRect.top;
+
+              // Calculate scale between displayed and natural size
+              const scaleX = imageSize.width / imgRect.width;
+              const scaleY = imageSize.height / imgRect.height;
+
+              const naturalX = x * scaleX;
+              const naturalY = y * scaleY;
+
+              if (isDragging) {
+
+              setCropBox((prev) => ({
+                ...prev,
+                x: Math.max(
+                  0,
+                  Math.min(naturalX - dragStart.x, imageSize.width - prev.width)
+                ),
+                y: Math.max(
+                  0,
+                  Math.min(
+                    naturalY - dragStart.y,
+                    imageSize.height - prev.height
+                  )
+                ),
+              }));
+            }}
+            onMouseUp={() => setIsDragging(false)}
+            onMouseLeave={() => setIsDragging(false)}
+          >
+            {/* Full Image */}
+            <img
+              ref={imageRef}
+              src={proxyImageUrl}
+              alt="Crop"
+              className="max-w-full max-h-[80vh] object-contain border border-gray-300"
+              onLoad={handleImageLoad}
+              onError={(err) => {
+                console.error("Image failed to load:", proxyImageUrl, err);
+              }}
+            />
+
+            {/* Crop Overlay - Rectangular for furniture */}
+            {imageLoaded &&
+              imageRef.current &&
+              (() => {
+                // Calculate display coordinates from natural coordinates
+                const imgRect = imageRef.current.getBoundingClientRect();
+                const scaleX = imgRect.width / imageSize.width;
+                const scaleY = imgRect.height / imageSize.height;
+
+                const displayX = cropBox.x * scaleX;
+                const displayY = cropBox.y * scaleY;
+                const displayWidth = cropBox.width * scaleX;
+                const displayHeight = cropBox.height * scaleY;
+
+                return (
+                  <>
+                    {/* Crop Box with dark overlay */}
+                    <div
+                      className="absolute border-2 border-white cursor-move pointer-events-auto"
+                      style={{
+                        left: displayX,
+                        top: displayY,
+                        width: displayWidth,
+                        height: displayHeight,
+                        boxShadow: "0 0 0 9999px rgba(0,0,0,0.6)",
+                        zIndex: 10,
+                      }}
+                      onMouseDown={(e) => {
+                        if (!imageRef.current) return;
+
+                        const imgRect =
+                          imageRef.current.getBoundingClientRect();
+                        const x = e.clientX - imgRect.left;
+                        const y = e.clientY - imgRect.top;
+
+                        // Calculate scale between displayed and natural size
+                        const scaleX = imageSize.width / imgRect.width;
+                        const scaleY = imageSize.height / imgRect.height;
+
+                        const naturalX = x * scaleX;
+                        const naturalY = y * scaleY;
+
+                        setIsDragging(true);
+                        setDragStart({
+                          x: naturalX - cropBox.x,
+                          y: naturalY - cropBox.y,
+                        });
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      {/* Corner handles */}
+                      <div className="absolute -top-1 -left-1 w-3 h-3 bg-white border border-gray-400 pointer-events-none"></div>
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-white border border-gray-400 pointer-events-none"></div>
+                      <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-white border border-gray-400 pointer-events-none"></div>
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white border border-gray-400 pointer-events-none"></div>
+                    </div>
+                  </>
+                );
+              })()}
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="p-3 border-t bg-gray-50 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">Width:</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateCropBox(-30, 0)}
+                >
+                  <div className="text-xs">−</div>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateCropBox(30, 0)}
+                >
+                  <div className="text-xs">+</div>
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">Height:</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateCropBox(0, -30)}
+                >
+                  <div className="text-xs">−</div>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateCropBox(0, 30)}
+                >
+                  <div className="text-xs">+</div>
+                </Button>
+              </div>
+              <span className="text-sm font-mono text-gray-700">
+                {Math.round(cropBox.width)} × {Math.round(cropBox.height)}
+              </span>
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button onClick={handleCrop} disabled={isLoading}>
+                <Check className="h-4 w-4 mr-2" />
+                {isLoading ? "Cropping..." : "Crop & Save"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-2 text-xs text-gray-500 text-center">
+            Click and drag the crop area to position it, use +/- to resize
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

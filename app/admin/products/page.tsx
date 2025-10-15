@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getAllProducts, updateProduct, getProductBySlug, createProduct, deleteProduct, getProductCategories, uploadProductImage } from "@/lib/products";
 import { getAllSpaces } from "@/lib/categories";
 import { Product, Space, Subcategory } from "@/types";
+import { supabase } from "@/lib/supabase";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +33,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<string>('name-asc');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [customCategory, setCustomCategory] = useState("");
@@ -61,6 +63,7 @@ export default function AdminProductsPage() {
     // New category system
     space_id: "",
     subcategory_id: "",
+    product_type: "" as string | undefined,
     // Featured deals system
     is_featured_deal: false,
     deal_position: "",
@@ -82,39 +85,67 @@ export default function AdminProductsPage() {
     limited_time_deal_discount_percent: "0",
   });
 
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const [productsData, categoriesData, spacesData, warehousesData] = await Promise.all([
+        getAllProducts(),
+        getProductCategories(),
+        getAllSpaces(),
+        getAllWarehouses()
+      ]);
+      setProducts(productsData);
+      setFilteredProducts(productsData);
+      setCategories(categoriesData);
+      setSpaces(spacesData);
+      setAllWarehouses(warehousesData.map(w => ({ id: w.id, name: w.name })) as Warehouse[]);
+    } finally { 
+      setLoading(false); 
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      try {
-        const [productsData, categoriesData, spacesData, warehousesData] = await Promise.all([
-          getAllProducts(),
-          getProductCategories(),
-          getAllSpaces(),
-          getAllWarehouses()
-        ]);
-        setProducts(productsData);
-        setFilteredProducts(productsData);
-        setCategories(categoriesData);
-        setSpaces(spacesData);
-        setAllWarehouses(warehousesData.map(w => ({ id: w.id, name: w.name })) as Warehouse[]);
-      } finally { 
-        setLoading(false); 
-      }
-    })();
+    fetchProducts();
   }, []);
 
-  // Filter products based on search term
+  // Filter and sort products based on search term and sort option
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredProducts(products);
-    } else {
-      const filtered = products.filter(product =>
+    let filtered = products;
+    
+    if (searchTerm.trim()) {
+      filtered = products.filter(product =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product as any).modelNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.category.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setFilteredProducts(filtered);
     }
-  }, [searchTerm, products]);
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc':
+          return a.name.localeCompare(b.name);
+        case 'name-desc':
+          return b.name.localeCompare(a.name);
+        case 'price-asc':
+          return a.price - b.price;
+        case 'price-desc':
+          return b.price - a.price;
+        case 'category-asc':
+          return a.category.localeCompare(b.category);
+        case 'category-desc':
+          return b.category.localeCompare(a.category);
+        case 'stock-asc':
+          return (a.inStock ? 1 : 0) - (b.inStock ? 1 : 0);
+        case 'stock-desc':
+          return (b.inStock ? 1 : 0) - (a.inStock ? 1 : 0);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredProducts(sorted);
+  }, [searchTerm, products, sortBy]);
 
   const resetForm = () => {
     setFormData({
@@ -135,6 +166,7 @@ export default function AdminProductsPage() {
       // New category system
       space_id: "",
       subcategory_id: "",
+      product_type: "",
       // Featured deals system
       is_featured_deal: false,
       deal_position: "",
@@ -165,6 +197,11 @@ export default function AdminProductsPage() {
   };
 
   const handleEdit = (product: Product) => {
+    console.log('📝 Editing product:', product.name);
+    console.log('DOTW values:', { 
+      is_featured_deal: (product as any).is_featured_deal, 
+      deal_priority: (product as any).deal_priority 
+    });
     setEditingProduct(product);
     setFormData({
       name: product.name,
@@ -184,6 +221,7 @@ export default function AdminProductsPage() {
       // New category system
       space_id: String((product as any).space_id ?? ""),
       subcategory_id: String((product as any).subcategory_id ?? ""),
+      product_type: String((product as any).product_type ?? ""),
       // Featured deals system
       is_featured_deal: Boolean((product as any).is_featured_deal),
       deal_position: String((product as any).deal_position ?? ""),
@@ -209,6 +247,11 @@ export default function AdminProductsPage() {
     setProductImages(product.images && product.images.length > 0 ? product.images : (product.imageUrl ? [product.imageUrl] : []));
     // Set videos if available
     setProductVideos((product as any).videos || []);
+    
+    // Set initial stock and warehouse location for editing
+    setInitialStock(String((product as any).stock_count ?? ""));
+    setSelectedWarehouseId(String((product as any).warehouseLocation ?? ""));
+    
     setIsDialogOpen(true);
   };
 
@@ -282,15 +325,18 @@ export default function AdminProductsPage() {
       return;
     }
 
-    // Validate Initial Stock and Warehouse
-    const qty = parseInt(initialStock);
-    if (isNaN(qty) || qty < 0) {
-      alert("Please enter a valid initial stock quantity.");
-      return;
-    }
-    if (!selectedWarehouseId) {
-      alert("Please select a Warehouse.");
-      return;
+    // Validate Initial Stock and Warehouse (only if provided)
+    let qty = 0;
+    if (initialStock) {
+      qty = parseInt(initialStock);
+      if (isNaN(qty) || qty < 0) {
+        alert("Please enter a valid initial stock quantity.");
+        return;
+      }
+      if (!selectedWarehouseId) {
+        alert("Please select a Warehouse when setting initial stock.");
+        return;
+      }
     }
 
     // Parse bulk pricing tiers
@@ -338,11 +384,12 @@ export default function AdminProductsPage() {
       is_best_seller: formData.is_best_seller,
       is_new: formData.is_new,
       modelNo: formData.modelNo,
-      warehouseLocation: formData.warehouseLocation || undefined,
+      warehouseLocation: selectedWarehouseId || undefined,
       dimensions: formData.dimensions,
       // New category system
       space_id: formData.space_id || undefined,
       subcategory_id: formData.subcategory_id || undefined,
+      product_type: formData.product_type || undefined,
       // Enhanced product view page fields
       discount_enabled: formData.discount_enabled,
       bulk_pricing_enabled: formData.bulk_pricing_enabled,
@@ -354,28 +401,86 @@ export default function AdminProductsPage() {
       weight_capacity: formData.weight_capacity || undefined,
       warranty: formData.warranty || undefined,
       delivery_timeframe: formData.delivery_timeframe || undefined,
-      stock_count: formData.stock_count ? Number(formData.stock_count) : undefined,
+      stock_count: initialStock ? Number(initialStock) : undefined,
       limited_time_deal: limitedTimeDeal,
+      // Deals of the Week
+      is_featured_deal: formData.is_featured_deal,
+      deal_priority: formData.deal_priority ? Number(formData.deal_priority) : undefined,
     };
 
     console.log('🔄 Submitting product data:', productData);
+    console.log('📊 Featured deals values:', { 
+      is_featured_deal: formData.is_featured_deal, 
+      deal_priority: formData.deal_priority,
+      deal_priority_number: formData.deal_priority ? Number(formData.deal_priority) : undefined
+    });
 
     try {
       setSavingId(editingProduct?.id || 'new');
+
+      // Handle DOTW position conflicts
+      if (formData.is_featured_deal && formData.deal_priority) {
+        const newPosition = Number(formData.deal_priority);
+        console.log('🔄 Handling DOTW position conflict for position:', newPosition);
+        
+        // Get all current DOTW products
+        const { data: dotwProducts } = await supabase
+          .from('products')
+          .select('id, name, deal_priority')
+          .eq('is_featured_deal', true)
+          .neq('id', editingProduct?.id || '') // Exclude current product
+          .order('deal_priority', { ascending: true });
+
+        if (dotwProducts && dotwProducts.length > 0) {
+          // Check if position is taken
+          const conflictingProduct = dotwProducts.find(p => p.deal_priority === newPosition);
+          
+          if (conflictingProduct) {
+            console.log('⚠️ Position conflict detected, cascading products...');
+            
+            // Get all products at or after the new position
+            const productsToShift = dotwProducts.filter(p => p.deal_priority >= newPosition);
+            
+            // Shift them down by 1
+            for (const product of productsToShift) {
+              const newPos = product.deal_priority + 1;
+              
+              if (newPos > 7) {
+                // Remove from DOTW if beyond position 7
+                console.log(`❌ Removing ${product.name} from DOTW (position ${newPos} > 7)`);
+                await supabase
+                  .from('products')
+                  .update({ is_featured_deal: false, deal_priority: null })
+                  .eq('id', product.id);
+              } else {
+                // Shift to new position
+                console.log(`➡️ Moving ${product.name} from position ${product.deal_priority} to ${newPos}`);
+                await supabase
+                  .from('products')
+                  .update({ deal_priority: newPos })
+                  .eq('id', product.id);
+              }
+            }
+          }
+        }
+      }
       
       if (editingProduct) {
         console.log('🔄 Updating product:', editingProduct.id);
         const updated = await updateProduct(editingProduct.id, productData);
         
         if (updated) {
-          try {
-            await fetch('/api/inventory/upsert', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ entries: [{ warehouse_id: selectedWarehouseId, product_id: updated.id, stock_count: qty }] })
-            });
-          } catch (e) {
-            console.warn('Stock upsert failed', e);
+          // Only update inventory if stock and warehouse are provided
+          if (initialStock && selectedWarehouseId && qty > 0) {
+            try {
+              await fetch('/api/inventory/upsert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ entries: [{ warehouse_id: selectedWarehouseId, product_id: updated.id, stock_count: qty }] })
+              });
+            } catch (e) {
+              console.warn('Stock upsert failed', e);
+            }
           }
           setProducts(products.map(p => p.id === editingProduct.id ? updated : p));
           alert('Product updated successfully!');
@@ -388,14 +493,17 @@ export default function AdminProductsPage() {
         console.log('🔄 Creating new product');
         const created = await createProduct(productData);
         if (created) {
-          try {
-            await fetch('/api/inventory/upsert', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ entries: [{ warehouse_id: selectedWarehouseId, product_id: created.id, stock_count: qty }] })
-            });
-          } catch (e) {
-            console.warn('Stock upsert failed', e);
+          // Only update inventory if stock and warehouse are provided
+          if (initialStock && selectedWarehouseId && qty > 0) {
+            try {
+              await fetch('/api/inventory/upsert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ entries: [{ warehouse_id: selectedWarehouseId, product_id: created.id, stock_count: qty }] })
+              });
+            } catch (e) {
+              console.warn('Stock upsert failed', e);
+            }
           }
           setProducts([created, ...products]);
           alert('Product created successfully!');
@@ -421,9 +529,16 @@ export default function AdminProductsPage() {
     if (confirm("Are you sure you want to delete this product?")) {
       try {
         console.log('🗑️ Deleting product:', id);
-        await deleteProduct(id);
-        setProducts(products.filter(p => p.id !== id));
-        alert('Product deleted successfully!');
+        const success = await deleteProduct(id);
+        
+        if (success) {
+          // Update local state immediately
+          setProducts(products.filter(p => p.id !== id));
+          setFilteredProducts(filteredProducts.filter(p => p.id !== id));
+          alert('Product deleted successfully!');
+        } else {
+          throw new Error('Delete operation returned false');
+        }
       } catch (error) {
         let errorMessage = 'Unknown error occurred';
         if (error && typeof error === 'object' && 'message' in error) {
@@ -485,11 +600,31 @@ export default function AdminProductsPage() {
               className="pl-10 w-80"
             />
           </div>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+              <SelectItem value="price-asc">Price (Low to High)</SelectItem>
+              <SelectItem value="price-desc">Price (High to Low)</SelectItem>
+              <SelectItem value="category-asc">Category (A-Z)</SelectItem>
+              <SelectItem value="category-desc">Category (Z-A)</SelectItem>
+              <SelectItem value="stock-asc">Out of Stock First</SelectItem>
+              <SelectItem value="stock-desc">In Stock First</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Button onClick={openAddDialog} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Product
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={fetchProducts} variant="outline" disabled={loading}>
+            Refresh
+          </Button>
+          <Button onClick={openAddDialog} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       {/* Product Dialog */}
@@ -649,6 +784,59 @@ export default function AdminProductsPage() {
                   </Select>
                 </div>
 
+                {/* Product Type (conditional based on subcategory) */}
+                {(() => {
+                  const selectedSubcategory = spaces
+                    .find(space => space.id === formData.space_id)
+                    ?.subcategories?.find(sub => sub.id === formData.subcategory_id);
+                  
+                  const subcategoryName = selectedSubcategory?.name?.toLowerCase() || "";
+                  const isOfficeTables = subcategoryName.includes("office tables");
+                  const isOfficeChairs = subcategoryName.includes("office chairs");
+
+                  if (!isOfficeTables && !isOfficeChairs) return null;
+
+                  return (
+                    <div>
+                      <Label htmlFor="product_type">
+                        {isOfficeTables ? "Table Type" : "Chair Type"} (Optional)
+                      </Label>
+                      <Select
+                        value={formData.product_type || "none"}
+                        onValueChange={(value) => setFormData({...formData, product_type: value === "none" ? undefined : value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={`Select ${isOfficeTables ? "table" : "chair"} type`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {isOfficeTables && (
+                            <>
+                              <SelectItem value="Executive Tables">Executive Tables</SelectItem>
+                              <SelectItem value="Electric Desks">Electric Desks</SelectItem>
+                              <SelectItem value="Reception Tables">Reception Tables</SelectItem>
+                              <SelectItem value="Conference Tables">Conference Tables</SelectItem>
+                              <SelectItem value="Standard Tables">Standard Tables</SelectItem>
+                            </>
+                          )}
+                          {isOfficeChairs && (
+                            <>
+                              <SelectItem value="Ergonomic Chairs">Ergonomic Chairs</SelectItem>
+                              <SelectItem value="Mesh Chairs">Mesh Chairs</SelectItem>
+                              <SelectItem value="Swivel Chairs">Swivel Chairs</SelectItem>
+                              <SelectItem value="Guest Chairs">Guest Chairs</SelectItem>
+                              <SelectItem value="Task Chairs">Task Chairs</SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Used for filtering in the {isOfficeTables ? "Office Tables" : "Office Chairs"} section
+                      </p>
+                    </div>
+                  );
+                })()}
+
                 {/* Initial Stock and Warehouse (optional) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -708,13 +896,6 @@ export default function AdminProductsPage() {
 
                 {/* Inventory Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <WarehouseSelector
-                    value={formData.warehouseLocation}
-                    onValueChange={(value) => setFormData({...formData, warehouseLocation: value})}
-                    placeholder="Select warehouse location"
-                    showWarning={true}
-                  />
-                  
                   <div>
                     <Label htmlFor="dimensions">Dimensions</Label>
                     <Input
@@ -777,9 +958,10 @@ export default function AdminProductsPage() {
 
                 {/* Featured Deals Section */}
                 <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold mb-4">Featured Deals Settings</h3>
+                  <h3 className="text-lg font-semibold mb-4">Deals of the Week</h3>
+                  <p className="text-sm text-gray-600 mb-4">Show this product in the "Deals of the Week" section (2 big cards + 5 normal cards = 7 total)</p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center space-x-2">
                       <Switch
                         id="is_featured_deal"
@@ -789,44 +971,22 @@ export default function AdminProductsPage() {
                       <Label htmlFor="is_featured_deal">Feature in Deals of the Week</Label>
                     </div>
 
-                    <div>
-                      <Label htmlFor="deal_priority">Priority (1-10, higher = first)</Label>
-                      <Input
-                        id="deal_priority"
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={formData.deal_priority}
-                        onChange={(e) => setFormData({...formData, deal_priority: e.target.value})}
-                        placeholder="1"
-                      />
-                    </div>
+                    {formData.is_featured_deal && (
+                      <div>
+                        <Label htmlFor="deal_priority">Position (1-7)</Label>
+                        <Input
+                          id="deal_priority"
+                          type="number"
+                          min="1"
+                          max="7"
+                          value={formData.deal_priority}
+                          onChange={(e) => setFormData({...formData, deal_priority: e.target.value})}
+                          placeholder="1"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">1-2 = big cards, 3-7 = normal cards</p>
+                      </div>
+                    )}
                   </div>
-
-                  {formData.is_featured_deal && (
-                    <div className="mb-4">
-                      <Label htmlFor="deal_position">Card Position</Label>
-                      <Select
-                        value={formData.deal_position}
-                        onValueChange={(value) => setFormData({...formData, deal_position: value})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select card position" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="big-1">Big Card 1 (Top Left)</SelectItem>
-                          <SelectItem value="big-2">Big Card 2 (Top Right)</SelectItem>
-                          <SelectItem value="small-1">Small Card 1 (Bottom Left)</SelectItem>
-                          <SelectItem value="small-2">Small Card 2 (Bottom Middle Left)</SelectItem>
-                          <SelectItem value="small-3">Small Card 3 (Bottom Middle Right)</SelectItem>
-                          <SelectItem value="small-4">Small Card 4 (Bottom Right)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Big cards get "Selling Fast" badges automatically
-                      </p>
-                    </div>
-                  )}
                 </div>
 
                 {/* Enhanced Product Features */}
@@ -1171,27 +1331,18 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* Existing Image Cropping Dialog */}
-      {cropExistingImage && (
-        <Dialog open={!!cropExistingImage} onOpenChange={() => setCropExistingImage(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Crop className="w-5 h-5" />
-                Crop Image
-              </DialogTitle>
-              <DialogDescription>
-                Adjust the crop area and confirm to apply changes to the image.
-              </DialogDescription>
-            </DialogHeader>
+      {/* Existing Image Cropping - Nested Dialog */}
+      <Dialog open={!!cropExistingImage} onOpenChange={() => setCropExistingImage(null)}>
+        <DialogContent className="!w-[95vw] !h-[95vh] !max-w-[95vw] !max-h-[95vh] p-0">
+          {cropExistingImage && (
             <ImageCropper
               imageUrl={cropExistingImage.url}
               onCropComplete={handleExistingCropComplete}
               onCancel={() => setCropExistingImage(null)}
             />
-          </DialogContent>
-        </Dialog>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

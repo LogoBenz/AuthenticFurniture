@@ -1,13 +1,27 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import { Header } from '@/components/layout/Header';
+import { Inter, DM_Sans } from 'next/font/google';
+import { CrazyNavbar } from '@/components/layout/CrazyNavbar';
 import { Footer } from '@/components/layout/Footer';
 import { ThemeProvider } from '@/components/layout/ThemeProvider';
 import { FloatingWhatsAppButton } from '@/components/ui/whatsapp-button';
 import { EnquiryCartProvider } from '@/hooks/use-enquiry-cart';
+import { NewsletterPopup } from '@/components/ui/NewsletterPopup';
 
-const inter = Inter({ subsets: ['latin'] });
+// Professional font pairing - DM Sans for headings, Inter for body
+const dmSans = DM_Sans({ 
+  subsets: ['latin'],
+  variable: '--font-heading',
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
+
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-body',
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Authentic Furniture | Premium Furniture for Nigerian Homes & Offices',
@@ -21,7 +35,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.variable} ${dmSans.variable} font-body antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -30,10 +44,11 @@ export default function RootLayout({
         >
           <EnquiryCartProvider>
             <div className="flex flex-col min-h-screen">
-              <Header />
-              <main className="flex-grow pt-[var(--header-offset)]">{children}</main>
+              <CrazyNavbar />
+              <main className="flex-grow pt-[90px] md:pt-[95px]">{children}</main>
               <Footer />
               <FloatingWhatsAppButton />
+              <NewsletterPopup />
             </div>
           </EnquiryCartProvider>
         </ThemeProvider>

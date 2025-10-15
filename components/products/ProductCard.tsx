@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Heart, RotateCcw, Eye, MessageCircle } from 'lucide-react';
+import { ShoppingCart, Heart, RotateCcw, Eye, MessageCircle, Plus } from 'lucide-react';
 import { Product } from '@/types';
 import { useEnquiryCart } from '@/hooks/use-enquiry-cart';
+import { NextUICard } from '@/components/ui/nextui-card';
+import { NextUIButton } from '@/components/ui/nextui-button';
 
 interface ProductCardProps {
   product: Product;
@@ -52,125 +54,143 @@ interface ProductCardProps {
   const isNew = product.is_new || false;
 
   return (
-    <div 
-      className="bg-white rounded-2xl border-2 border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer overflow-hidden relative flex flex-col h-full min-w-[300px] w-full"
+    <NextUICard
+      variant="bordered"
+      radius="none"
+      className="group cursor-pointer flex flex-col h-full border-slate-200 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 transition-all duration-300 hover:shadow-lg bg-white dark:bg-slate-900"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link href={`/products/${product.slug}`} className="block flex flex-col h-full">
+      <Link href={`/products/${product.slug}`} className="block">
         {/* Image Container */}
-        <div className="relative overflow-hidden aspect-square bg-slate-50">
+        <div className="relative w-full h-[215px] bg-white overflow-hidden">
           <Image
             src={imageUrl}
             alt={product.name}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-contain group-hover:scale-105 transition-transform duration-500 ease-out"
+            sizes="386px"
           />
           
           {/* NEW Badge */}
           {isNew && (
-            <div className="absolute top-3 left-3 bg-green-500 text-white rounded-md px-2 py-1 text-xs font-bold">
+            <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 text-xs font-bold z-10 rounded">
               NEW
             </div>
           )}
 
           {/* Discount Badge */}
           {discountPercent > 0 && (
-            <div className={`absolute top-3 ${isNew ? 'left-16' : 'left-3'} bg-red-500 text-white rounded-full px-2 py-1 text-xs font-bold`}>
+            <div className={`absolute top-2 ${isNew ? 'left-14' : 'left-2'} bg-red-500 text-white px-2 py-1 text-xs font-bold z-10 rounded`}>
               -{discountPercent}%
             </div>
           )}
 
-          {/* Action Icons - Always visible on mobile, hover on desktop */}
-          <div className={`absolute top-3 right-3 flex flex-col space-y-2 transition-opacity duration-200 ${
+          {/* NextUI Action Icons - Top Right */}
+          <div className={`absolute top-3 right-3 flex flex-col gap-2 transition-opacity duration-200 ${
             isHovered ? 'opacity-100' : 'opacity-0 sm:opacity-100 md:opacity-0'
           }`}>
-            <button
+            <NextUIButton
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // Compare functionality - placeholder for now
+                // Compare functionality
               }}
-              className="w-8 h-8 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-slate-800 transition-colors duration-200 shadow-sm"
+              variant="flat"
+              radius="full"
+              size="sm"
+              className="w-8 h-8 min-w-8 p-0 bg-white/90 backdrop-blur-md"
               title="Compare"
             >
-              <RotateCcw className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-            </button>
-            <button
+              <RotateCcw className="w-3.5 h-3.5" />
+            </NextUIButton>
+            <NextUIButton
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 onQuickView?.(product);
               }}
-              className="w-8 h-8 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-slate-800 transition-colors duration-200 shadow-sm"
+              variant="flat"
+              radius="full"
+              size="sm"
+              className="w-8 h-8 min-w-8 p-0 bg-white/90 backdrop-blur-md"
               title="Quick View"
             >
-              <Eye className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsWishlisted(!isWishlisted);
-              }}
-              className="w-8 h-8 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-slate-800 transition-colors duration-200 shadow-sm"
+              <Eye className="w-3.5 h-3.5" />
+            </NextUIButton>
+            <NextUIButton
+              onClick={handleWishlist}
+              variant="flat"
+              radius="full"
+              size="sm"
+              className="w-8 h-8 min-w-8 p-0 bg-white/90 backdrop-blur-md"
               title="Add to Wishlist"
             >
               <Heart
-                className={`w-4 h-4 transition-colors duration-200 ${
-                  isWishlisted ? 'text-red-500 fill-red-500' : 'text-slate-600 dark:text-slate-300'
+                className={`w-3.5 h-3.5 transition-colors duration-200 ${
+                  isWishlisted ? 'text-red-500 fill-red-500' : ''
                 }`}
               />
-            </button>
+            </NextUIButton>
           </div>
         </div>
 
         {/* Product Info */}
-        <div className="p-4 flex flex-col flex-grow">
+        <div className="p-3">
+          {/* Category Label */}
+          <p className="text-[10px] text-slate-500 uppercase tracking-wide font-medium">
+            {product.category}
+          </p>
+          
           {/* Product Name */}
-          <div className="mb-3">
-            <h3 className="font-semibold text-slate-900 dark:text-white text-sm line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200 min-h-[40px]">
-              {product.name}
-            </h3>
-          </div>
+          <h3 className="font-heading font-semibold text-slate-900 dark:text-slate-100 text-base leading-tight line-clamp-1 mt-1 mb-2">
+            {product.name}
+          </h3>
 
-          {/* Pricing */}
-          <div className="mb-3">
-            <div className="flex items-center space-x-2">
-              <span className="text-lg font-bold text-slate-900 dark:text-white">
-                {formatPrice(currentPrice)}
-              </span>
-              {discountPercent > 0 && (
-                <span className="text-slate-500 dark:text-slate-400 line-through text-sm">
-                  {formatPrice(originalPrice)}
+          {/* Price and Add to Cart Row */}
+          <div className="flex items-center justify-between">
+            {/* Pricing */}
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-heading font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  {formatPrice(currentPrice)}
                 </span>
+                {discountPercent > 0 && (
+                  <span className="text-xs text-slate-400 line-through font-medium">
+                    {formatPrice(originalPrice)}
+                  </span>
+                )}
+              </div>
+              {discountPercent > 0 && (
+                <div className="text-green-600 text-xs font-semibold mt-0.5">
+                  Save {formatPrice(savingsAmount)}
+                </div>
               )}
             </div>
-            {discountPercent > 0 && (
-              <div className="text-green-600 dark:text-green-400 text-sm font-medium mt-1">
-                You save {formatPrice(originalPrice - currentPrice)}
-              </div>
-            )}
-          </div>
 
-          {/* Add to Cart Button - Moved outside image, at bottom */}
-          <div className="mt-auto">
-            <button
+            {/* NextUI Circular Button */}
+            <NextUIButton
               onClick={handleAddToCart}
-              className={`w-full py-2.5 rounded-lg flex items-center justify-center gap-2 font-semibold text-sm shadow-md transition-all duration-200 hover:shadow-lg ${
+              variant={isInCart(product.id) ? "solid" : "shadow"}
+              radius="full"
+              size="sm"
+              className={`w-10 h-10 min-w-10 p-0 flex-shrink-0 ${
                 isInCart(product.id)
-                  ? 'bg-red-500 hover:bg-red-600 text-white'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  ? 'bg-red-500 hover:bg-red-600 shadow-red-500/50'
+                  : 'bg-slate-900 hover:bg-slate-800'
               }`}
               title={isInCart(product.id) ? 'Remove from cart' : 'Add to cart'}
             >
-              <ShoppingCart className="w-4 h-4" />
-              <span>{isInCart(product.id) ? 'Remove from Cart' : 'Add to Cart'}</span>
-            </button>
+              {isInCart(product.id) ? (
+                <ShoppingCart className="w-4 h-4" />
+              ) : (
+                <Plus className="w-5 h-5" />
+              )}
+            </NextUIButton>
           </div>
         </div>
       </Link>
-    </div>
+    </NextUICard>
   );
 };
 

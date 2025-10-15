@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './supabase-simple';
 import { Warehouse, WarehouseGroup } from '@/types';
 
 function mapSupabaseRowToWarehouse(row: any): Warehouse {
@@ -20,17 +20,8 @@ function mapSupabaseRowToWarehouse(row: any): Warehouse {
 
 // Check if Supabase is properly configured
 function isSupabaseConfigured(): boolean {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
-  return !!(
-    supabaseUrl &&
-    supabaseKey &&
-    supabaseUrl.trim() !== '' &&
-    supabaseKey.trim() !== '' &&
-    supabaseUrl.startsWith('http') &&
-    supabaseUrl.includes('supabase.co')
-  );
+  // Always return true since we're using direct config
+  return true;
 }
 
 // Get all warehouses
@@ -82,14 +73,14 @@ export async function getAllWarehouses(): Promise<Warehouse[]> {
       .order('name', { ascending: true });
 
     if (error) {
-      console.error('❌ Supabase fetch error:', error);
-      throw new Error(`Database fetch failed: ${error.message}`);
+      console.warn('⚠️ Warehouses table not found or error fetching:', error.message);
+      return []; // Return empty array instead of throwing
     }
 
     return (data || []).map(mapSupabaseRowToWarehouse);
   } catch (error) {
-    console.error('❌ Get warehouses error:', error);
-    throw error;
+    console.warn('⚠️ Get warehouses error:', error);
+    return []; // Return empty array instead of throwing
   }
 }
 

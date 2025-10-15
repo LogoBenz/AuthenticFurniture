@@ -1,14 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://nufciijehcapowhhggcl.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51ZmNpaWplaGNhcG93aGhnZ2NsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMjEzNjksImV4cCI6MjA2NjY5NzM2OX0.IBOZuiEERx0QivGDKKiFzWAD_wWPWJUdw5opR4K7HZo';
 
 // Validate environment variables
 function isValidSupabaseConfig(): boolean {
   return !!(
-    supabaseUrl && 
-    supabaseAnonKey && 
-    supabaseUrl.trim() !== '' && 
+    supabaseUrl &&
+    supabaseAnonKey &&
+    supabaseUrl.trim() !== '' &&
     supabaseAnonKey.trim() !== '' &&
     supabaseUrl.startsWith('http') &&
     supabaseUrl.includes('supabase.co')
@@ -47,7 +47,7 @@ function createDummyClient() {
       signUp: () => Promise.resolve({ data: { user: null, session: null }, error: new Error('Supabase not configured') }),
       signInWithPassword: () => Promise.resolve({ data: { user: null, session: null }, error: new Error('Supabase not configured') }),
       signOut: () => Promise.resolve({ error: new Error('Supabase not configured') }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } })
     }
   };
 }
@@ -57,7 +57,7 @@ function createEnhancedFetch(): typeof fetch {
   return (async (input: RequestInfo | URL, init?: RequestInit) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased to 30 seconds
-    
+
     try {
       const response = await fetch(input, {
         ...(init || {}),
@@ -65,12 +65,12 @@ function createEnhancedFetch(): typeof fetch {
         mode: 'cors',
         credentials: 'omit'
       });
-      
+
       clearTimeout(timeoutId);
       return response;
     } catch (error: any) {
       clearTimeout(timeoutId);
-      
+
       // Log the error for debugging but don't throw
       console.warn('Supabase connection failed:', {
         url: String(input),
@@ -78,18 +78,18 @@ function createEnhancedFetch(): typeof fetch {
         type: error.name,
         code: error.code
       });
-      
+
       // Return a mock response that indicates failure but doesn't crash the app
       return new Response(
-        JSON.stringify({ 
-          error: { 
+        JSON.stringify({
+          error: {
             message: 'Network connection failed',
             details: error.message,
             code: error.code || 'NETWORK_ERROR',
             name: error.name || 'NetworkError'
-          } 
+          }
         }),
-        { 
+        {
           status: 503,
           statusText: 'Service Unavailable',
           headers: { 'Content-Type': 'application/json' }
@@ -100,47 +100,24 @@ function createEnhancedFetch(): typeof fetch {
 }
 
 // Create the Supabase client
-let supabaseClient;
+console.log('🔧 Creating Supabase client with URL:', supabaseUrl);
 
-if (!isValidSupabaseConfig()) {
-  console.warn('Supabase configuration missing or invalid. Using fallback mode.');
-  supabaseClient = createDummyClient();
-} else {
-  try {
-    console.log('🔧 Creating Supabase client with URL:', supabaseUrl);
-    // Use non-persistent, non-refreshing auth to avoid background retryable
-    // auth fetches in anonymous sessions which can spam the console with
-    // AuthRetryableFetchError when environments are misconfigured.
-    supabaseClient = createClient(supabaseUrl as string, supabaseAnonKey as string, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
-      },
-      global: {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-        },
-        fetch: createEnhancedFetch()
-      }
-    });
-    console.log('✅ Supabase client created successfully');
-  } catch (error) {
-    console.warn('❌ Failed to create Supabase client:', error);
-    supabaseClient = createDummyClient();
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,  // ✅ FIXED: Now sessions persist!
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined
   }
-}
-
-// Cast to any to avoid complex union types between the real client and dummy fallback
-export const supabase: any = supabaseClient as any;
+});
 
 // Admin client for server-side operations
 export const createAdminClient = () => {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
+
   if (!supabaseServiceKey || !supabaseUrl) {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY or SUPABASE_URL environment variable.');
   }
-  
+
   return createClient(supabaseUrl as string, supabaseServiceKey);
 };

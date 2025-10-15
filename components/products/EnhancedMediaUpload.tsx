@@ -516,23 +516,17 @@ export function EnhancedMediaUpload({
       )}
 
       {/* Image Cropping Dialog */}
-      {cropImage && (
-        <Dialog open={!!cropImage} onOpenChange={() => setCropImage(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Crop className="w-5 h-5" />
-                Crop Image
-              </DialogTitle>
-            </DialogHeader>
+      <Dialog open={!!cropImage} onOpenChange={() => setCropImage(null)}>
+        <DialogContent className="!w-[95vw] !h-[95vh] !max-w-[95vw] !max-h-[95vh] p-0">
+          {cropImage && (
             <ImageCropper
               imageUrl={cropImage.url}
               onCropComplete={handleCropComplete}
               onCancel={() => setCropImage(null)}
             />
-          </DialogContent>
-        </Dialog>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Video Preview Dialog */}
       {previewVideo && (

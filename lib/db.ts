@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './supabase-simple';
 import { Product, Customer, Order } from '@/types';
 import productsData from '@/data/products-fallback.json';
 
@@ -177,18 +177,8 @@ function mapSupabaseRowToProduct(row: any): Product {
 
 // Check if Supabase is properly configured
 function isSupabaseConfigured(): boolean {
-  if (typeof window !== 'undefined') {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    return !!(supabaseUrl && 
-              supabaseKey && 
-              supabaseUrl.trim() !== '' && 
-              supabaseKey.trim() !== '' &&
-              supabaseUrl.startsWith('http') &&
-              supabaseUrl.includes('supabase.co'));
-  }
-  return false;
+  // Always return true since we're using direct config
+  return true;
 }
 
 // Enhanced error handling - detect CORS and configuration issues

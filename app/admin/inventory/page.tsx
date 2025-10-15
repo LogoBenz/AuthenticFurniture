@@ -6,10 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Search, Package, Warehouse, Edit, Save, X, Loader2, Plus, Minus } from 'lucide-react';
+import { Search, Package, Warehouse, Edit, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Warehouse as WarehouseType } from '@/types';
 import Image from 'next/image';
@@ -52,14 +51,8 @@ export default function AdminInventoryPage() {
   const [loading, setLoading] = useState(true);
   const [selectedWarehouse, setSelectedWarehouse] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [sortBy, setSortBy] = useState<string>('name-asc');
   const [editingWarehouse, setEditingWarehouse] = useState<WarehouseStock | null>(null);
-  const [editValues, setEditValues] = useState({
-    stock_quantity: 0,
-    reserved_quantity: 0,
-    reorder_level: 0,
-  });
-  const [saving, setSaving] = useState(false);
   const [showStockModal, setShowStockModal] = useState(false);
 
   // Fetch warehouses and inventory
@@ -79,6 +72,7 @@ export default function AdminInventoryPage() {
         const inventoryResponse = await fetch('/api/inventory/all');
         if (inventoryResponse.ok) {
           const { inventory: fetchedInventory } = await inventoryResponse.json();
+          console.log('📦 Inventory data sample:', fetchedInventory[0]); // Debug log
           setInventory(fetchedInventory || []);
         }
       } catch (error) {
@@ -90,6 +84,12 @@ export default function AdminInventoryPage() {
     };
 
     fetchData();
+
+    // Set up polling to refresh inventory every 30 seconds
+    const intervalId = setInterval(fetchData, 30000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   // Handle warehouse selection change
@@ -109,15 +109,6 @@ export default function AdminInventoryPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleEdit = (warehouseStock: WarehouseStock) => {
-    setEditingWarehouse(warehouseStock);
-    setEditValues({
-      stock_quantity: warehouseStock.stock_quantity,
-      reserved_quantity: warehouseStock.reserved_quantity,
-      reorder_level: warehouseStock.reorder_level,
-    });
   };
 
   const handleStockAdjustment = (warehouseStock: WarehouseStock) => {
@@ -159,64 +150,6 @@ export default function AdminInventoryPage() {
     }
   };
 
-  const handleSave = async () => {
-    if (!editingWarehouse) return;
-
-    try {
-      setSaving(true);
-      
-      const response = await fetch('/api/inventory/stock', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          stockUpdates: [{
-            warehouseId: editingWarehouse.warehouse_id,
-            productId: editingWarehouse.product_id,
-            stockQuantity: editValues.stock_quantity,
-            reservedQuantity: editValues.reserved_quantity,
-            reorderLevel: editValues.reorder_level,
-          }]
-        }),
-      });
-
-      if (response.ok) {
-        // Refresh inventory data
-        const inventoryResponse = await fetch('/api/inventory/all');
-        if (inventoryResponse.ok) {
-          const { inventory: fetchedInventory } = await inventoryResponse.json();
-          setInventory(fetchedInventory || []);
-        }
-        
-        toast.success('Stock updated successfully');
-        setEditingWarehouse(null);
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'Failed to update stock');
-      }
-    } catch (error) {
-      console.error('Error updating stock:', error);
-      toast.error('Failed to update stock');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setEditingWarehouse(null);
-    setEditValues({
-      stock_quantity: 0,
-      reserved_quantity: 0,
-      reorder_level: 0,
-    });
-  };
-
-  const getWarehouseName = (warehouseId: string) => {
-    const warehouse = warehouses.find(w => w.id === warehouseId);
-    return warehouse ? `${warehouse.name} (${warehouse.state})` : 'Unknown Warehouse';
-  };
-
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = 
       item.product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -228,6 +161,23 @@ export default function AdminInventoryPage() {
     }
     
     return matchesSearch;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'name-asc':
+        return a.product.name.localeCompare(b.product.name);
+      case 'name-desc':
+        return b.product.name.localeCompare(a.product.name);
+      case 'stock-asc':
+        return a.totalStock - b.totalStock;
+      case 'stock-desc':
+        return b.totalStock - a.totalStock;
+      case 'price-asc':
+        return a.product.price - b.product.price;
+      case 'price-desc':
+        return b.product.price - a.product.price;
+      default:
+        return 0;
+    }
   });
 
   const getStockStatus = (totalStock: number, reorderLevel: number) => {
@@ -251,6 +201,27 @@ export default function AdminInventoryPage() {
           <h1 className="text-3xl font-bold">Inventory Management</h1>
           <p className="text-muted-foreground">Track and manage stock across all warehouses</p>
         </div>
+        <Button 
+          onClick={async () => {
+            setLoading(true);
+            try {
+              const inventoryResponse = await fetch('/api/inventory/all');
+              if (inventoryResponse.ok) {
+                const { inventory: fetchedInventory } = await inventoryResponse.json();
+                setInventory(fetchedInventory || []);
+                toast.success('Inventory refreshed');
+              }
+            } catch (error) {
+              toast.error('Failed to refresh inventory');
+            } finally {
+              setLoading(false);
+            }
+          }}
+          variant="outline"
+        >
+          <Package className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
       {/* Filters */}
@@ -269,7 +240,7 @@ export default function AdminInventoryPage() {
           </div>
         </div>
         
-        <div className="sm:w-64">
+        <div className="sm:w-48">
           <Label htmlFor="warehouse">Warehouse</Label>
           <Select value={selectedWarehouse} onValueChange={handleWarehouseChange}>
             <SelectTrigger>
@@ -285,130 +256,162 @@ export default function AdminInventoryPage() {
             </SelectContent>
           </Select>
         </div>
+
+        <div className="sm:w-48">
+          <Label htmlFor="sortBy">Sort By</Label>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger>
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+              <SelectItem value="stock-asc">Stock (Low to High)</SelectItem>
+              <SelectItem value="stock-desc">Stock (High to Low)</SelectItem>
+              <SelectItem value="price-asc">Price (Low to High)</SelectItem>
+              <SelectItem value="price-desc">Price (High to Low)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Inventory Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Package className="h-5 w-5 mr-2" />
-            Inventory
-            <Badge variant="secondary" className="ml-2">
-              {filteredInventory.length} items
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {filteredInventory.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No inventory found.</p>
-              <p className="text-sm">Try adjusting your search or warehouse filter.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Model No</TableHead>
-                    <TableHead>Total Stock</TableHead>
-                    <TableHead>Warehouses</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-12"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredInventory.map((item) => {
-                    const stockStatus = getStockStatus(item.totalStock, Math.max(...item.warehouses.map(w => w.reorder_level)));
-                    
-                    return (
-                      <TableRow key={item.product.id}>
-                        <TableCell>
-                          <div className="flex items-center space-x-3">
-                            {item.product.images?.[0] && (
-                              <Image
-                                src={item.product.images[0]}
-                                alt={item.product.name}
-                                width={40}
-                                height={40}
-                                className="w-10 h-10 object-cover rounded"
-                              />
-                            )}
-                            <div>
-                              <div className="font-medium">{item.product.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                ₦{item.product.price.toLocaleString()}
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className="font-mono text-sm">
-                          {item.product.model_no || 'N/A'}
-                        </TableCell>
-                        
-                        <TableCell>
-                          <div className="text-center">
-                            <div className="font-bold text-lg">{item.totalStock}</div>
-                            <div className="text-xs text-muted-foreground">
-                              Available: {item.totalAvailable}
-                            </div>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell>
-                          <div className="space-y-1">
-                            {item.warehouses.map((warehouse) => (
-                              <div key={warehouse.id} className="flex items-center justify-between text-sm">
-                                <div className="flex items-center">
-                                  <Warehouse className="h-3 w-3 mr-1" />
-                                  <span className="font-medium">{warehouse.warehouse.name}</span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <span className="font-mono font-semibold text-lg">{warehouse.stock_quantity}</span>
-                                  <div className="flex gap-1">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleStockAdjustment(warehouse)}
-                                      className="h-7 w-7 p-0 text-green-600 border-green-200 hover:bg-green-50"
-                                      title="Adjust Stock"
-                                    >
-                                      <Edit className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell>
-                          <Badge variant={stockStatus.color as any}>
-                            {stockStatus.status === 'out' ? 'Out of Stock' :
-                             stockStatus.status === 'low' ? 'Low Stock' : 'In Stock'}
-                          </Badge>
-                        </TableCell>
-                        
-                        <TableCell>
+      {/* Inventory Grid - Modern Card Layout */}
+      {filteredInventory.length === 0 ? (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Package className="h-16 w-16 mx-auto mb-4 opacity-30 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">No inventory found</h3>
+            <p className="text-sm text-muted-foreground">Try adjusting your search or warehouse filter.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredInventory.map((item) => {
+            const stockStatus = getStockStatus(item.totalStock, Math.max(...item.warehouses.map(w => w.reorder_level)));
+            
+            // Handle images - they might be a JSON string, array, or null
+            let imageUrl = null;
+            if (item.product.images) {
+              if (typeof item.product.images === 'string') {
+                try {
+                  const parsed = JSON.parse(item.product.images);
+                  imageUrl = Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : null;
+                } catch {
+                  // If it's a string but not JSON, use it directly
+                  imageUrl = item.product.images;
+                }
+              } else if (Array.isArray(item.product.images) && item.product.images.length > 0) {
+                imageUrl = item.product.images[0];
+              }
+            }
+            
+            return (
+              <Card key={item.product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                {/* Product Image */}
+                <div className="relative h-48 bg-gray-100 dark:bg-gray-800">
+                  {imageUrl ? (
+                    <Image
+                      src={imageUrl}
+                      alt={item.product.name}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          const fallback = document.createElement('div');
+                          fallback.className = 'flex items-center justify-center h-full';
+                          fallback.innerHTML = '<svg class="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>';
+                          parent.appendChild(fallback);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <Package className="h-16 w-16 text-gray-300" />
+                    </div>
+                  )}
+                  
+                  {/* Stock Status Badge */}
+                  <div className="absolute top-2 right-2">
+                    <Badge 
+                      variant={stockStatus.color as any}
+                      className="shadow-md"
+                    >
+                      {stockStatus.status === 'out' ? 'Out of Stock' :
+                       stockStatus.status === 'low' ? 'Low Stock' : 'In Stock'}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Product Info */}
+                <CardContent className="p-4">
+                  <div className="mb-3">
+                    <h3 className="font-semibold text-lg line-clamp-2 mb-1">
+                      {item.product.name}
+                    </h3>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span className="font-mono">{item.product.model_no || 'N/A'}</span>
+                      <span className="font-semibold text-foreground">
+                        ₦{item.product.price.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Total Stock */}
+                  <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-3 mb-3">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                        {item.totalStock}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Total Stock ({item.totalAvailable} available)
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Warehouse Breakdown */}
+                  <div className="space-y-2">
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Warehouses
+                    </div>
+                    {item.warehouses.map((warehouse) => (
+                      <div 
+                        key={warehouse.id} 
+                        className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded"
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <Warehouse className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                          <span className="text-sm font-medium truncate">
+                            {warehouse.warehouse.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-bold">
+                            {warehouse.stock_quantity}
+                          </span>
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={() => handleStockAdjustment(item.warehouses[0])}
+                            variant="ghost"
+                            onClick={() => handleStockAdjustment(warehouse)}
+                            className="h-8 w-8 p-0 hover:bg-green-100 hover:text-green-600"
+                            title="Adjust Stock"
                           >
-                            <Edit className="h-3 w-3" />
+                            <Edit className="h-4 w-4" />
                           </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Stock Adjustment Modal */}
       {editingWarehouse && (

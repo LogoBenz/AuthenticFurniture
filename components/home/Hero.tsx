@@ -26,24 +26,26 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative pt-2 pb-8 sm:pb-12 lg:pb-16 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4">
+    <section className="relative pt-4 sm:pt-6 pb-4 sm:pb-6 bg-white dark:bg-slate-900">
+      {/* Full width - no container */}
+      <div className="w-full">
         {/* Responsive Layout */}
-        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row gap-4 w-full max-w-[1320px] mx-auto px-4">
 
-          {/* Left Main Card - Responsive */}
+          {/* Left Main Card - NextUI Style - 883x500 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="relative overflow-hidden rounded-lg w-full lg:w-[65%] aspect-[16/9] lg:aspect-[883/500]"
+            className="relative overflow-hidden rounded-xl transition-all duration-300 flex-shrink-0"
+            style={{ aspectRatio: '883/500', width: '883px', maxWidth: '100%' }}
           >
             {/* Background Image Slideshow */}
             <div className="absolute inset-0">
               <img
                 src={mainHeroImages[mainCurrentImageIndex]}
                 alt="Modern Nigerian Living Room Furniture"
-                className="w-full h-full object-cover object-center transition-opacity duration-500"
+                className="w-full h-full object-contain transition-opacity duration-500"
               />
             </div>
 
@@ -63,13 +65,14 @@ export function Hero() {
           </motion.div>
 
           {/* Right Column - Two cards responsive */}
-          <div className="flex flex-col gap-4 w-full lg:w-[35%]">
-            {/* Top Right Card - Responsive */}
+          <div className="flex flex-col gap-4 flex-shrink-0">
+            {/* Top Right Card - NextUI Style - 429x240 */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative overflow-hidden rounded-lg w-full aspect-[16/9] lg:aspect-[429/240]"
+              className="relative overflow-hidden rounded-xl transition-all duration-300"
+              style={{ aspectRatio: '429/240', width: '429px', maxWidth: '100%' }}
             >
               <img
                 src={topRightImage}
@@ -78,12 +81,13 @@ export function Hero() {
               />
             </motion.div>
 
-            {/* Bottom Right Card - Responsive */}
+            {/* Bottom Right Card - NextUI Style - 429x240 */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="relative overflow-hidden rounded-lg w-full aspect-[16/9] lg:aspect-[429/240]"
+              className="relative overflow-hidden rounded-xl transition-all duration-300"
+              style={{ aspectRatio: '429/240', width: '429px', maxWidth: '100%' }}
             >
               <img
                 src={bottomRightImage}

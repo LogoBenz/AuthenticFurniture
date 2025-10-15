@@ -13,11 +13,11 @@ export function AdminMainContent({ children }: AdminMainContentProps) {
   return (
     <main 
       className={cn(
-        "transition-all duration-300",
-        isCollapsed ? "lg:pl-16" : "lg:pl-80"
+        "transition-all duration-300 ease-in-out min-h-screen",
+        isCollapsed ? "lg:pl-20" : "lg:pl-80"
       )}
     >
-      <div className="p-6">
+      <div className="p-6 lg:p-8">
         {children}
       </div>
     </main>

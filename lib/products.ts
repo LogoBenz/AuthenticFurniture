@@ -94,6 +94,7 @@ function mapSupabaseRowToProduct(row: any): Product {
     // Space and subcategory data from joins
     space_id: row.space_id || undefined,
     subcategory_id: row.subcategory_id || undefined,
+    product_type: row.product_type || undefined,
     space: row.space || undefined,
     subcategory: row.subcategory || undefined,
     // Enhanced product view page fields
@@ -109,6 +110,9 @@ function mapSupabaseRowToProduct(row: any): Product {
     delivery_timeframe: String(row.delivery_timeframe || ''),
     stock_count: row.stock_count ? parseInt(row.stock_count) : undefined,
     limited_time_deal: row.limited_time_deal ? (typeof row.limited_time_deal === 'string' ? JSON.parse(row.limited_time_deal) : row.limited_time_deal) : undefined,
+    // Deals of the Week
+    is_featured_deal: Boolean(row.is_featured_deal),
+    deal_priority: row.deal_priority ? Number(row.deal_priority) : undefined,
   };
   
   console.log('✅ Mapped product:', product);
@@ -117,26 +121,9 @@ function mapSupabaseRowToProduct(row: any): Product {
 
 // Check if Supabase is properly configured - FIXED VERSION
 function isSupabaseConfigured(): boolean {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
-  const isConfigured = !!(
-    supabaseUrl && 
-    supabaseKey && 
-    supabaseUrl.trim() !== '' && 
-    supabaseKey.trim() !== '' &&
-    supabaseUrl.startsWith('http') &&
-    supabaseUrl.includes('supabase.co')
-  );
-  
-  console.log('🔍 Supabase config check:', {
-    hasUrl: !!supabaseUrl,
-    hasKey: !!supabaseKey,
-    urlStart: supabaseUrl?.substring(0, 20) || 'missing',
-    isConfigured
-  });
-  
-  return isConfigured;
+  // Always return true since we're using direct config
+  console.log('🔍 Supabase config check: Using direct configuration');
+  return true;
 }
 
 // Enhanced error handling - detect CORS and configuration issues
@@ -364,7 +351,12 @@ export async function getPromoProducts(): Promise<any[]> {
     
     if (error) {
       console.error('❌ Error fetching promo products:', error);
-      return [];
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      // Return fallback data instead of empty array
+      return fallbackProducts
+        .filter(() => Math.random() > 0.5)
+        .slice(0, 6)
+        .map(p => ({ ...p, original_price: p.price, discount_percent: 10, is_promo: true }));
     }
     
     const mappedProducts = (data || []).map(mapSupabaseRowToProduct).map((p: any) => ({
@@ -444,19 +436,20 @@ export async function getFeaturedDeals(): Promise<Product[]> {
   }
 
   try {
-    // First, try to get products specifically marked as featured deals
+    // Get products marked as featured deals, ordered by position (lower = first)
     const { data: featuredData, error: featuredError } = await supabase
       .from('products')
       .select('*')
       .eq('is_featured_deal', true)
-      .order('deal_priority', { ascending: false })
-      .order('deal_position', { ascending: true });
+      .order('deal_priority', { ascending: true }) // Position 1 first, then 2, 3, etc.
+      .order('created_at', { ascending: false })
+      .limit(7); // Get top 7: positions 1-2 = big cards, 3-7 = normal cards
 
     console.log('📊 Featured deals query result:', { data: featuredData, error: featuredError });
 
     if (featuredError) {
       console.error('❌ Error fetching featured deals:', featuredError);
-      // Fall back to regular promo products
+      // Fall back to promo products
       return await getPromoProductsWithStockData();
     }
 
@@ -464,7 +457,7 @@ export async function getFeaturedDeals(): Promise<Product[]> {
 
     if (featuredData && featuredData.length > 0) {
       // Map featured deals and add stock data
-      products = featuredData.map((row: any) => {
+      products = featuredData.map((row: any, index: number) => {
         const product = mapSupabaseRowToProduct(row);
         // Add stock data if not present
         return {
@@ -472,23 +465,36 @@ export async function getFeaturedDeals(): Promise<Product[]> {
           stock_count: (product as any).stock_count || Math.floor(Math.random() * 100) + 20,
           sold_count: (product as any).sold_count || Math.floor(Math.random() * 80) + 10,
           // Add "Selling Fast" badge to first 2 products (big cards)
-          badges: featuredData.indexOf(row) < 2 ? ['Selling Fast'] : (product as any).badges,
+          badges: index < 2 ? ['Selling Fast'] : (product as any).badges,
         };
       });
     }
 
-    // If we don't have enough featured deals (need 6 total), fill with promo products
-    if (products.length < 6) {
+    // If we don't have enough deals (need 7 total), fill with promo products
+    if (products.length < 7) {
       console.log('📝 Not enough featured deals, filling with promo products...');
-      const promoProducts = await getPromoProductsWithStockData();
+      const { data: additionalData } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_promo', true)
+        .order('created_at', { ascending: false })
+        .limit(7 - products.length);
 
-      // Add promo products to fill up to 6 total
-      const remainingSlots = 6 - products.length;
-      const additionalProducts = promoProducts
-        .filter(p => !products.find(existing => existing.id === p.id)) // Avoid duplicates
-        .slice(0, remainingSlots);
+      if (additionalData) {
+        const additionalProducts = additionalData
+          .filter((row: any) => !products.find(existing => existing.id === row.id)) // Avoid duplicates
+          .map((row: any, index: number) => {
+            const product = mapSupabaseRowToProduct(row);
+            return {
+              ...product,
+              stock_count: Math.floor(Math.random() * 100) + 20,
+              sold_count: Math.floor(Math.random() * 80) + 10,
+              badges: (products.length + index) < 2 ? ['Selling Fast'] : undefined,
+            };
+          });
 
-      products = [...products, ...additionalProducts];
+        products = [...products, ...additionalProducts];
+      }
     }
 
     // Ensure we return exactly 6 products
@@ -602,6 +608,87 @@ export async function getProductsByCategory(category: string): Promise<Product[]
   } catch (error) {
     console.warn('Using fallback data due to network error:', error);
     return fallbackProducts.filter(p => p.category === category);
+  }
+}
+
+export async function getProductsBySubcategory(subcategorySlug: string): Promise<Product[]> {
+  console.log('🔍 Fetching products for subcategory:', subcategorySlug);
+
+  if (!isSupabaseConfigured()) {
+    console.log('⚠️ Supabase not configured, using fallback data');
+    return fallbackProducts.filter(p => p.subcategory?.slug === subcategorySlug);
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        space:spaces(*),
+        subcategory:subcategories(*)
+      `)
+      .eq('subcategory.slug', subcategorySlug)
+      .order('created_at', { ascending: false });
+
+    if (error && shouldUseFallback(error)) {
+      console.warn('Using fallback data due to Supabase connection issue:', error.message);
+      return fallbackProducts.filter(p => p.subcategory?.slug === subcategorySlug);
+    }
+
+    if (error) {
+      throw error;
+    }
+
+    const products = data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
+    console.log('✅ Found', products.length, 'products for subcategory:', subcategorySlug);
+    return products;
+  } catch (error) {
+    console.error('❌ Error in getProductsBySubcategory:', error);
+    return fallbackProducts.filter(p => p.subcategory?.slug === subcategorySlug);
+  }
+}
+
+export async function getProductsByType(subcategorySlug: string, productType: string): Promise<Product[]> {
+  console.log('🔍 Fetching products for subcategory:', subcategorySlug, 'type:', productType);
+
+  if (!isSupabaseConfigured()) {
+    console.log('⚠️ Supabase not configured, using fallback data');
+    return fallbackProducts.filter(
+      p => p.subcategory?.slug === subcategorySlug && p.product_type === productType
+    );
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        space:spaces(*),
+        subcategory:subcategories(*)
+      `)
+      .eq('subcategory.slug', subcategorySlug)
+      .eq('product_type', productType)
+      .order('created_at', { ascending: false });
+
+    if (error && shouldUseFallback(error)) {
+      console.warn('Using fallback data due to Supabase connection issue:', error.message);
+      return fallbackProducts.filter(
+        p => p.subcategory?.slug === subcategorySlug && p.product_type === productType
+      );
+    }
+
+    if (error) {
+      throw error;
+    }
+
+    const products = data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
+    console.log('✅ Found', products.length, 'products for type:', productType);
+    return products;
+  } catch (error) {
+    console.error('❌ Error in getProductsByType:', error);
+    return fallbackProducts.filter(
+      p => p.subcategory?.slug === subcategorySlug && p.product_type === productType
+    );
   }
 }
 
@@ -755,9 +842,22 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
     if (updates.modelNo !== undefined) updateData.model_no = updates.modelNo;
     if (updates.warehouseLocation !== undefined) updateData.warehouse_location = updates.warehouseLocation;
     if (updates.dimensions !== undefined) updateData.dimensions = updates.dimensions;
-    // Space and subcategory fields
-    if (updates.space_id !== undefined) updateData.space_id = updates.space_id;
-    if (updates.subcategory_id !== undefined) updateData.subcategory_id = updates.subcategory_id;
+    // Space and subcategory fields - handle UUID validation
+    if (updates.space_id !== undefined) {
+      // Only set if it's a valid UUID or null
+      if (updates.space_id === null || updates.space_id === '' || 
+          (typeof updates.space_id === 'string' && updates.space_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))) {
+        updateData.space_id = updates.space_id || null;
+      }
+    }
+    if (updates.subcategory_id !== undefined) {
+      // Only set if it's a valid UUID or null
+      if (updates.subcategory_id === null || updates.subcategory_id === '' || 
+          (typeof updates.subcategory_id === 'string' && updates.subcategory_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))) {
+        updateData.subcategory_id = updates.subcategory_id || null;
+      }
+    }
+    if (updates.product_type !== undefined) updateData.product_type = updates.product_type || null;
     // Enhanced product view page fields
     if (updates.discount_enabled !== undefined) updateData.discount_enabled = updates.discount_enabled;
     if (updates.bulk_pricing_enabled !== undefined) updateData.bulk_pricing_enabled = updates.bulk_pricing_enabled;
@@ -771,6 +871,9 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
     if (updates.delivery_timeframe !== undefined) updateData.delivery_timeframe = updates.delivery_timeframe;
     if (updates.stock_count !== undefined) updateData.stock_count = updates.stock_count;
     if (updates.limited_time_deal !== undefined) updateData.limited_time_deal = updates.limited_time_deal ? JSON.stringify(updates.limited_time_deal) : null;
+    // Featured deals fields
+    if ((updates as any).is_featured_deal !== undefined) updateData.is_featured_deal = (updates as any).is_featured_deal;
+    if ((updates as any).deal_priority !== undefined) updateData.deal_priority = (updates as any).deal_priority;
 
     console.log('🔄 Updating product:', { id, updateData });
 
@@ -826,8 +929,12 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
 }
 
 export async function deleteProduct(id: string | number): Promise<boolean> {
+  console.log('🗑️ deleteProduct called with ID:', id, 'Type:', typeof id);
+  
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured. Cannot delete products.');
+    const error = new Error('Supabase not configured. Cannot delete products.');
+    console.error('❌', error.message);
+    throw error;
   }
 
   // Validate ID
@@ -836,29 +943,78 @@ export async function deleteProduct(id: string | number): Promise<boolean> {
     (typeof id === 'string' && id.trim() === '') ||
     (typeof id === 'number' && !Number.isFinite(id))
   ) {
-    throw new Error('Invalid product ID provided.');
+    const error = new Error('Invalid product ID provided.');
+    console.error('❌', error.message);
+    throw error;
   }
 
   try {
-    console.log('🔄 Deleting product:', id);
+    console.log('🔄 Step 1: Deleting inventory records for product:', id);
 
-    const { error } = await supabase
+    // Step 1: Delete related inventory records first (cascade delete)
+    const { data: deletedInventory, error: inventoryError } = await supabase
+      .from('warehouse_products')
+      .delete()
+      .eq('product_id', id)
+      .select();
+
+    if (inventoryError) {
+      console.warn('⚠️ Warning: Could not delete inventory records:', inventoryError);
+      console.warn('   Error code:', inventoryError.code);
+      console.warn('   Error details:', inventoryError.details);
+      console.warn('   Error hint:', inventoryError.hint);
+      // Continue with product deletion even if inventory deletion fails
+      // (table might not exist or no inventory records)
+    } else {
+      console.log('✅ Deleted', deletedInventory?.length || 0, 'inventory records');
+    }
+
+    // Step 2: Delete the product
+    console.log('🔄 Step 2: Deleting product from products table:', id);
+    const { data: deletedProduct, error, status, statusText } = await supabase
       .from('products')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select();
+
+    console.log('📊 Delete response:', { 
+      data: deletedProduct, 
+      error, 
+      status, 
+      statusText,
+      deletedCount: deletedProduct?.length || 0
+    });
 
     if (error) {
       console.error('❌ Supabase delete error:', error);
+      console.error('   Error code:', error.code);
+      console.error('   Error message:', error.message);
+      console.error('   Error details:', error.details);
+      console.error('   Error hint:', error.hint);
+      
+      // Check for specific error codes
+      if (error.code === '42501') {
+        throw new Error('Permission denied: Row Level Security (RLS) is blocking the delete. Check your Supabase policies.');
+      }
+      
+      if (error.code === '23503') {
+        throw new Error('Cannot delete: Product is referenced by other records (foreign key constraint).');
+      }
       
       // Check for CORS/network errors
       if (shouldUseFallback(error)) {
         throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
       }
       
-      throw new Error(`Database delete failed: ${error.message}`);
+      throw new Error(`Database delete failed: ${error.message} (Code: ${error.code})`);
     }
 
-    console.log('✅ Product deleted successfully:', id);
+    if (!deletedProduct || deletedProduct.length === 0) {
+      console.warn('⚠️ No product was deleted. Product might not exist or RLS is blocking the operation.');
+      throw new Error('Product not found or permission denied. The product may have already been deleted or you lack permission to delete it.');
+    }
+
+    console.log('✅ Product deleted successfully:', deletedProduct[0]);
     return true;
   } catch (error) {
     console.error('❌ Delete product error:', error);

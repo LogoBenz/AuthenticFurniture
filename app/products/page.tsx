@@ -80,6 +80,7 @@ function ProductsPageContent() {
     }
 
     // Filter by Space and Subcategory (Space → Subspace enforcement)
+    // Also fallback to matching by subcategory name if space/subcategory relationships aren't set
     if (urlSpace) {
       filtered = filtered.filter(product => {
         const productSpaceSlug = (product.space?.slug || "").toLowerCase();
@@ -89,7 +90,13 @@ function ProductsPageContent() {
     if (urlSubcategory) {
       filtered = filtered.filter(product => {
         const productSubSlug = (product.subcategory?.slug || "").toLowerCase();
-        return productSubSlug === urlSubcategory.toLowerCase();
+        const productCategory = product.category.toLowerCase();
+        const subcategoryName = urlSubcategory.replace(/-/g, ' ').toLowerCase();
+        
+        // Match by subcategory slug OR by category name (fallback)
+        return productSubSlug === urlSubcategory.toLowerCase() || 
+               productCategory.includes(subcategoryName) ||
+               subcategoryName.includes(productCategory);
       });
     }
 

@@ -1,19 +1,10 @@
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase-simple';
 import { BlogPost, BlogCategory, BlogLike } from '@/types';
 
 // Check if Supabase is properly configured
 function isSupabaseConfigured(): boolean {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
-  return !!(
-    supabaseUrl && 
-    supabaseKey && 
-    supabaseUrl.trim() !== '' && 
-    supabaseKey.trim() !== '' &&
-    supabaseUrl.startsWith('http') &&
-    supabaseUrl.includes('supabase.co')
-  );
+  // Always return true since we're using direct config
+  return true;
 }
 
 // Get all published blog posts

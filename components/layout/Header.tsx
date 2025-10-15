@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Settings, LogOut, Lock, Facebook, Instagram, Linkedin, Twitter, Armchair, Gamepad2, Sofa, Table, Leaf, Puzzle, Search, User, ChevronDown, Home, Briefcase, Building, TreePine, Archive, Bed, GraduationCap, Users, Sun } from "lucide-react";
+import { Menu, X, Settings, LogOut, Lock, Facebook, Instagram, Linkedin, Twitter, Armchair, Gamepad2, Sofa, Table, Leaf, Puzzle, Search, User, ChevronDown, Home, Briefcase, Building, TreePine, Archive, Bed, GraduationCap, Users, Sun, Lamp, Utensils, Wine, Umbrella, Building2, School, Hotel, Store, Warehouse } from "lucide-react";
 
 function TikTokIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -170,18 +170,29 @@ export function Header() {
   // Helper function to get icon component
   const getIconComponent = (iconName: string) => {
     const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = {
+      // Spaces
       'Home': Home,
       'Briefcase': Briefcase,
-      'Building': Building,
+      'Building': Building2,
+      'Building2': Building2,
       'TreePine': TreePine,
+      'Hotel': Hotel,
+      'School': School,
+      'Store': Store,
+      'Warehouse': Warehouse,
+      // Subcategories
       'Sofa': Sofa,
       'Bed': Bed,
       'Archive': Archive,
       'Table': Table,
-      'GraduationCap': GraduationCap,
+      'GraduationCap': Armchair, // Better icon for chairs
       'Users': Users,
       'Armchair': Armchair,
       'Sun': Sun,
+      'Lamp': Lamp,
+      'Utensils': Utensils,
+      'Wine': Wine,
+      'Umbrella': Umbrella,
     };
     return iconMap[iconName] || Table; // Default to Table icon
   };
@@ -433,49 +444,70 @@ export function Header() {
                   <ChevronDown className="w-4 h-4" />
                 </button>
                 
-                {/* Professional Mega Menu Dropdown */}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[600px] bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                  <div className="p-6">
-                    <div className="grid grid-cols-3 gap-6">
+                {/* shadcn-style Professional Mega Menu */}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[580px] bg-popover dark:bg-slate-950 rounded-lg shadow-lg border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="p-4">
+                    <div className="grid grid-cols-2 gap-4">
                       {spaces.map((space) => {
                         const IconComponent = getIconComponent(space.icon || 'Table');
                         return (
-                          <div key={space.id} className="group/space">
-                            <div className="flex items-center space-x-3 px-4 py-3 text-base font-semibold text-slate-900 dark:text-white group-hover/space:bg-slate-50 dark:group-hover/space:bg-slate-700 rounded-lg transition-colors">
-                              <IconComponent className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                              <span>{space.name}</span>
-                            </div>
-                            <div className="space-y-1 ml-7">
+                          <div key={space.id} className="space-y-2">
+                            {/* Space Header - shadcn style */}
+                            <Link
+                              href={`/products?space=${space.slug}`}
+                              className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors group/header"
+                            >
+                              <div className="flex h-8 w-8 items-center justify-center rounded-md border bg-background">
+                                <IconComponent className="h-4 w-4 text-muted-foreground group-hover/header:text-foreground transition-colors" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold leading-none truncate">
+                                  {space.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {space.subcategories?.length || 0} items
+                                </p>
+                              </div>
+                              <ChevronDown className="h-4 w-4 text-muted-foreground rotate-[-90deg] opacity-0 group-hover/header:opacity-100 transition-opacity" />
+                            </Link>
+                            
+                            {/* Subcategories - shadcn style */}
+                            <div className="ml-10 space-y-1">
                               {space.subcategories?.slice(0, 4).map((subcategory) => {
                                 const SubIconComponent = getIconComponent(subcategory.icon || 'Table');
                                 return (
                                   <Link
                                     key={subcategory.id}
                                     href={`/products?space=${space.slug}&subcategory=${subcategory.slug}`}
-                                    className="flex items-center space-x-2 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-300 transition-all duration-200"
+                                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors group/sub"
                                   >
-                                    <SubIconComponent className="w-4 h-4" />
-                                    <span>{subcategory.name}</span>
+                                    <SubIconComponent className="h-3.5 w-3.5 text-muted-foreground group-hover/sub:text-foreground transition-colors" />
+                                    <span className="truncate">{subcategory.name}</span>
                                   </Link>
                                 );
                               })}
                               {space.subcategories && space.subcategories.length > 4 && (
-                                <div className="text-xs text-slate-500 dark:text-slate-400 px-3 py-1">
+                                <Link
+                                  href={`/products?space=${space.slug}`}
+                                  className="flex items-center px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                >
                                   +{space.subcategories.length - 4} more
-                                </div>
+                                </Link>
                               )}
                             </div>
                           </div>
                         );
                       })}
                     </div>
-                    <div className="border-t border-slate-200 dark:border-slate-700 mt-6 pt-4">
+                    
+                    {/* Footer - shadcn style */}
+                    <div className="mt-4 pt-4 border-t">
                       <Link
                         href="/products"
-                        className="flex items-center justify-center space-x-2 px-6 py-3 text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-lg transition-colors shadow-lg hover:shadow-xl"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                       >
                         <span>View All Products</span>
-                        <ChevronDown className="w-4 h-4 rotate-[-90deg]" />
+                        <ChevronDown className="h-4 w-4 rotate-[-90deg]" />
                       </Link>
                     </div>
                   </div>

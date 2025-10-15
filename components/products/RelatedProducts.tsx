@@ -88,7 +88,7 @@ export function RelatedProducts({ currentProduct, limit = 4 }: RelatedProductsPr
 
   return (
     <div className="py-12">
-      <div className="container mx-auto px-4">
+      <div className="w-full max-w-[1400px] mx-auto px-6">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 text-center">
           Related Products
         </h2>
@@ -96,12 +96,11 @@ export function RelatedProducts({ currentProduct, limit = 4 }: RelatedProductsPr
           You might also like these products from the same category
         </p>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex flex-wrap gap-8 justify-center">
           {relatedProducts.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product}
-            />
+            <div key={product.id} className="w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.34rem)]">
+              <ProductCard product={product} />
+            </div>
           ))}
         </div>
 
@@ -113,9 +112,11 @@ export function RelatedProducts({ currentProduct, limit = 4 }: RelatedProductsPr
             <p className="text-center text-slate-600 dark:text-slate-400 mb-8">
               People also bought these with this product
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex flex-wrap gap-8 justify-center">
               {complementaryProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <div key={product.id} className="w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.34rem)]">
+                  <ProductCard product={product} />
+                </div>
               ))}
             </div>
           </div>

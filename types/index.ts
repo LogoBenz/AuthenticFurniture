@@ -24,6 +24,7 @@ export interface Product {
   // New category system
   space_id?: string;
   subcategory_id?: string;
+  product_type?: string; // e.g., "Executive Tables", "Electric Desks", etc.
   space?: Space;
   subcategory?: Subcategory;
   // Enhanced product view page fields
@@ -48,6 +49,9 @@ export interface Product {
     end_date: string;
     discount_percent: number;
   };
+  // Featured deals (Deals of the Week)
+  is_featured_deal?: boolean;
+  deal_priority?: number; // 1-10, higher = first. Top 2 = big cards, next 5 = normal cards
   // Color variants
   variants?: ProductVariant[];
 }

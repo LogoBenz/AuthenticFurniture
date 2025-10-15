@@ -14,13 +14,16 @@ interface ProductImageGalleryProps {
 }
 
 export function ProductImageGallery({ 
-  images, 
+  images: imagesProp, 
   productName, 
   className = "",
   isCard = false 
 }: ProductImageGalleryProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Safety check: ensure images is an array
+  const images = Array.isArray(imagesProp) ? imagesProp : (imagesProp ? [imagesProp as any] : []);
 
   if (!images || images.length === 0) {
     return (

@@ -103,39 +103,110 @@ export function Categories() {
 
   const orderedSubcategories = getOrderedSubcategories();
 
-  return (
-    <section className="py-12 sm:py-16">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4 text-center">
-          Shop by Categories
-        </h2>
-        <p className="text-center text-slate-600 mb-12 max-w-2xl mx-auto text-lg">
-          Discover our carefully curated furniture collections designed for every space and style
-        </p>
+  // Define popular categories with clean product images on white backgrounds
+  const popularCategories = [
+    { 
+      name: 'Student Chairs', 
+      slug: 'student-chairs', 
+      image: '/catImg/student-chair.png',
+      productCount: 12
+    },
+    { 
+      name: 'Office Tables', 
+      slug: 'office-tables', 
+      image: '/catImg/oTable.png',
+      productCount: 18
+    },
+    { 
+      name: 'Complimentary', 
+      slug: 'complimentary', 
+      image: '/catImg/compCat.png',
+      productCount: 8
+    },
+    { 
+      name: 'Office Chairs', 
+      slug: 'office-chairs', 
+      image: '/catImg/oChair.png',
+      productCount: 24
+    },
+    { 
+      name: 'Sofa Sets', 
+      slug: 'sofa-sets', 
+      image: '/catImg/sofaCar.png',
+      productCount: 15
+    },
+    { 
+      name: 'Auditorium Chair', 
+      slug: 'auditorium-chair', 
+      image: '/catImg/AuditoriumCat.png',
+      productCount: 6
+    },
+    { 
+      name: 'Storage Cabinets', 
+      slug: 'storage-cabinets', 
+      image: '/catImg/cabinet.png',
+      productCount: 10
+    },
+    { 
+      name: 'Patio Sets', 
+      slug: 'patio-sets', 
+      image: '/catImg/patioCat.png',
+      productCount: 5
+    },
+  ];
 
-        {/* Horizontal sliding carousel for all devices */}
-        <div className="w-full">
-          <div className="flex justify-start px-4">
-            <div className="flex space-x-6 overflow-x-auto scrollbar-hide pb-4 max-w-full">
-              {orderedSubcategories.map((subcategory) => {
-                const IconComponent = getIconComponent(subcategory.icon || 'Table');
+  return (
+    <section className="pt-4 pb-16 sm:pt-6 sm:pb-20 bg-white">
+      <div className="max-w-[85rem] mx-auto px-4">
+        {/* Title */}
+        <div className="text-center mb-10">
+          <h2 className="text-[28px] font-heading font-semibold text-slate-900 tracking-tight">
+            Popular Categories
+          </h2>
+        </div>
+
+        {/* Horizontal Sliding Carousel - One Row */}
+        <div className="relative max-w-7xl mx-auto">
+          {/* Scrollable Container */}
+          <div className="overflow-x-auto scrollbar-hide pb-4">
+            <div className="flex gap-6 px-2">
+              {popularCategories.map((category) => {
+                // Categories that need zoom out (padding)
+                const needsZoomOut = ['complimentary', 'office-chairs', 'auditorium-chair', 'storage-cabinets'].includes(category.slug);
+                
                 return (
                   <Link
-                    href={`/products?subcategory=${subcategory.slug}`}
-                    key={subcategory.id}
-                    className="flex-shrink-0 group flex flex-col items-center p-4 rounded-xl bg-white border-2 border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300 min-w-[140px] hover:scale-105"
+                    href={`/products?category=${category.slug}`}
+                    key={category.slug}
+                    className="group flex-shrink-0 w-[200px] sm:w-[220px]"
                   >
-                    <div className="w-14 h-14 mb-3 flex items-center justify-center rounded-full bg-slate-50 group-hover:bg-blue-50 transition-colors duration-300">
-                      <IconComponent className="w-7 h-7 text-slate-700 group-hover:text-blue-600 transition-colors duration-300 group-hover:scale-110 transition-transform duration-300" />
+                    {/* Card with sharp corners */}
+                    <div className="bg-white border border-slate-300 transition-all duration-300 ease-out hover:border-slate-500 hover:shadow-lg overflow-hidden">
+                      {/* Pure White Image Container - Landscape */}
+                      <div className={`relative aspect-[4/3] bg-white overflow-hidden ${needsZoomOut ? 'p-4' : ''}`}>
+                        <img
+                          src={category.image}
+                          alt={category.name}
+                          className={`w-full h-full transition-transform duration-500 ease-out group-hover:scale-110 ${needsZoomOut ? 'object-contain' : 'object-cover'}`}
+                        />
+                      </div>
+                    
+                    {/* Clean Text - Center Aligned */}
+                    <div className="text-center px-3 py-2 border-t border-slate-100">
+                      <h3 className="text-sm font-heading font-semibold text-slate-900 tracking-tight">
+                        {category.name}
+                      </h3>
                     </div>
-                    <span className="text-sm font-semibold text-center text-slate-900 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
-                      {subcategory.name}
-                    </span>
-                  </Link>
+                  </div>
+                </Link>
                 );
               })}
             </div>
           </div>
+
+          {/* Scroll Fade Indicators */}
+          <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
         </div>
       </div>
 

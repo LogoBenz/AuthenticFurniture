@@ -12,7 +12,7 @@ interface AdminSidebarContextType {
 const AdminSidebarContext = createContext<AdminSidebarContextType | undefined>(undefined);
 
 export function AdminSidebarProvider({ children }: { children: ReactNode }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed by default
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
