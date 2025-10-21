@@ -51,7 +51,7 @@ export function FeaturedDealsGrid({ title = "Deals of the Week", fetcher }: Feat
   }
 
   return (
-    <section className="pt-20 pb-16 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+    <section className="pt-5 pb-16 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
       <div className="max-w-[85rem] mx-auto px-4">
         <h2 className="text-[28px] font-heading font-semibold tracking-tight mb-10 text-center">
           {title}
@@ -159,9 +159,9 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
   };
 
   if (isLarge) {
-    // BIG CARD - Enhanced visibility for mobile and desktop
+    // BIG CARD - 656x299px desktop, responsive mobile
     return (
-      <div className="relative bg-white dark:bg-slate-800 border-2 border-slate-600 dark:border-slate-400 shadow-lg hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 group cursor-pointer overflow-hidden">
+      <div className="relative bg-white dark:bg-slate-800 border-2 border-slate-700 dark:border-slate-400 shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 group cursor-pointer overflow-hidden h-auto lg:h-[299px]">
         {/* Badges positioned over the image */}
         <div className="absolute top-3 left-3 z-10 flex gap-2">
           <div className="bg-yellow-400 text-slate-900 px-2.5 py-1 text-xs font-semibold shadow-md rounded">
@@ -174,11 +174,11 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
           )}
         </div>
 
-        {/* Main content area - Responsive */}
-        <div className="flex flex-col sm:flex-row relative">
+        {/* Main content area - Responsive layout */}
+        <div className="flex flex-col lg:flex-row h-full relative">
           {/* Left side - Image */}
-          <div className="w-full sm:w-2/5">
-            <div className="relative aspect-square sm:h-full bg-slate-50 dark:bg-slate-900 overflow-hidden">
+          <div className="w-full lg:w-[40%] flex-shrink-0">
+            <div className="relative h-full bg-slate-50 dark:bg-slate-900 overflow-hidden">
               <img
                 src={imageUrl}
                 alt={product.name}
@@ -188,7 +188,7 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
           </div>
 
           {/* Right side - Product Info */}
-          <div className="w-full sm:w-3/5 p-4 flex flex-col justify-center bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm">
+          <div className="w-full lg:w-[60%] flex flex-col justify-center bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-4 lg:p-0" style={{ padding: '20px 30px 20px 10px' }}>
             <div className="flex flex-col justify-between h-full">
               {/* Product details - centered content */}
               <div className="flex-grow flex flex-col justify-center">
@@ -234,14 +234,14 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
     );
   }
 
-  // SMALL CARD - Enhanced with full product info
+  // SMALL CARD - Compact 316x381px desktop, responsive mobile
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-500 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group cursor-pointer overflow-hidden flex flex-col h-full">
-      <div className="relative overflow-hidden aspect-square bg-slate-50 dark:bg-slate-900">
+    <div className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-500 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group cursor-pointer overflow-hidden flex flex-col w-full lg:w-[316px] h-auto lg:h-[381px]">
+      <div className="relative overflow-hidden aspect-square lg:h-[270px] lg:aspect-auto bg-slate-50 dark:bg-slate-900">
         <img
           src={imageUrl}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
         />
 
         {/* Discount Badge */}
@@ -273,16 +273,14 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
         </div>
       </div>
 
-      {/* Product Info */}
-      <div className="p-3 flex flex-col flex-grow">
-        <h3 className="font-semibold text-slate-900 dark:text-white text-sm line-clamp-2 mb-3 min-h-[40px]">
+      {/* Product Info - Compact */}
+      <div className="p-2 flex flex-col justify-between flex-grow">
+        <h3 className="font-semibold text-slate-900 dark:text-white text-base line-clamp-2 mb-1">
           {product.name}
         </h3>
 
-
-
         {/* Pricing */}
-        <div className="mt-auto">
+        <div>
           <div className="flex items-baseline space-x-2 mb-1">
             <span className="font-bold text-slate-900 dark:text-white text-lg">
               {formatPrice(currentPrice)}

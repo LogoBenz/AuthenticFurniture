@@ -19,6 +19,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { EnquiryCartModal } from "@/components/products/EnquiryCartModal";
+import { SearchModal } from "@/components/ui/SearchModal";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter, usePathname } from "next/navigation";
 import { getSpacesForNavigation } from "@/lib/categories";
@@ -28,6 +29,7 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [hoveredSpace, setHoveredSpace] = useState<Space | null>(null);
   const [showAdminHint, setShowAdminHint] = useState(false);
@@ -547,17 +549,15 @@ export function Header() {
 
             {/* Right icons: search, profile, cart */}
             <div className="flex items-center space-x-1 sm:space-x-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm" className="p-2 hover:bg-blue-50 dark:hover:bg-blue-950">
-                    <Search className="h-5 w-5" />
-                    <span className="sr-only">Search</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" sideOffset={8} className="p-2 w-72 sm:w-96">
-                  <Input autoFocus placeholder="Search products, categories..." className="h-10" />
-                </PopoverContent>
-              </Popover>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsSearchModalOpen(true)}
+                className="p-2 hover:bg-blue-50 dark:hover:bg-blue-950"
+              >
+                <Search className="h-5 w-5" />
+                <span className="sr-only">Search</span>
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -588,7 +588,11 @@ export function Header() {
         onClose={() => setIsCartModalOpen(false)} 
       />
 
-      {/* Search popover handled inline above */}
+      {/* Search Modal */}
+      <SearchModal 
+        isOpen={isSearchModalOpen} 
+        onClose={() => setIsSearchModalOpen(false)} 
+      />
     </>
   );
 }

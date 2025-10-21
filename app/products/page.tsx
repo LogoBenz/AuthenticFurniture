@@ -15,6 +15,8 @@ function ProductsPageContent() {
   const urlCategory = searchParams?.get("category") ?? undefined;
   const urlSpace = searchParams?.get("space") ?? undefined;
   const urlSubcategory = searchParams?.get("subcategory") ?? undefined;
+  const minPrice = searchParams?.get("minPrice") ? parseInt(searchParams.get("minPrice")!) : 0;
+  const maxPrice = searchParams?.get("maxPrice") ? parseInt(searchParams.get("maxPrice")!) : 1000000;
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -64,6 +66,10 @@ function ProductsPageContent() {
   
   // Enhanced filtering with proper search implementation
   const filteredProducts = useMemo(() => {
+    console.log('🔍 FILTERING PRODUCTS');
+    console.log('  Total products:', products.length);
+    console.log('  URL params:', { urlSpace, urlSubcategory, minPrice, maxPrice });
+    
     let filtered = products;
 
     // Apply search filter first if there's a search query
@@ -105,13 +111,21 @@ function ProductsPageContent() {
       filtered = filtered.filter(product => product.category === selectedCategory);
     }
 
+    // Filter by price range
+    console.log('  Before price filter:', filtered.length);
+    filtered = filtered.filter(product => 
+      product.price >= minPrice && product.price <= maxPrice
+    );
+    console.log('  After price filter:', filtered.length);
+
     // Filter by availability
     if (showAvailableOnly) {
       filtered = filtered.filter(product => product.inStock);
     }
 
+    console.log('  Final filtered count:', filtered.length);
     return filtered;
-  }, [products, selectedCategory, searchQuery, showAvailableOnly, urlSpace, urlSubcategory]);
+  }, [products, selectedCategory, searchQuery, showAvailableOnly, urlSpace, urlSubcategory, minPrice, maxPrice]);
 
   // Update the selected category when the URL parameter changes
   useEffect(() => {

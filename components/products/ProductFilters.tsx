@@ -25,7 +25,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [priceRange, setPriceRange] = useState<[number, number]>([
     parseInt(searchParams.get('minPrice') || '0'),
-    parseInt(searchParams.get('maxPrice') || '10000')
+    parseInt(searchParams.get('maxPrice') || '1000000')
   ]);
   const [selectedSpaces, setSelectedSpaces] = useState<string[]>(
     searchParams.get('space') ? [searchParams.get('space')!] : []
@@ -40,14 +40,45 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
 
   // Update URL when filters change
   useEffect(() => {
-    const params = new URLSearchParams();
+    // Start with existing URL params to preserve navigation params
+    const params = new URLSearchParams(window.location.search);
 
-    if (sortBy !== 'newest') params.set('sort', sortBy);
-    if (priceRange[0] > 0) params.set('minPrice', priceRange[0].toString());
-    if (priceRange[1] < 10000) params.set('maxPrice', priceRange[1].toString());
-    if (selectedSpaces.length > 0) params.set('space', selectedSpaces[0]);
-    if (selectedSubcategories.length > 0) params.set('subcategory', selectedSubcategories[0]);
-    if (availability.length > 0) params.set('availability', availability.join(','));
+    // Update or remove filter params
+    if (sortBy !== 'newest') {
+      params.set('sort', sortBy);
+    } else {
+      params.delete('sort');
+    }
+
+    if (priceRange[0] > 0) {
+      params.set('minPrice', priceRange[0].toString());
+    } else {
+      params.delete('minPrice');
+    }
+
+    if (priceRange[1] < 1000000) {
+      params.set('maxPrice', priceRange[1].toString());
+    } else {
+      params.delete('maxPrice');
+    }
+
+    if (selectedSpaces.length > 0) {
+      params.set('space', selectedSpaces[0]);
+    } else {
+      params.delete('space');
+    }
+
+    if (selectedSubcategories.length > 0) {
+      params.set('subcategory', selectedSubcategories[0]);
+    } else {
+      params.delete('subcategory');
+    }
+
+    if (availability.length > 0) {
+      params.set('availability', availability.join(','));
+    } else {
+      params.delete('availability');
+    }
 
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     router.replace(newUrl, { scroll: false });
@@ -81,7 +112,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
 
   const clearAllFilters = () => {
     setSortBy('newest');
-    setPriceRange([0, 10000]);
+    setPriceRange([0, 1000000]);
     setSelectedSpaces([]);
     setSelectedSubcategories([]);
     setAvailability([]);
@@ -90,7 +121,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
   const getActiveFiltersCount = () => {
     let count = 0;
     if (sortBy !== 'newest') count++;
-    if (priceRange[0] > 0 || priceRange[1] < 10000) count++;
+    if (priceRange[0] > 0 || priceRange[1] < 1000000) count++;
     if (selectedSpaces.length > 0) count++;
     if (selectedSubcategories.length > 0) count++;
     if (availability.length > 0) count++;
@@ -168,9 +199,9 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
             <Slider
               value={priceRange}
               onValueChange={(value) => setPriceRange(value as [number, number])}
-              max={10000}
+              max={1000000}
               min={0}
-              step={100}
+              step={10000}
               className="w-full"
             />
             <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400 mt-2">
@@ -275,7 +306,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
                   Sort: {sortBy.replace('_', ' ')}
                 </Badge>
               )}
-              {(priceRange[0] > 0 || priceRange[1] < 10000) && (
+              {(priceRange[0] > 0 || priceRange[1] < 1000000) && (
                 <Badge variant="outline" className="text-xs">
                   ₦{priceRange[0].toLocaleString()} - ₦{priceRange[1].toLocaleString()}
                 </Badge>

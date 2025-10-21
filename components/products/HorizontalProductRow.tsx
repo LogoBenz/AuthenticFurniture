@@ -77,7 +77,7 @@ export function HorizontalProductRow({ title, fetcher }: RowProps) {
   }
 
   return (
-    <section className="pt-12 pb-16 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+    <section className="pt-5 pb-16 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
       <div className="max-w-[85rem] mx-auto px-4">
         {/* Header with Navigation */}
         <div className="flex items-center justify-between mb-6">

@@ -15,9 +15,8 @@ import {
   Users,
   Plus
 } from "lucide-react";
-import { HorizontalProductRow } from "@/components/products/HorizontalProductRow";
 import { FeaturedDealsGrid } from "@/components/products/FeaturedDealsGrid";
-import { getPromoProducts, getBestSellers, getFeaturedDeals } from "@/lib/products";
+import { getFeaturedDeals } from "@/lib/products";
 import { getAllSpaces } from "@/lib/categories";
 import { Space, Subcategory } from "@/types";
 
@@ -109,54 +108,54 @@ export function Categories() {
       name: 'Student Chairs', 
       slug: 'student-chairs', 
       image: '/catImg/student-chair.png',
-      productCount: 12
+      productCount: 8
     },
     { 
       name: 'Office Tables', 
       slug: 'office-tables', 
       image: '/catImg/oTable.png',
-      productCount: 18
+      productCount: 21
     },
     { 
-      name: 'Complimentary', 
-      slug: 'complimentary', 
+      name: 'Complementory', 
+      slug: 'complementory', 
       image: '/catImg/compCat.png',
-      productCount: 8
+      productCount: 0
     },
     { 
       name: 'Office Chairs', 
       slug: 'office-chairs', 
       image: '/catImg/oChair.png',
-      productCount: 24
+      productCount: 11
     },
     { 
       name: 'Sofa Sets', 
       slug: 'sofa-sets', 
       image: '/catImg/sofaCar.png',
-      productCount: 15
+      productCount: 30
     },
     { 
-      name: 'Auditorium Chair', 
-      slug: 'auditorium-chair', 
+      name: 'Auditorium Chairs', 
+      slug: 'auditorium-chairs', 
       image: '/catImg/AuditoriumCat.png',
-      productCount: 6
+      productCount: 0
     },
     { 
-      name: 'Storage Cabinets', 
-      slug: 'storage-cabinets', 
+      name: 'Conference Table', 
+      slug: 'conference-table', 
       image: '/catImg/cabinet.png',
-      productCount: 10
+      productCount: 0
     },
     { 
-      name: 'Patio Sets', 
-      slug: 'patio-sets', 
+      name: 'Dining Sets', 
+      slug: 'dining-sets', 
       image: '/catImg/patioCat.png',
-      productCount: 5
+      productCount: 0
     },
   ];
 
   return (
-    <section className="pt-4 pb-16 sm:pt-6 sm:pb-20 bg-white">
+    <section className="pt-4 pb-8 sm:pt-6 sm:pb-10 bg-white">
       <div className="max-w-[85rem] mx-auto px-4">
         {/* Title */}
         <div className="text-center mb-10">
@@ -176,7 +175,7 @@ export function Categories() {
                 
                 return (
                   <Link
-                    href={`/products?category=${category.slug}`}
+                    href={`/products?subcategory=${category.slug}`}
                     key={category.slug}
                     className="group flex-shrink-0 w-[200px] sm:w-[220px]"
                   >
@@ -210,11 +209,11 @@ export function Categories() {
         </div>
       </div>
 
+      {/* Spacer between Popular Categories and DOTW */}
+      <div className="h-8"></div>
+
       {/* Featured Deals Grid - replaces Promo Products with 2+4 layout */}
       <FeaturedDealsGrid title="Deals of the Week" fetcher={getFeaturedDeals} />
-
-      {/* Best Sellers - keeps original horizontal layout */}
-      <HorizontalProductRow title="Best Sellers" fetcher={getBestSellers} />
     </section>
   );
 }

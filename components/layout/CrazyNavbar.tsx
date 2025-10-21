@@ -47,6 +47,7 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { EnquiryCartModal } from "@/components/products/EnquiryCartModal";
+import { SearchModal } from "@/components/ui/SearchModal";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter, usePathname } from "next/navigation";
 import { getSpacesForNavigation } from "@/lib/categories";
@@ -63,6 +64,7 @@ function TikTokIcon(props: React.SVGProps<SVGSVGElement>) {
 export function CrazyNavbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [activeSpace, setActiveSpace] = useState<string | null>(null);
   const [showTopHeader, setShowTopHeader] = useState(true);
@@ -588,21 +590,19 @@ export function CrazyNavbar() {
 
             {/* Right Actions */}
             <div className="flex items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Button variant="ghost" size="sm" className="p-2">
-                      <Search className="h-5 w-5" />
-                    </Button>
-                  </motion.div>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-80">
-                  <Input autoFocus placeholder="Search products..." />
-                </PopoverContent>
-              </Popover>
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setIsSearchModalOpen(true)}
+                  className="p-2"
+                >
+                  <Search className="h-5 w-5" />
+                </Button>
+              </motion.div>
 
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Button
@@ -641,6 +641,11 @@ export function CrazyNavbar() {
       <EnquiryCartModal
         isOpen={isCartModalOpen}
         onClose={() => setIsCartModalOpen(false)}
+      />
+
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
       />
     </>
   );

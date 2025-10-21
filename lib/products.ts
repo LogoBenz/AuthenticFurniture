@@ -699,6 +699,82 @@ export function formatPrice(price: number): string {
   }).format(price);
 }
 
+/**
+ * Search products by query string
+ * Searches across name, category, description, and features
+ * @param query - Search query string
+ * @returns Promise<Product[]> - Array of matching products (limited to 10)
+ */
+export async function searchProducts(query: string): Promise<Product[]> {
+  console.log('🔍 Searching products with query:', query);
+
+  if (!query || query.trim() === '') {
+    console.log('⚠️ Empty search query, returning empty array');
+    return [];
+  }
+
+  const searchTerm = query.trim().toLowerCase();
+
+  if (!isSupabaseConfigured()) {
+    console.log('⚠️ Supabase not configured, using fallback data');
+    // Client-side filtering on fallback data
+    return fallbackProducts
+      .filter(product =>
+        product.name.toLowerCase().includes(searchTerm) ||
+        product.category.toLowerCase().includes(searchTerm) ||
+        product.description.toLowerCase().includes(searchTerm) ||
+        product.features.some(feature => feature.toLowerCase().includes(searchTerm))
+      )
+      .slice(0, 10);
+  }
+
+  try {
+    // Try Supabase query with .or() clause for multiple field matching
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        space:spaces(*),
+        subcategory:subcategories(*)
+      `)
+      .or(`name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+      .limit(10);
+
+    if (error && shouldUseFallback(error)) {
+      console.warn('Using fallback data due to Supabase connection issue:', error.message);
+      // Fallback to client-side filtering
+      return fallbackProducts
+        .filter(product =>
+          product.name.toLowerCase().includes(searchTerm) ||
+          product.category.toLowerCase().includes(searchTerm) ||
+          product.description.toLowerCase().includes(searchTerm) ||
+          product.features.some(feature => feature.toLowerCase().includes(searchTerm))
+        )
+        .slice(0, 10);
+    }
+
+    if (error) {
+      throw error;
+    }
+
+    const products = data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
+    console.log('✅ Found', products.length, 'products matching query:', query);
+    return products;
+  } catch (error) {
+    console.error('❌ Error in searchProducts:', error);
+    // Fallback to client-side filtering
+    console.warn('Using fallback data due to network error:', error);
+    return fallbackProducts
+      .filter(product =>
+        product.name.toLowerCase().includes(searchTerm) ||
+        product.category.toLowerCase().includes(searchTerm) ||
+        product.description.toLowerCase().includes(searchTerm) ||
+        product.features.some(feature => feature.toLowerCase().includes(searchTerm))
+      )
+      .slice(0, 10);
+  }
+}
+
 // Admin functions for managing products (only work with Supabase)
 export async function createProduct(product: Omit<Product, 'id'>): Promise<Product | null> {
   if (!isSupabaseConfigured()) {
