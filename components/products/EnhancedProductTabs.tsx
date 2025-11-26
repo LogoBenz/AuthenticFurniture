@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Product } from "@/types";
-import { 
-  Package, 
-  FileText, 
-  Truck, 
+import {
+  Package,
+  FileText,
+  Truck,
   Star,
   MapPin,
   Shield,
@@ -47,18 +47,23 @@ export function EnhancedProductTabs({ product }: EnhancedProductTabsProps) {
     <div className="mt-12">
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">
-        <nav className="flex space-x-8">
+        <nav className="flex space-x-8" role="tablist" aria-label="Product Information">
           {tabs.map((tab) => {
             const Icon = tab.icon;
+            const isSelected = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
+                role="tab"
+                aria-selected={isSelected}
+                aria-controls={`panel-${tab.id}`}
+                id={`tab-${tab.id}`}
+                tabIndex={isSelected ? 0 : -1}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
+                className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${isSelected
                     ? "border-blue-800 text-blue-800"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
+                    : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 <span>{tab.label}</span>
@@ -71,7 +76,12 @@ export function EnhancedProductTabs({ product }: EnhancedProductTabsProps) {
       {/* Tab Content */}
       <div className="py-8">
         {activeTab === "specifications" && (
-          <div className="space-y-6">
+          <div
+            className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
+            role="tabpanel"
+            id="panel-specifications"
+            aria-labelledby="tab-specifications"
+          >
             {/* Description */}
             {product.description && (
               <div className="space-y-4">
@@ -160,16 +170,15 @@ export function EnhancedProductTabs({ product }: EnhancedProductTabsProps) {
                   {product.stock_count !== undefined && (
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Stock Status:</span>
-                      <span className={`text-sm font-medium ${
-                        product.stock_count > 10 
-                          ? 'text-green-600' 
-                          : product.stock_count > 0 
+                      <span className={`text-sm font-medium ${product.stock_count > 10
+                          ? 'text-green-600'
+                          : product.stock_count > 0
                             ? 'text-orange-600'
                             : 'text-red-600'
-                      }`}>
-                        {product.stock_count > 10 
-                          ? 'In Stock' 
-                          : product.stock_count > 0 
+                        }`}>
+                        {product.stock_count > 10
+                          ? 'In Stock'
+                          : product.stock_count > 0
                             ? 'Low Stock'
                             : 'Out of Stock'
                         }
@@ -191,7 +200,12 @@ export function EnhancedProductTabs({ product }: EnhancedProductTabsProps) {
         )}
 
         {activeTab === "delivery" && (
-          <div className="space-y-6">
+          <div
+            className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
+            role="tabpanel"
+            id="panel-delivery"
+            aria-labelledby="tab-delivery"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Delivery Options */}
               <div className="space-y-4">
@@ -316,7 +330,12 @@ export function EnhancedProductTabs({ product }: EnhancedProductTabsProps) {
         )}
 
         {activeTab === "reviews" && (
-          <div className="space-y-6">
+          <div
+            className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
+            role="tabpanel"
+            id="panel-reviews"
+            aria-labelledby="tab-reviews"
+          >
             <div className="text-center py-12">
               <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">

@@ -24,9 +24,9 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
 
   // Use error handling hook for main image
   const currentMediaSrc = allMedia[currentImageIndex] || "";
-  const { imgSrc, hasError, handleError } = useImageWithFallback({ 
+  const { imgSrc, hasError, handleError } = useImageWithFallback({
     src: currentMediaSrc,
-    maxRetries: 1 
+    maxRetries: 1
   });
 
   // Handle thumbnail errors
@@ -70,7 +70,7 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
             Your browser does not support the video tag.
           </video>
         ) : hasError ? (
-          <ImageFallback 
+          <ImageFallback
             productName={productName}
             category={category}
             aspectRatio="aspect-[8/5]"
@@ -137,11 +137,10 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
               <button
                 key={index}
                 onClick={() => goToMedia(index)}
-                className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${
-                  index === currentImageIndex
+                className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${index === currentImageIndex
                     ? "border-blue-800"
                     : "border-gray-200 hover:border-gray-300"
-                }`}
+                  }`}
                 aria-label={`View image ${index + 1}`}
               >
                 {isVideo(index) ? (
@@ -149,7 +148,7 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
                     <Play className="w-6 h-6 text-gray-600" />
                   </div>
                 ) : thumbnailErrors.has(index) ? (
-                  <ImageFallback 
+                  <ImageFallback
                     productName={productName}
                     category={category}
                     aspectRatio="aspect-square"
@@ -161,6 +160,7 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
                     alt={`${productName} thumbnail ${index + 1}`}
                     fill
                     className="object-cover"
+                    loading="lazy"
                     onError={() => handleThumbnailError(index)}
                   />
                 )}
@@ -172,7 +172,7 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
 
       {/* Zoom Modal */}
       {isZoomed && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           onClick={() => setIsZoomed(false)}
         >

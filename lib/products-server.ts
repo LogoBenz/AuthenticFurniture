@@ -40,7 +40,7 @@ export interface PaginatedProducts {
 function mapSupabaseRowToProduct(row: any): Product {
   // Handle images
   let images: string[] = []
-  
+
   if (row.images) {
     if (Array.isArray(row.images)) {
       images = row.images
@@ -53,11 +53,11 @@ function mapSupabaseRowToProduct(row: any): Product {
       }
     }
   }
-  
+
   if (images.length === 0 && row.image_url) {
     images = [row.image_url]
   }
-  
+
   if (images.length === 0) {
     images = ['/placeholder-product.jpg']
   }
@@ -164,7 +164,7 @@ export const getProducts = cache(async (filters: ProductFilters = {}): Promise<P
         .select('id')
         .eq('slug', filters.space)
         .single()
-      
+
       if (spaceData) {
         query = query.eq('space_id', spaceData.id)
       }
@@ -176,7 +176,7 @@ export const getProducts = cache(async (filters: ProductFilters = {}): Promise<P
         .select('id')
         .eq('slug', filters.subcategory)
         .single()
-      
+
       if (subcategoryData) {
         query = query.eq('subcategory_id', subcategoryData.id)
       }
@@ -272,7 +272,7 @@ export const getProductBySlug = unstable_cache(
           console.log(`Product not found with slug: ${slug}`)
           return null
         }
-        
+
         console.error(`Error fetching product ${slug}:`, {
           message: error.message,
           details: error.details,
@@ -395,7 +395,7 @@ export const getFeaturedDeals = cache(async (): Promise<Product[]> => {
           sold_count: Math.floor(Math.random() * 80) + 10,
           badges: (products.length + index) < 2 ? ['Selling Fast'] : undefined,
         }))
-      
+
       products = [...products, ...additionalProducts]
     }
 
@@ -412,10 +412,10 @@ export const getProductsBySubcategory = cache(async (subcategorySlug: string): P
 })
 
 export const getProductsByType = cache(async (subcategorySlug: string, productType: string): Promise<Product[]> => {
-  const result = await getProducts({ 
-    subcategory: subcategorySlug, 
+  const result = await getProducts({
+    subcategory: subcategorySlug,
     product_type: productType,
-    limit: 100 
+    limit: 100
   })
   return result.products
 })
