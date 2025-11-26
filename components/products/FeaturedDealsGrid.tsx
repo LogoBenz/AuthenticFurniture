@@ -158,10 +158,18 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
     }).format(price);
   };
 
+  // Navigate to product page
+  const handleClick = () => {
+    window.location.href = `/products/${product.slug}`;
+  };
+
   if (isLarge) {
     // BIG CARD - 656x299px desktop, responsive mobile
     return (
-      <div className="relative bg-white dark:bg-slate-800 border-2 border-slate-700 dark:border-slate-400 shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 group cursor-pointer overflow-hidden h-auto lg:h-[299px]">
+      <div 
+        onClick={handleClick}
+        className="relative bg-white border-2 border-slate-700 shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 group cursor-pointer overflow-hidden h-auto lg:h-[299px]"
+      >
         {/* Badges positioned over the image */}
         <div className="absolute top-3 left-3 z-10 flex gap-2">
           <div className="bg-yellow-400 text-slate-900 px-2.5 py-1 text-xs font-semibold shadow-md rounded">
@@ -176,9 +184,9 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
 
         {/* Main content area - Responsive layout */}
         <div className="flex flex-col lg:flex-row h-full relative">
-          {/* Left side - Image */}
-          <div className="w-full lg:w-[40%] flex-shrink-0">
-            <div className="relative h-full bg-slate-50 dark:bg-slate-900 overflow-hidden">
+          {/* Left side - Image (widened from 40% to 50%) */}
+          <div className="w-full lg:w-[50%] flex-shrink-0">
+            <div className="relative h-full bg-white overflow-hidden">
               <img
                 src={imageUrl}
                 alt={product.name}
@@ -187,8 +195,8 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
             </div>
           </div>
 
-          {/* Right side - Product Info */}
-          <div className="w-full lg:w-[60%] flex flex-col justify-center bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-4 lg:p-0" style={{ padding: '20px 30px 20px 10px' }}>
+          {/* Right side - Product Info (reduced from 60% to 50%) */}
+          <div className="w-full lg:w-[50%] flex flex-col justify-center bg-white backdrop-blur-sm p-4 lg:p-0" style={{ padding: '20px 20px 20px 10px' }}>
             <div className="flex flex-col justify-between h-full">
               {/* Product details - centered content */}
               <div className="flex-grow flex flex-col justify-center">
@@ -211,19 +219,19 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
                 </div>
               </div>
 
-              {/* Stock counter bar - Matching reference design */}
-              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3">
-                <div className="flex justify-between text-xs font-medium text-slate-600 dark:text-slate-300 mb-2 gap-2">
+              {/* Stock counter bar - Compact design */}
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2.5">
+                <div className="flex justify-between text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-1.5 gap-2">
                   <span className="text-red-500 font-semibold whitespace-nowrap">Stock: {stockCount}</span>
                   <span className="text-slate-500 whitespace-nowrap">Sold: {soldCount}</span>
                 </div>
-                <div className="bg-slate-200 dark:bg-slate-700 rounded-full h-2 mb-2 overflow-hidden">
+                <div className="bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mb-1.5 overflow-hidden">
                   <div
                     className="bg-red-500 h-full rounded-full transition-all duration-300"
                     style={{ width: `${soldPercentage}%` }}
                   />
                 </div>
-                <div className="text-xs text-center text-slate-500 dark:text-slate-400 font-medium">
+                <div className="text-[11px] text-center text-slate-500 dark:text-slate-400 font-medium">
                   Hurry! Only {stockCount} left in stock
                 </div>
               </div>
@@ -236,8 +244,11 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
 
   // SMALL CARD - Compact 316x381px desktop, responsive mobile
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-500 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group cursor-pointer overflow-hidden flex flex-col w-full lg:w-[316px] h-auto lg:h-[381px]">
-      <div className="relative overflow-hidden aspect-square lg:h-[270px] lg:aspect-auto bg-slate-50 dark:bg-slate-900">
+    <div 
+      onClick={handleClick}
+      className="bg-white border border-slate-300 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group cursor-pointer overflow-hidden flex flex-col w-full lg:w-[316px] h-auto lg:h-[381px]"
+    >
+      <div className="relative overflow-hidden aspect-square lg:h-[270px] lg:aspect-auto bg-white">
         <img
           src={imageUrl}
           alt={product.name}

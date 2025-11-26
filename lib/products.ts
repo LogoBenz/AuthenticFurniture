@@ -1,9 +1,8 @@
+import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import { supabase } from '@/lib/supabase';
+import { createAdminClient } from '@/lib/supabase-admin';
 import { Product } from "@/types";
-import productsData from "@/data/products-fallback.json";
-
-// Fallback data when Supabase is not configured
-const fallbackProducts: Product[] = productsData.products as Product[];
 
 // Convert Supabase row to Product type
 function mapSupabaseRowToProduct(row: any): Product {
@@ -119,46 +118,123 @@ function mapSupabaseRowToProduct(row: any): Product {
   return product;
 }
 
-// Check if Supabase is properly configured - FIXED VERSION
-function isSupabaseConfigured(): boolean {
-  // Always return true since we're using direct config
-  console.log('🔍 Supabase config check: Using direct configuration');
-  return true;
+
+
+// ============================================================================
+// NEW SERVER-SIDE CACHED FUNCTIONS FOR PRODUCTION SSR
+// ============================================================================
+
+/**
+ * Product filter interface for pagination and filtering
+ */
+export interface ProductFilters {
+  space?: string;
+  subcategory?: string;
+  price_min?: number;
+  price_max?: number;
+  page?: number;
+  limit?: number;
 }
 
-// Enhanced error handling - detect CORS and configuration issues
-function shouldUseFallback(error: any): boolean {
-  if (!error) return false;
-  
-  const errorMessage = error?.message || '';
-  const errorCode = error?.code || '';
-  const errorName = error?.name || '';
-  
-  // Network/CORS/Config errors should use fallback silently
-  return (
-    errorMessage.includes('CORS') || 
-    errorMessage.includes('Failed to fetch') ||
-    errorMessage.includes('NetworkError') ||
-    errorMessage.includes('not configured') ||
-    errorMessage.includes('Invalid URL') ||
-    errorMessage.includes('CORS_ERROR') ||
-    errorMessage.includes('Request timeout') ||
-    errorMessage.includes('fetch') ||
-    errorName === 'TypeError' ||
-    errorName === 'NetworkError' ||
-    errorCode === 'PGRST301' ||
-    errorCode === 'NETWORK_ERROR'
-  );
+/**
+ * Paginated products response interface
+ */
+export interface PaginatedProducts {
+  products: Product[];
+  totalCount: number;
+  page: number;
+  totalPages: number;
 }
+
+/**
+ * Server-side cached function for fetching products with pagination and filters
+ * Uses React cache() for request deduplication
+ * 
+ * @param filters - ProductFilters object with optional space, subcategory, price range, and pagination
+ * @returns Promise<PaginatedProducts> - Paginated product data with total count
+ */
+export const getProducts = cache(async (filters: ProductFilters = {}): Promise<PaginatedProducts> => {
+  console.log('🔍 getProducts: Fetching with filters:', filters);
+  
+  const supabase = createAdminClient(); // Use admin client for server-side
+  const page = filters.page || 1;
+  const limit = filters.limit || 12;
+  const offset = (page - 1) * limit;
+
+  try {
+    // Build query with selective column selection for performance
+    let query = supabase
+      .from('products')
+      .select(`
+        id,
+        name,
+        slug,
+        price,
+        images,
+        in_stock,
+        category,
+        space_id,
+        subcategory_id,
+        space:spaces(id, name, slug),
+        subcategory:subcategories(id, name, slug)
+      `, { count: 'exact' });
+
+    // Apply filters
+    if (filters.space) {
+      console.log('🔍 Applying space filter:', filters.space);
+      query = query.eq('space_id', filters.space);
+    }
+    
+    if (filters.subcategory) {
+      console.log('🔍 Applying subcategory filter:', filters.subcategory);
+      query = query.eq('subcategory_id', filters.subcategory);
+    }
+    
+    if (filters.price_min !== undefined) {
+      console.log('🔍 Applying price_min filter:', filters.price_min);
+      query = query.gte('price', filters.price_min);
+    }
+    
+    if (filters.price_max !== undefined) {
+      console.log('🔍 Applying price_max filter:', filters.price_max);
+      query = query.lte('price', filters.price_max);
+    }
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+    
+    // Order by created_at descending (newest first)
+    query = query.order('created_at', { ascending: false });
+
+    console.log('🔍 Executing query with offset:', offset, 'limit:', limit);
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error('❌ Supabase error fetching products:', error);
+      throw new Error(`Failed to fetch products: ${error.message}`);
+    }
+
+    const products = (data || []).map(mapSupabaseRowToProduct);
+    const totalCount = count || 0;
+    const totalPages = Math.ceil(totalCount / limit);
+
+    console.log('✅ getProducts: Returning', products.length, 'products, total:', totalCount, 'pages:', totalPages);
+
+    return {
+      products,
+      totalCount,
+      page,
+      totalPages
+    };
+  } catch (error) {
+    console.error('❌ Error in getProducts:', error);
+    throw error;
+  }
+});
 
 // Debug function to check database state
 export async function debugDatabaseState(): Promise<void> {
   console.log('🔍 Debugging database state...');
-  
-  if (!isSupabaseConfigured()) {
-    console.log('⚠️ Supabase not configured');
-    return;
-  }
 
   try {
     // Check total products with slugs
@@ -194,15 +270,9 @@ export async function debugDatabaseState(): Promise<void> {
 }
 
 export async function getAllProducts(): Promise<Product[]> {
-  console.log('🔍 getAllProducts: Checking Supabase config...');
-
-  if (!isSupabaseConfigured()) {
-    console.log('⚠️ getAllProducts: Supabase not configured, using fallback data');
-    return fallbackProducts;
-  }
+  console.log('🔍 getAllProducts: Querying Supabase with space/subcategory joins...');
 
   try {
-    console.log('🔍 getAllProducts: Querying Supabase with space/subcategory joins...');
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -214,99 +284,100 @@ export async function getAllProducts(): Promise<Product[]> {
 
     console.log('📊 getAllProducts: Supabase query result:', { data, error });
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return fallbackProducts;
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Supabase error fetching products:', error);
+      throw new Error(`Failed to fetch products: ${error.message}`);
     }
 
-    const products = data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : fallbackProducts;
+    const products = data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
     console.log('✅ getAllProducts: Returning', products.length, 'products');
     return products;
   } catch (error) {
     console.error('❌ getAllProducts: Error:', error);
-    if (shouldUseFallback(error)) {
-      console.warn('Using fallback data due to network error:', error);
-      return fallbackProducts;
-    }
-    return fallbackProducts;
+    throw error;
   }
 }
 
-export async function getProductBySlug(slug: string): Promise<Product | null> {
-  console.log('🔍 Looking for product with slug:', slug);
-  
-  if (!isSupabaseConfigured()) {
-    console.log('⚠️ Supabase not configured, using fallback data');
-    const found = fallbackProducts.find(p => p.slug === slug) || null;
-    console.log('📦 Fallback result:', found ? 'Found' : 'Not found');
-    return found;
-  }
+/**
+ * Server-side cached function for fetching a single product by slug
+ * Uses unstable_cache for longer-term caching with tags for revalidation
+ * 
+ * @param slug - Product slug
+ * @returns Promise<Product | null> - Product data or null if not found
+ */
+export const getProductBySlug = unstable_cache(
+  async (slug: string): Promise<Product | null> => {
+    console.log('🔍 getProductBySlug: Looking for product with slug:', slug);
 
-  try {
-    console.log('🔍 Querying Supabase for slug:', slug);
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('slug', slug)
-      .single();
+    const supabase = createAdminClient(); // Use admin client for server-side
 
-    console.log('📊 Supabase query result:', { data, error });
+    try {
+      console.log('🔍 Querying Supabase for slug:', slug);
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          space:spaces(*),
+          subcategory:subcategories(*)
+        `)
+        .eq('slug', slug)
+        .single();
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      const found = fallbackProducts.find(p => p.slug === slug) || null;
-      console.log('📦 Fallback result:', found ? 'Found' : 'Not found');
-      return found;
-    }
+      console.log('📊 Supabase query result:', { data, error });
 
-    if (error) {
-      console.error('❌ Supabase error:', error);
-      
-      // If it's a "not found" error, try to find by ID as fallback
-      if (error.code === 'PGRST116' || error.message?.includes('No rows found')) {
-        console.log('🔄 No product found with slug, trying to find by ID...');
+      if (error) {
+        console.error('❌ Supabase error:', error);
         
-        // Check if slug might be an ID
-        const { data: idData, error: idError } = await supabase
-          .from('products')
-          .select('*')
-          .eq('id', slug)
-          .single();
+        // If it's a "not found" error, try to find by ID as fallback
+        if (error.code === 'PGRST116' || error.message?.includes('No rows found')) {
+          console.log('🔄 No product found with slug, trying to find by ID...');
           
-        if (idData && !idError) {
-          console.log('✅ Found product by ID:', idData.name);
-          return mapSupabaseRowToProduct(idData);
+          // Check if slug might be an ID
+          const { data: idData, error: idError } = await supabase
+            .from('products')
+            .select(`
+              *,
+              space:spaces(*),
+              subcategory:subcategories(*)
+            `)
+            .eq('id', slug)
+            .single();
+            
+          if (idData && !idError) {
+            console.log('✅ Found product by ID:', idData.name);
+            return mapSupabaseRowToProduct(idData);
+          }
         }
+        
+        // Return null for not found, throw for other errors
+        if (error.code === 'PGRST116' || error.message?.includes('No rows found')) {
+          console.log('❌ No product found with slug:', slug);
+          return null;
+        }
+        
+        throw new Error(`Failed to fetch product: ${error.message}`);
       }
-      
+
+      if (data) {
+        console.log('✅ Product found:', data.name);
+        return mapSupabaseRowToProduct(data);
+      } else {
+        console.log('❌ No product found with slug:', slug);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Error in getProductBySlug:', error);
       throw error;
     }
-
-    if (data) {
-      console.log('✅ Product found:', data.name);
-      return mapSupabaseRowToProduct(data);
-    } else {
-      console.log('❌ No product found with slug:', slug);
-      return null;
-    }
-  } catch (error) {
-    console.error('❌ Error in getProductBySlug:', error);
-    console.warn('Using fallback data due to network error:', error);
-    const found = fallbackProducts.find(p => p.slug === slug) || null;
-    console.log('📦 Fallback result:', found ? 'Found' : 'Not found');
-    return found;
+  },
+  ['product-by-slug'],
+  {
+    revalidate: 180, // 3 minutes
+    tags: ['products']
   }
-}
+);
 
 export async function getFeaturedProducts(): Promise<Product[]> {
-  if (!isSupabaseConfigured()) {
-    return fallbackProducts.filter(p => p.isFeatured);
-  }
-
   try {
     const { data, error } = await supabase
       .from('products')
@@ -314,31 +385,20 @@ export async function getFeaturedProducts(): Promise<Product[]> {
       .eq('is_featured', true)
       .order('created_at', { ascending: false });
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return fallbackProducts.filter(p => p.isFeatured);
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Error fetching featured products:', error);
+      throw new Error(`Failed to fetch featured products: ${error.message}`);
     }
 
-    return data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : fallbackProducts.filter(p => p.isFeatured);
+    return data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
   } catch (error) {
-    console.warn('Using fallback data due to network error:', error);
-    return fallbackProducts.filter(p => p.isFeatured);
+    console.error('❌ Error in getFeaturedProducts:', error);
+    throw error;
   }
 }
 
 export async function getPromoProducts(): Promise<any[]> {
   console.log('🔍 Fetching promo products...');
-  
-  if (!isSupabaseConfigured()) {
-    console.log('⚠️ Supabase not configured, using fallback data');
-    return fallbackProducts
-      .filter(() => Math.random() > 0.5)
-      .map(p => ({ ...p, original_price: p.price, discount_percent: 10, is_promo: true }));
-  }
 
   try {
     const { data, error } = await supabase
@@ -352,11 +412,7 @@ export async function getPromoProducts(): Promise<any[]> {
     if (error) {
       console.error('❌ Error fetching promo products:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
-      // Return fallback data instead of empty array
-      return fallbackProducts
-        .filter(() => Math.random() > 0.5)
-        .slice(0, 6)
-        .map(p => ({ ...p, original_price: p.price, discount_percent: 10, is_promo: true }));
+      throw new Error(`Failed to fetch promo products: ${error.message}`);
     }
     
     const mappedProducts = (data || []).map(mapSupabaseRowToProduct).map((p: any) => ({
@@ -369,22 +425,12 @@ export async function getPromoProducts(): Promise<any[]> {
     return mappedProducts;
   } catch (error) {
     console.error('❌ Exception in getPromoProducts:', error);
-    return [];
+    throw error;
   }
 }
 
 export async function getBestSellers(): Promise<any[]> {
   console.log('🔍 Fetching best sellers...');
-
-  if (!isSupabaseConfigured()) {
-    console.log('⚠️ Supabase not configured, using fallback data');
-    return fallbackProducts.slice(0, 8).map((p, i) => ({
-      ...p,
-      original_price: p.price,
-      discount_percent: i % 2 === 0 ? 0 : 15,
-      is_best_seller: true,
-    }));
-  }
 
   try {
     const { data, error } = await supabase
@@ -397,7 +443,7 @@ export async function getBestSellers(): Promise<any[]> {
 
     if (error) {
       console.error('❌ Error fetching best sellers:', error);
-      return [];
+      throw new Error(`Failed to fetch best sellers: ${error.message}`);
     }
 
     const mappedProducts = (data || []).map(mapSupabaseRowToProduct).map((p: any) => ({
@@ -410,30 +456,12 @@ export async function getBestSellers(): Promise<any[]> {
     return mappedProducts;
   } catch (error) {
     console.error('❌ Exception in getBestSellers:', error);
-    return [];
+    throw error;
   }
 }
 
 export async function getFeaturedDeals(): Promise<Product[]> {
   console.log('🔍 Fetching featured deals...');
-
-  if (!isSupabaseConfigured()) {
-    console.log('⚠️ Supabase not configured, using fallback promo products');
-    // Return first 6 promo products as fallback with stock data
-    return fallbackProducts
-      .filter(() => Math.random() > 0.3) // Randomly select some products
-      .slice(0, 6)
-      .map((p, index) => ({
-        ...p,
-        original_price: p.price,
-        discount_percent: Math.floor(Math.random() * 30) + 5, // 5-35% discount
-        // Add stock data for the stock counter
-        stock_count: Math.floor(Math.random() * 100) + 20, // 20-120 stock
-        sold_count: Math.floor(Math.random() * 80) + 10,  // 10-90 sold
-        // Add badges for big cards
-        badges: index < 2 ? ['Selling Fast'] : undefined,
-      }));
-  }
 
   try {
     // Get products marked as featured deals, ordered by position (lower = first)
@@ -536,58 +564,30 @@ async function getPromoProductsWithStockData(): Promise<Product[]> {
 }
 
 export async function getProductCategories(): Promise<string[]> {
-  if (!isSupabaseConfigured()) {
-    const categories = new Set<string>();
-    fallbackProducts.forEach((product) => {
-      categories.add(product.category);
-    });
-    return Array.from(categories);
-  }
-
   try {
     const { data, error } = await supabase
       .from('products')
       .select('category')
       .order('category');
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      const categories = new Set<string>();
-      fallbackProducts.forEach((product) => {
-        categories.add(product.category);
-      });
-      return Array.from(categories);
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Error fetching product categories:', error);
+      throw new Error(`Failed to fetch product categories: ${error.message}`);
     }
 
     if (!data || !Array.isArray(data)) {
-      const categories = new Set<string>();
-      fallbackProducts.forEach((product) => {
-        categories.add(product.category);
-      });
-      return Array.from(categories);
+      return [];
     }
 
     const categories = [...new Set(data.map(item => item.category))];
     return categories;
   } catch (error) {
-    console.warn('Using fallback data due to network error:', error);
-    const categories = new Set<string>();
-    fallbackProducts.forEach((product) => {
-      categories.add(product.category);
-    });
-    return Array.from(categories);
+    console.error('❌ Error in getProductCategories:', error);
+    throw error;
   }
 }
 
 export async function getProductsByCategory(category: string): Promise<Product[]> {
-  if (!isSupabaseConfigured()) {
-    return fallbackProducts.filter(p => p.category === category);
-  }
-
   try {
     const { data, error } = await supabase
       .from('products')
@@ -595,29 +595,20 @@ export async function getProductsByCategory(category: string): Promise<Product[]
       .eq('category', category)
       .order('created_at', { ascending: false });
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return fallbackProducts.filter(p => p.category === category);
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Error fetching products by category:', error);
+      throw new Error(`Failed to fetch products by category: ${error.message}`);
     }
 
-    return data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : fallbackProducts.filter(p => p.category === category);
+    return data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
   } catch (error) {
-    console.warn('Using fallback data due to network error:', error);
-    return fallbackProducts.filter(p => p.category === category);
+    console.error('❌ Error in getProductsByCategory:', error);
+    throw error;
   }
 }
 
 export async function getProductsBySubcategory(subcategorySlug: string): Promise<Product[]> {
   console.log('🔍 Fetching products for subcategory:', subcategorySlug);
-
-  if (!isSupabaseConfigured()) {
-    console.log('⚠️ Supabase not configured, using fallback data');
-    return fallbackProducts.filter(p => p.subcategory?.slug === subcategorySlug);
-  }
 
   try {
     const { data, error } = await supabase
@@ -630,13 +621,9 @@ export async function getProductsBySubcategory(subcategorySlug: string): Promise
       .eq('subcategory.slug', subcategorySlug)
       .order('created_at', { ascending: false });
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return fallbackProducts.filter(p => p.subcategory?.slug === subcategorySlug);
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Error fetching products by subcategory:', error);
+      throw new Error(`Failed to fetch products by subcategory: ${error.message}`);
     }
 
     const products = data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
@@ -644,19 +631,12 @@ export async function getProductsBySubcategory(subcategorySlug: string): Promise
     return products;
   } catch (error) {
     console.error('❌ Error in getProductsBySubcategory:', error);
-    return fallbackProducts.filter(p => p.subcategory?.slug === subcategorySlug);
+    throw error;
   }
 }
 
 export async function getProductsByType(subcategorySlug: string, productType: string): Promise<Product[]> {
   console.log('🔍 Fetching products for subcategory:', subcategorySlug, 'type:', productType);
-
-  if (!isSupabaseConfigured()) {
-    console.log('⚠️ Supabase not configured, using fallback data');
-    return fallbackProducts.filter(
-      p => p.subcategory?.slug === subcategorySlug && p.product_type === productType
-    );
-  }
 
   try {
     const { data, error } = await supabase
@@ -670,15 +650,9 @@ export async function getProductsByType(subcategorySlug: string, productType: st
       .eq('product_type', productType)
       .order('created_at', { ascending: false });
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return fallbackProducts.filter(
-        p => p.subcategory?.slug === subcategorySlug && p.product_type === productType
-      );
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Error fetching products by type:', error);
+      throw new Error(`Failed to fetch products by type: ${error.message}`);
     }
 
     const products = data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
@@ -686,9 +660,7 @@ export async function getProductsByType(subcategorySlug: string, productType: st
     return products;
   } catch (error) {
     console.error('❌ Error in getProductsByType:', error);
-    return fallbackProducts.filter(
-      p => p.subcategory?.slug === subcategorySlug && p.product_type === productType
-    );
+    throw error;
   }
 }
 
@@ -700,12 +672,12 @@ export function formatPrice(price: number): string {
 }
 
 /**
- * Search products by query string
- * Searches across name, category, description, and features
+ * Search products by query string (SERVER-SIDE with caching)
+ * Searches across name, category, description
  * @param query - Search query string
  * @returns Promise<Product[]> - Array of matching products (limited to 10)
  */
-export async function searchProducts(query: string): Promise<Product[]> {
+export const searchProducts = cache(async (query: string): Promise<Product[]> => {
   console.log('🔍 Searching products with query:', query);
 
   if (!query || query.trim() === '') {
@@ -714,47 +686,33 @@ export async function searchProducts(query: string): Promise<Product[]> {
   }
 
   const searchTerm = query.trim().toLowerCase();
-
-  if (!isSupabaseConfigured()) {
-    console.log('⚠️ Supabase not configured, using fallback data');
-    // Client-side filtering on fallback data
-    return fallbackProducts
-      .filter(product =>
-        product.name.toLowerCase().includes(searchTerm) ||
-        product.category.toLowerCase().includes(searchTerm) ||
-        product.description.toLowerCase().includes(searchTerm) ||
-        product.features.some(feature => feature.toLowerCase().includes(searchTerm))
-      )
-      .slice(0, 10);
-  }
+  const supabase = createAdminClient(); // Use admin client for server-side
 
   try {
-    // Try Supabase query with .or() clause for multiple field matching
+    // Server-side Supabase query with .or() clause for multiple field matching
     const { data, error } = await supabase
       .from('products')
       .select(`
-        *,
-        space:spaces(*),
-        subcategory:subcategories(*)
+        id,
+        name,
+        slug,
+        price,
+        images,
+        image_url,
+        category,
+        in_stock,
+        original_price,
+        discount_percent,
+        space:spaces(id, name, slug),
+        subcategory:subcategories(id, name, slug)
       `)
       .or(`name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
       .limit(10);
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      // Fallback to client-side filtering
-      return fallbackProducts
-        .filter(product =>
-          product.name.toLowerCase().includes(searchTerm) ||
-          product.category.toLowerCase().includes(searchTerm) ||
-          product.description.toLowerCase().includes(searchTerm) ||
-          product.features.some(feature => feature.toLowerCase().includes(searchTerm))
-        )
-        .slice(0, 10);
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Error in searchProducts:', error);
+      // Return empty array on error instead of fallback
+      return [];
     }
 
     const products = data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
@@ -762,25 +720,13 @@ export async function searchProducts(query: string): Promise<Product[]> {
     return products;
   } catch (error) {
     console.error('❌ Error in searchProducts:', error);
-    // Fallback to client-side filtering
-    console.warn('Using fallback data due to network error:', error);
-    return fallbackProducts
-      .filter(product =>
-        product.name.toLowerCase().includes(searchTerm) ||
-        product.category.toLowerCase().includes(searchTerm) ||
-        product.description.toLowerCase().includes(searchTerm) ||
-        product.features.some(feature => feature.toLowerCase().includes(searchTerm))
-      )
-      .slice(0, 10);
+    // Return empty array on error instead of fallback
+    return [];
   }
-}
+});
 
 // Admin functions for managing products (only work with Supabase)
 export async function createProduct(product: Omit<Product, 'id'>): Promise<Product | null> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured. Cannot create products.');
-  }
-
   // Validate required fields
   if (!product.name || !product.category || !product.description || !product.imageUrl) {
     throw new Error('Missing required fields: name, category, description, and imageUrl are required.');
@@ -844,12 +790,6 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
 
     if (error) {
       console.error('❌ Supabase create error:', error);
-      
-      // Check for CORS/network errors
-      if (shouldUseFallback(error)) {
-        throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-      }
-      
       throw new Error(`Database create failed: ${error.message}`);
     }
 
@@ -862,21 +802,11 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
     return mapped;
   } catch (error) {
     console.error('❌ Create product error:', error);
-    
-    // Check if it's a network error and provide better error message
-    if (shouldUseFallback(error)) {
-      throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-    }
-    
     throw error;
   }
 }
 
 export async function updateProduct(id: string | number, updates: Partial<Product>): Promise<Product | null> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured. Cannot update products.');
-  }
-
   // Validate ID
   if (
     id === null || id === undefined ||
@@ -977,12 +907,6 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
     if (error) {
       console.error('❌ Supabase update error:', error);
       console.error('❌ Update data that failed:', updateData);
-      
-      // Check for CORS/network errors
-      if (shouldUseFallback(error)) {
-        throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-      }
-      
       throw new Error(`Database update failed: ${error.message}`);
     }
 
@@ -994,24 +918,12 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
     return mapSupabaseRowToProduct(data);
   } catch (error) {
     console.error('❌ Update product error:', error);
-    
-    // Check if it's a network error and provide better error message
-    if (shouldUseFallback(error)) {
-      throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-    }
-    
     throw error;
   }
 }
 
 export async function deleteProduct(id: string | number): Promise<boolean> {
   console.log('🗑️ deleteProduct called with ID:', id, 'Type:', typeof id);
-  
-  if (!isSupabaseConfigured()) {
-    const error = new Error('Supabase not configured. Cannot delete products.');
-    console.error('❌', error.message);
-    throw error;
-  }
 
   // Validate ID
   if (
@@ -1077,11 +989,6 @@ export async function deleteProduct(id: string | number): Promise<boolean> {
         throw new Error('Cannot delete: Product is referenced by other records (foreign key constraint).');
       }
       
-      // Check for CORS/network errors
-      if (shouldUseFallback(error)) {
-        throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-      }
-      
       throw new Error(`Database delete failed: ${error.message} (Code: ${error.code})`);
     }
 
@@ -1094,12 +1001,6 @@ export async function deleteProduct(id: string | number): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('❌ Delete product error:', error);
-    
-    // Check if it's a network error and provide better error message
-    if (shouldUseFallback(error)) {
-      throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-    }
-    
     throw error;
   }
 }
@@ -1109,15 +1010,9 @@ export { uploadProductImage, uploadProductVideo } from './uploadMedia';
 
 // Enhanced getAllProducts with filtering support
 export async function getFilteredProducts(searchParams?: URLSearchParams): Promise<Product[]> {
-  console.log('🔍 getFilteredProducts: Checking Supabase config...');
-
-  if (!isSupabaseConfigured()) {
-    console.log('⚠️ getFilteredProducts: Supabase not configured, using fallback data');
-    return fallbackProducts;
-  }
+  console.log('🔍 getFilteredProducts: Querying Supabase with space/subcategory joins...');
 
   try {
-    console.log('🔍 getFilteredProducts: Querying Supabase with space/subcategory joins...');
     let query = supabase
       .from('products')
       .select(`
@@ -1195,23 +1090,16 @@ export async function getFilteredProducts(searchParams?: URLSearchParams): Promi
 
     console.log('📊 getFilteredProducts: Supabase query result:', { data, error });
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return fallbackProducts;
-    }
-
     if (error) {
-      console.warn('❌ getFilteredProducts: Supabase error:', error);
-      // Don't throw error, just return fallback data
-      return fallbackProducts;
+      console.error('❌ getFilteredProducts: Supabase error:', error);
+      throw new Error(`Failed to fetch filtered products: ${error.message}`);
     }
 
-    const products = data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : fallbackProducts;
+    const products = data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
     console.log('✅ getFilteredProducts: Returning', products.length, 'products');
     return products;
   } catch (error) {
-    console.warn('❌ getFilteredProducts: Caught error:', error);
-    // Don't throw error, just return fallback data
-    return fallbackProducts;
+    console.error('❌ getFilteredProducts: Caught error:', error);
+    throw error;
   }
 }

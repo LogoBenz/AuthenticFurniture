@@ -10,14 +10,14 @@ import {
   Truck, 
   Shield, 
   Clock,
-  Star,
   Users,
   Package,
   Zap,
-  Heart,
   Facebook,
   Instagram,
-  Twitter
+  Twitter,
+  Star,
+  Code
 } from "lucide-react";
 import { formatPrice } from "@/lib/products";
 import { Product } from "@/types";
@@ -78,7 +78,7 @@ Can you provide more details and availability?`;
 
   const handleWhatsAppEnquiry = () => {
     const message = generateWhatsAppMessage();
-    window.open(`https://wa.me/2348123456789?text=${message}`, '_blank');
+    window.open(`https://wa.me/2349037725829?text=${message}`, '_blank');
   };
 
   const handleSocialShare = (platform: string) => {
@@ -107,61 +107,67 @@ Can you provide more details and availability?`;
 
   return (
     <div className="space-y-6">
-      {/* Product Badges */}
-      {product.badges && product.badges.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {product.badges.map((badge, index) => (
-            <Badge 
-              key={index} 
-              variant={badge === 'Best Seller' ? 'default' : 'secondary'}
-              className="bg-blue-600 text-white hover:bg-blue-700"
-            >
-              {badge}
-            </Badge>
-          ))}
-        </div>
-      )}
-
       {/* Product Title */}
-      <div>
-        <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mb-2">
+      <div className="space-y-3">
+        <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
           {product.name}
         </h1>
+        
+        {/* Badges Section */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Popular Badge with gradient */}
+          {product.popular_with && product.popular_with.length > 0 && (
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm">
+              <Star className="w-4 h-4 fill-current" />
+              <span className="text-sm font-semibold">Popular with {product.popular_with[0]}</span>
+            </div>
+          )}
+          
+          {/* Discount Badge with gradient */}
+          {discountPercent > 0 && (
+            <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm rounded-full px-3 py-1 border-0">
+              -{discountPercent}% OFF
+            </Badge>
+          )}
+        </div>
+        
+        {/* Model Number Chip */}
         {product.modelNo && (
-          <p className="text-slate-600 dark:text-slate-400 text-sm">
-            Model: {product.modelNo}
-          </p>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Code className="w-4 h-4" />
+            <span className="px-2 py-1 bg-gray-100 rounded-md font-mono text-xs">
+              {product.modelNo}
+            </span>
+          </div>
         )}
       </div>
+      
+      {/* Divider below badges section */}
+      <div className="border-b border-gray-200"></div>
 
       {/* Pricing Section */}
       <div className="space-y-4">
         <div className="flex items-center space-x-4">
-          <span className="text-3xl font-bold text-slate-900 dark:text-white">
+          <span className="text-[26px] font-semibold text-gray-900">
             {formatPrice(bulkPrice)}
           </span>
           {discountPercent > 0 && (
-            <>
-              <span className="text-xl text-slate-500 line-through">
-                {formatPrice(originalPrice)}
-              </span>
-              <Badge variant="destructive" className="bg-red-600 text-white">
-                -{discountPercent}% OFF
-              </Badge>
-            </>
+            <span className="text-xl text-gray-500 line-through">
+              {formatPrice(originalPrice)}
+            </span>
           )}
         </div>
 
         {/* Limited Time Deal */}
         {product.limited_time_deal?.enabled && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
             <div className="flex items-center space-x-2">
               <Zap className="w-5 h-5 text-red-600" />
-              <span className="text-red-800 dark:text-red-200 font-semibold">
+              <span className="text-red-800 font-semibold">
                 Limited Time Deal: {product.limited_time_deal.discount_percent}% OFF
               </span>
             </div>
-            <p className="text-red-700 dark:text-red-300 text-sm mt-1">
+            <p className="text-red-700 text-sm mt-1">
               Ends {new Date(product.limited_time_deal.end_date).toLocaleDateString()}
             </p>
           </div>
@@ -170,8 +176,8 @@ Can you provide more details and availability?`;
         {/* Stock Counter */}
         {product.stock_count !== undefined && (
           <div className="flex items-center space-x-2">
-            <Package className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            <span className="text-sm text-slate-600 dark:text-slate-400">
+            <Package className="w-4 h-4 text-gray-600" />
+            <span className="text-sm text-gray-600">
               {product.stock_count > 10 
                 ? `${product.stock_count} in stock` 
                 : product.stock_count > 0 
@@ -185,8 +191,8 @@ Can you provide more details and availability?`;
 
       {/* Bulk Pricing */}
       {product.bulk_pricing_enabled && product.bulk_pricing_tiers && (
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4">
-          <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center">
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
             <Users className="w-5 h-5 mr-2" />
             Bulk Pricing
           </h3>
@@ -196,21 +202,21 @@ Can you provide more details and availability?`;
                 key={index}
                 className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                   selectedBulkTier === index
-                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                    ? 'border-blue-600 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
                 }`}
                 onClick={() => setSelectedBulkTier(selectedBulkTier === index ? null : index)}
               >
                 <div className="flex justify-between items-center">
-                  <span className="font-medium text-slate-900 dark:text-white">
+                  <span className="font-medium text-gray-900">
                     {tier.min_quantity}{tier.max_quantity ? `-${tier.max_quantity}` : '+'} pieces
                   </span>
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                  <span className="text-blue-600 font-semibold">
                     {formatPrice(tier.price)} each
                   </span>
                 </div>
                 {tier.discount_percent && (
-                  <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                  <p className="text-sm text-green-600 mt-1">
                     Save {tier.discount_percent}% per piece
                   </p>
                 )}
@@ -220,87 +226,79 @@ Can you provide more details and availability?`;
         </div>
       )}
 
-      {/* Quantity Selector */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+      {/* Quantity & Actions - Compact Inline Layout */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-700">
           Quantity
         </label>
-        <div className="flex items-center space-x-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            disabled={quantity <= 1}
-          >
-            -
-          </Button>
-          <span className="w-16 text-center font-medium">{quantity}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setQuantity(quantity + 1)}
-          >
-            +
-          </Button>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          {/* Quantity selector */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              disabled={quantity <= 1}
+              className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              -
+            </button>
+            <span className="w-12 text-center font-medium text-gray-900 leading-none">{quantity}</span>
+            <button
+              onClick={() => setQuantity(quantity + 1)}
+              className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              +
+            </button>
+          </div>
+          
+          {/* Action buttons */}
+          <div className="flex gap-2 flex-1 w-full sm:w-auto">
+            <Button
+              onClick={handleAddToCart}
+              className="h-10 flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-sm rounded-lg font-medium text-base"
+            >
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              {isInCart(product.id) ? 'REMOVE FROM CART' : 'ADD TO CART'}
+            </Button>
+            <Button
+              onClick={handleWhatsAppEnquiry}
+              className="h-10 flex-1 bg-green-600 hover:bg-green-700 text-white shadow-sm rounded-lg font-medium text-base"
+            >
+              <MessageCircle className="w-5 h-5 mr-2" />
+              BUY NOW
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Total Price */}
       {quantity > 1 && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+        <div className="bg-blue-50 rounded-lg p-4">
           <div className="flex justify-between items-center">
-            <span className="font-medium text-slate-900 dark:text-white">
+            <span className="font-medium text-gray-900">
               Total ({quantity} pieces):
             </span>
-            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <span className="text-2xl font-bold text-blue-600">
               {formatPrice(totalPrice)}
             </span>
           </div>
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button
-            onClick={handleAddToCart}
-            className={`${
-              isInCart(product.id) 
-                ? 'bg-red-600 hover:bg-red-700 text-white' 
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-            size="lg"
-          >
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            {isInCart(product.id) ? 'Remove from Cart' : 'Add to Cart'}
-          </Button>
-          <Button
-            onClick={handleWhatsAppEnquiry}
-            variant="outline"
-            size="lg"
-            className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-          >
-            <MessageCircle className="w-5 h-5 mr-2" />
-            WhatsApp Enquiry
-          </Button>
-        </div>
-
-        {/* Bulk Order Button */}
-        {quantity >= 4 && (
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-            onClick={() => {
-              setBulkQuantity(quantity < 4 ? 4 : quantity);
-              setIsBulkDialogOpen(true);
-            }}
-          >
-            <Users className="w-5 h-5 mr-2" />
-            Request Bulk Quote
-          </Button>
-        )}
-      </div>
+      {/* Bulk Order Button */}
+      {quantity >= 4 && (
+        <Button
+          variant="outline"
+          size="lg"
+          className="w-full h-10 border-orange-600 text-orange-600 hover:bg-orange-50 rounded-lg"
+          onClick={() => {
+            setBulkQuantity(quantity < 4 ? 4 : quantity);
+            setIsBulkDialogOpen(true);
+          }}
+        >
+          <Users className="w-5 h-5 mr-2" />
+          Request Bulk Quote
+        </Button>
+      )}
 
       {/* Bulk Quote Dialog */}
       <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
@@ -310,11 +308,11 @@ Can you provide more details and availability?`;
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Product</label>
-              <div className="mt-1 text-sm text-slate-900 dark:text-white">{product.name}</div>
+              <label className="text-sm font-medium text-gray-700">Product</label>
+              <div className="mt-1 text-sm text-gray-900">{product.name}</div>
             </div>
             <div>
-              <label htmlFor="bulk-qty" className="text-sm font-medium text-slate-700 dark:text-slate-300">Desired Quantity</label>
+              <label htmlFor="bulk-qty" className="text-sm font-medium text-gray-700">Desired Quantity</label>
               <Input
                 id="bulk-qty"
                 type="number"
@@ -323,7 +321,7 @@ Can you provide more details and availability?`;
                 onChange={(e) => setBulkQuantity(Math.max(4, parseInt(e.target.value || '4')))}
                 className="mt-1 w-32"
               />
-              <p className="mt-1 text-xs text-slate-500">Minimum for bulk quote is 4 pieces.</p>
+              <p className="mt-1 text-xs text-gray-500">Minimum for bulk quote is 4 pieces.</p>
             </div>
             <div className="flex justify-end">
               <Button
@@ -340,27 +338,29 @@ Can you provide more details and availability?`;
         </DialogContent>
       </Dialog>
 
-      {/* Product Info Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-4 border-t border-slate-200 dark:border-slate-700">
-        <div className="flex items-center space-x-2">
-          <Truck className="w-5 h-5 text-blue-600" />
-          <div>
-            <p className="text-sm font-medium text-slate-900 dark:text-white">Free Shipping</p>
-            <p className="text-xs text-slate-600 dark:text-slate-400">Orders over ₦1,000,000</p>
+      {/* Feature Row - Premium Card Style */}
+      <div className="bg-gray-100 rounded-lg p-4 sm:p-6 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="flex items-start space-x-3">
+            <Truck className="w-6 h-6 text-blue-600 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Free Shipping</p>
+              <p className="text-xs text-gray-600">Orders over ₦1,000,000</p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Clock className="w-5 h-5 text-blue-600" />
-          <div>
-            <p className="text-sm font-medium text-slate-900 dark:text-white">Delivery</p>
-            <p className="text-xs text-slate-600 dark:text-slate-400">{getDeliveryEstimate()}</p>
+          <div className="flex items-start space-x-3">
+            <Clock className="w-6 h-6 text-blue-600 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Delivery</p>
+              <p className="text-xs text-gray-600">{getDeliveryEstimate()}</p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Shield className="w-5 h-5 text-blue-600" />
-          <div>
-            <p className="text-sm font-medium text-slate-900 dark:text-white">Warranty</p>
-            <p className="text-xs text-slate-600 dark:text-slate-400">1 Year</p>
+          <div className="flex items-start space-x-3">
+            <Shield className="w-6 h-6 text-blue-600 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Warranty</p>
+              <p className="text-xs text-gray-600">1 Year</p>
+            </div>
           </div>
         </div>
       </div>
@@ -368,52 +368,55 @@ Can you provide more details and availability?`;
       {/* Social Sharing */}
       <div className="space-y-3">
         <div className="flex items-center space-x-2">
-          <Share2 className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Share this product:</span>
+          <Share2 className="w-4 h-4 text-gray-600" />
+          <span className="text-sm font-medium text-gray-700">Share this product:</span>
         </div>
         <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
+          <button
             onClick={() => handleSocialShare('facebook')}
-            className="text-blue-600 border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg text-gray-600 hover:text-blue-800 hover:border-blue-800 hover:bg-blue-50 transition-all duration-200 hover:scale-110"
+            aria-label="Share on Facebook"
           >
-            <Facebook className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
+            <Facebook className="w-5 h-5" />
+          </button>
+          <button
             onClick={() => handleSocialShare('twitter')}
-            className="text-blue-400 border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg text-gray-600 hover:text-blue-800 hover:border-blue-800 hover:bg-blue-50 transition-all duration-200 hover:scale-110"
+            aria-label="Share on Twitter"
           >
-            <Twitter className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
+            <Twitter className="w-5 h-5" />
+          </button>
+          <button
             onClick={() => handleSocialShare('instagram')}
-            className="text-pink-600 border-pink-600 hover:bg-pink-50 dark:hover:bg-pink-900/20"
+            className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg text-gray-600 hover:text-blue-800 hover:border-blue-800 hover:bg-blue-50 transition-all duration-200 hover:scale-110"
+            aria-label="Share on Instagram"
           >
-            <Instagram className="w-4 h-4" />
-          </Button>
+            <Instagram className="w-5 h-5" />
+          </button>
         </div>
       </div>
 
-      {/* Payment Methods */}
-      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4">
-        <h3 className="font-semibold text-slate-900 dark:text-white mb-3">Payment Methods</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+      {/* Payment Methods - Premium Card Style */}
+      <div className="bg-gray-100 rounded-lg p-4 sm:p-6">
+        <h3 className="text-sm font-semibold text-gray-900 mb-4">Payment Methods</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-slate-700 dark:text-slate-300">Pay on Delivery (Lagos only)</span>
+            <div className="w-6 h-6 flex items-center justify-center">
+              <div className="w-2 h-2 bg-gray-700 rounded-full"></div>
+            </div>
+            <span className="text-sm text-gray-700">Pay on Delivery</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span className="text-slate-700 dark:text-slate-300">Bank Transfer</span>
+            <div className="w-6 h-6 flex items-center justify-center">
+              <div className="w-2 h-2 bg-gray-700 rounded-full"></div>
+            </div>
+            <span className="text-sm text-gray-700">Bank Transfer</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-            <span className="text-slate-700 dark:text-slate-300">POS Payment</span>
+            <div className="w-6 h-6 flex items-center justify-center">
+              <div className="w-2 h-2 bg-gray-700 rounded-full"></div>
+            </div>
+            <span className="text-sm text-gray-700">POS Payment</span>
           </div>
         </div>
       </div>

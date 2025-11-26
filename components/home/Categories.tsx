@@ -171,7 +171,7 @@ export function Categories() {
             <div className="flex gap-6 px-2">
               {popularCategories.map((category) => {
                 // Categories that need zoom out (padding)
-                const needsZoomOut = ['complimentary', 'office-chairs', 'auditorium-chair', 'storage-cabinets'].includes(category.slug);
+                const needsZoomOut = ['complementory', 'office-chairs', 'auditorium-chairs', 'conference-table'].includes(category.slug);
                 
                 return (
                   <Link

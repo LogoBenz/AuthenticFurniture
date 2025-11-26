@@ -32,6 +32,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { CartIndicator } from "@/components/ui/cart-indicator";
+import { WishlistIndicator } from "@/components/ui/WishlistIndicator";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import {
@@ -630,9 +631,9 @@ export function CrazyNavbar() {
                 </Button>
               </motion.div>
 
-              <div className="hidden md:block">
-                <ModeToggle />
-              </div>
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <WishlistIndicator />
+              </motion.div>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
 import { Badge } from "@/components/ui/badge";
 
 interface ProductFiltersProps {
@@ -21,110 +21,92 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Filter states
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
-  const [priceRange, setPriceRange] = useState<[number, number]>([
-    parseInt(searchParams.get('minPrice') || '0'),
-    parseInt(searchParams.get('maxPrice') || '1000000')
-  ]);
-  const [selectedSpaces, setSelectedSpaces] = useState<string[]>(
-    searchParams.get('space') ? [searchParams.get('space')!] : []
-  );
-  const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>(
-    searchParams.get('subcategory') ? [searchParams.get('subcategory')!] : []
-  );
-  const [availability, setAvailability] = useState<string[]>(
-    searchParams.get('availability')?.split(',').filter(Boolean) || []
-  );
+  // Read current filters from searchParams
+  const currentSort = searchParams.get('sort') || 'newest';
+  const currentMinPrice = parseInt(searchParams.get('price_min') || '0');
+  const currentMaxPrice = parseInt(searchParams.get('price_max') || '1000000');
+  const currentSpace = searchParams.get('space') || '';
+  const currentSubcategory = searchParams.get('subcategory') || '';
+  const currentAvailability = searchParams.get('availability')?.split(',').filter(Boolean) || [];
+
+  // Local state for UI interactions (price slider)
+  const [priceRange, setPriceRange] = useState<[number, number]>([currentMinPrice, currentMaxPrice]);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Update URL when filters change
-  useEffect(() => {
-    // Start with existing URL params to preserve navigation params
-    const params = new URLSearchParams(window.location.search);
+  // Update URL parameters function - preserves existing filters
+  const updateFilters = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
 
-    // Update or remove filter params
-    if (sortBy !== 'newest') {
-      params.set('sort', sortBy);
-    } else {
-      params.delete('sort');
-    }
+    // Apply updates
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === '') {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
 
-    if (priceRange[0] > 0) {
-      params.set('minPrice', priceRange[0].toString());
-    } else {
-      params.delete('minPrice');
-    }
+    // Reset to page 1 when filters change
+    params.set('page', '1');
 
-    if (priceRange[1] < 1000000) {
-      params.set('maxPrice', priceRange[1].toString());
-    } else {
-      params.delete('maxPrice');
-    }
-
-    if (selectedSpaces.length > 0) {
-      params.set('space', selectedSpaces[0]);
-    } else {
-      params.delete('space');
-    }
-
-    if (selectedSubcategories.length > 0) {
-      params.set('subcategory', selectedSubcategories[0]);
-    } else {
-      params.delete('subcategory');
-    }
-
-    if (availability.length > 0) {
-      params.set('availability', availability.join(','));
-    } else {
-      params.delete('availability');
-    }
-
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
-    router.replace(newUrl, { scroll: false });
-  }, [sortBy, priceRange, selectedSpaces, selectedSubcategories, availability, router]);
+    // Navigate to updated URL
+    router.push(`/products?${params.toString()}`, { scroll: false });
+  };
 
   const handleSpaceChange = (spaceSlug: string, checked: boolean) => {
     if (checked) {
-      setSelectedSpaces([spaceSlug]);
-      // Clear subcategory when space changes
-      setSelectedSubcategories([]);
+      // Set space and clear subcategory when space changes
+      updateFilters({
+        space: spaceSlug,
+        subcategory: null
+      });
     } else {
-      setSelectedSpaces([]);
+      updateFilters({ space: null });
     }
   };
 
   const handleSubcategoryChange = (subcategorySlug: string, checked: boolean) => {
-    if (checked) {
-      setSelectedSubcategories([subcategorySlug]);
-    } else {
-      setSelectedSubcategories([]);
-    }
+    updateFilters({
+      subcategory: checked ? subcategorySlug : null
+    });
   };
 
   const handleAvailabilityChange = (value: string, checked: boolean) => {
-    if (checked) {
-      setAvailability([...availability, value]);
-    } else {
-      setAvailability(availability.filter(a => a !== value));
-    }
+    const newAvailability = checked
+      ? [...currentAvailability, value]
+      : currentAvailability.filter(a => a !== value);
+    
+    updateFilters({
+      availability: newAvailability.length > 0 ? newAvailability.join(',') : null
+    });
+  };
+
+  const handleSortChange = (value: string) => {
+    updateFilters({
+      sort: value !== 'newest' ? value : null
+    });
+  };
+
+  const handlePriceRangeApply = () => {
+    updateFilters({
+      price_min: priceRange[0] > 0 ? priceRange[0].toString() : null,
+      price_max: priceRange[1] < 1000000 ? priceRange[1].toString() : null
+    });
   };
 
   const clearAllFilters = () => {
-    setSortBy('newest');
+    // Navigate to products page without any filter params
+    router.push('/products?page=1', { scroll: false });
     setPriceRange([0, 1000000]);
-    setSelectedSpaces([]);
-    setSelectedSubcategories([]);
-    setAvailability([]);
   };
 
   const getActiveFiltersCount = () => {
     let count = 0;
-    if (sortBy !== 'newest') count++;
-    if (priceRange[0] > 0 || priceRange[1] < 1000000) count++;
-    if (selectedSpaces.length > 0) count++;
-    if (selectedSubcategories.length > 0) count++;
-    if (availability.length > 0) count++;
+    if (currentSort !== 'newest') count++;
+    if (currentMinPrice > 0 || currentMaxPrice < 1000000) count++;
+    if (currentSpace) count++;
+    if (currentSubcategory) count++;
+    if (currentAvailability.length > 0) count++;
     return count;
   };
 
@@ -177,7 +159,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
         {/* Sort By */}
         <div className="space-y-3">
           <Label className="text-sm font-medium">Sort By</Label>
-          <Select value={sortBy} onValueChange={setSortBy}>
+          <Select value={currentSort} onValueChange={handleSortChange}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -208,6 +190,14 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
               <span>₦{priceRange[0].toLocaleString()}</span>
               <span>₦{priceRange[1].toLocaleString()}</span>
             </div>
+            <Button
+              onClick={handlePriceRangeApply}
+              size="sm"
+              className="w-full mt-2"
+              variant="outline"
+            >
+              Apply Price Filter
+            </Button>
           </div>
         </div>
 
@@ -220,7 +210,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
                 <div key={space.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={`space-${space.slug}`}
-                    checked={selectedSpaces.includes(space.slug)}
+                    checked={currentSpace === space.slug}
                     onCheckedChange={(checked) =>
                       handleSpaceChange(space.slug, checked as boolean)
                     }
@@ -238,17 +228,17 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
         )}
 
         {/* Subcategories */}
-        {selectedSpaces.length > 0 && spaces.find(s => s.slug === selectedSpaces[0])?.subcategories && (
+        {currentSpace && spaces.find(s => s.slug === currentSpace)?.subcategories && (
           <div className="space-y-3">
             <Label className="text-sm font-medium">Category</Label>
             <div className="space-y-2">
               {spaces
-                .find(s => s.slug === selectedSpaces[0])
+                .find(s => s.slug === currentSpace)
                 ?.subcategories?.map((subcategory) => (
                   <div key={subcategory.id} className="flex items-center space-x-2">
                     <Checkbox
                       id={`subcategory-${subcategory.slug}`}
-                      checked={selectedSubcategories.includes(subcategory.slug)}
+                      checked={currentSubcategory === subcategory.slug}
                       onCheckedChange={(checked) =>
                         handleSubcategoryChange(subcategory.slug, checked as boolean)
                       }
@@ -272,7 +262,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="in-stock"
-                checked={availability.includes('in_stock')}
+                checked={currentAvailability.includes('in_stock')}
                 onCheckedChange={(checked) =>
                   handleAvailabilityChange('in_stock', checked as boolean)
                 }
@@ -284,7 +274,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="out-of-stock"
-                checked={availability.includes('out_of_stock')}
+                checked={currentAvailability.includes('out_of_stock')}
                 onCheckedChange={(checked) =>
                   handleAvailabilityChange('out_of_stock', checked as boolean)
                 }
@@ -301,29 +291,29 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
           <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
             <Label className="text-sm font-medium mb-2 block">Active Filters</Label>
             <div className="flex flex-wrap gap-2">
-              {sortBy !== 'newest' && (
+              {currentSort !== 'newest' && (
                 <Badge variant="outline" className="text-xs">
-                  Sort: {sortBy.replace('_', ' ')}
+                  Sort: {currentSort.replace('_', ' ')}
                 </Badge>
               )}
-              {(priceRange[0] > 0 || priceRange[1] < 1000000) && (
+              {(currentMinPrice > 0 || currentMaxPrice < 1000000) && (
                 <Badge variant="outline" className="text-xs">
-                  ₦{priceRange[0].toLocaleString()} - ₦{priceRange[1].toLocaleString()}
+                  ₦{currentMinPrice.toLocaleString()} - ₦{currentMaxPrice.toLocaleString()}
                 </Badge>
               )}
-              {selectedSpaces.map(spaceSlug => (
-                <Badge key={spaceSlug} variant="outline" className="text-xs">
-                  {spaces.find(s => s.slug === spaceSlug)?.name}
+              {currentSpace && (
+                <Badge variant="outline" className="text-xs">
+                  {spaces.find(s => s.slug === currentSpace)?.name}
                 </Badge>
-              ))}
-              {selectedSubcategories.map(subcategorySlug => (
-                <Badge key={subcategorySlug} variant="outline" className="text-xs">
+              )}
+              {currentSubcategory && (
+                <Badge variant="outline" className="text-xs">
                   {spaces
-                    .find(s => s.slug === selectedSpaces[0])
-                    ?.subcategories?.find(sub => sub.slug === subcategorySlug)?.name}
+                    .find(s => s.slug === currentSpace)
+                    ?.subcategories?.find(sub => sub.slug === currentSubcategory)?.name}
                 </Badge>
-              ))}
-              {availability.map(avail => (
+              )}
+              {currentAvailability.map(avail => (
                 <Badge key={avail} variant="outline" className="text-xs">
                   {avail.replace('_', ' ')}
                 </Badge>

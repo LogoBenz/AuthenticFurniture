@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEnquiryCart } from "@/hooks/use-enquiry-cart";
 import { Product } from "@/types";
 import { QuantitySelector } from "./QuantitySelector";
-import { formatPrice } from "@/lib/products";
+import { formatPrice } from "@/lib/products-client";
 
 interface ModernProductInfoProps {
   product: Product;

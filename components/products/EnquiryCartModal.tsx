@@ -4,7 +4,7 @@ import { X, MessageCircle, Trash2, ShoppingCart, Plus, Package } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEnquiryCart } from "@/hooks/use-enquiry-cart";
-import { formatPrice } from "@/lib/products";
+import { formatPrice } from "@/lib/products-client";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";

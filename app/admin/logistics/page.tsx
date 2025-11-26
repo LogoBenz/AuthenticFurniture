@@ -18,7 +18,7 @@ import {
   Navigation
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { formatPrice } from "@/lib/products";
+import { formatPrice } from "@/lib/products-client";
 
 interface DeliveryZone {
   id: string;

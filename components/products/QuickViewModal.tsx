@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Product } from "@/types";
 import { useEnquiryCart } from "@/hooks/use-enquiry-cart";
-import { formatPrice } from "@/lib/products";
+import { formatPrice } from "@/lib/products-client";
 
 interface QuickViewModalProps {
   product: Product | null;

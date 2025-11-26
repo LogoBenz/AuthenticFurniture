@@ -13,6 +13,7 @@ function TikTokIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { CartIndicator } from "@/components/ui/cart-indicator";
+import { WishlistIndicator } from "@/components/ui/WishlistIndicator";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetTrigger, SheetContent, SheetClose } from "@/components/ui/sheet";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
@@ -547,8 +548,8 @@ export function Header() {
               </Link>
             </nav>
 
-            {/* Right icons: search, profile, cart */}
-            <div className="flex items-center space-x-1 sm:space-x-2">
+            {/* Right icons: search, wishlist, profile, cart */}
+            <div className="flex items-center space-x-1 sm:space-x-3">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -558,6 +559,7 @@ export function Header() {
                 <Search className="h-5 w-5" />
                 <span className="sr-only">Search</span>
               </Button>
+              <WishlistIndicator />
               <Button
                 variant="ghost"
                 size="sm"

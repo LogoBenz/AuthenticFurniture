@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Search, Loader2 } from "lucide-react";
-import { searchProducts, getFeaturedProducts } from "@/lib/products";
+import { getFeaturedProducts } from "@/lib/products";
+import { searchProductsAction } from "@/app/actions/search";
 import { Product } from "@/types";
 
 interface SearchModalProps {
@@ -80,7 +81,8 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
     const timeoutId = setTimeout(async () => {
       try {
-        const results = await searchProducts(searchQuery);
+        // Call server action instead of direct function
+        const results = await searchProductsAction(searchQuery);
         setSearchResults(results);
       } catch (error) {
         console.error("Search error:", error);

@@ -1,9 +1,12 @@
+'use client';
+
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ShoppingCart, Heart, RotateCcw, Eye, MessageCircle, Plus } from 'lucide-react';
 import { Product } from '@/types';
 import { useEnquiryCart } from '@/hooks/use-enquiry-cart';
+import { WishlistButton } from '@/components/ui/WishlistButton';
 import { NextUICard } from '@/components/ui/nextui-card';
 import { NextUIButton } from '@/components/ui/nextui-button';
 
@@ -23,7 +26,35 @@ interface ProductCardProps {
   const currentPrice = discountPercent > 0 ? originalPrice * (1 - discountPercent / 100) : originalPrice;
   const savingsAmount = discountPercent > 0 ? originalPrice - currentPrice : 0;
   
-  const imageUrl = product.imageUrl || product.images?.[0] || "/placeholder-product.jpg";
+  // Safely extract and validate image URL
+  const getImageUrl = () => {
+    // Try imageUrl first
+    if (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.trim()) {
+      return product.imageUrl;
+    }
+    
+    // Try images array
+    if (product.images) {
+      if (Array.isArray(product.images) && product.images.length > 0) {
+        const firstImage = product.images[0];
+        if (typeof firstImage === 'string' && firstImage.trim()) {
+          return firstImage;
+        }
+      } else if (typeof product.images === 'string' && product.images.trim()) {
+        return product.images;
+      }
+    }
+    
+    // Try image_url field
+    if (product.image_url && typeof product.image_url === 'string' && product.image_url.trim()) {
+      return product.image_url;
+    }
+    
+    // Fallback to placeholder
+    return "/placeholder-product.jpg";
+  };
+  
+  const imageUrl = getImageUrl();
   
          const handleAddToCart = (e: React.MouseEvent) => {
            e.preventDefault();
@@ -63,14 +94,21 @@ interface ProductCardProps {
     >
       <Link href={`/products/${product.slug}`} className="block">
         {/* Image Container */}
-        <div className="relative w-full h-[215px] bg-white overflow-hidden">
+        <div className="relative w-full h-[215px] bg-white dark:bg-slate-900 overflow-hidden">
           <Image
             src={imageUrl}
             alt={product.name}
             fill
-            className="object-contain group-hover:scale-105 transition-transform duration-500 ease-out"
-            sizes="386px"
+            className="object-scale-down group-hover:scale-105 transition-transform duration-500 ease-out"
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwABmX/9k="
           />
+          
+          {/* Wishlist Button - Top Right */}
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+            <WishlistButton productId={product.id.toString()} size="sm" />
+          </div>
           
           {/* NEW Badge */}
           {isNew && (

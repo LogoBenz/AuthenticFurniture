@@ -3,21 +3,37 @@
 import { useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, ZoomIn, Play } from "lucide-react";
-import { VideoPlayer } from "@/components/ui/video-player";
+import { useImageWithFallback } from "@/hooks/use-image-with-fallback";
+import { ImageFallback } from "./ImageFallback";
 
 interface EnhancedProductGalleryProps {
   images: string[];
   videos?: string[];
   productName: string;
+  category?: string;
 }
 
-export function EnhancedProductGallery({ images, videos = [], productName }: EnhancedProductGalleryProps) {
+export function EnhancedProductGallery({ images, videos = [], productName, category }: EnhancedProductGalleryProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [thumbnailErrors, setThumbnailErrors] = useState<Set<number>>(new Set());
 
   // Combine images and videos into one array for navigation
   const allMedia = [...images, ...videos];
   const isVideo = (index: number) => index >= images.length;
+
+  // Use error handling hook for main image
+  const currentMediaSrc = allMedia[currentImageIndex] || "";
+  const { imgSrc, hasError, handleError } = useImageWithFallback({ 
+    src: currentMediaSrc,
+    maxRetries: 1 
+  });
+
+  // Handle thumbnail errors
+  const handleThumbnailError = (index: number) => {
+    setThumbnailErrors(prev => new Set(prev).add(index));
+    console.warn(`Thumbnail load failed for index ${index}:`, allMedia[index]);
+  };
 
   const nextMedia = () => {
     setCurrentImageIndex((prev) => (prev + 1) % allMedia.length);
@@ -33,135 +49,124 @@ export function EnhancedProductGallery({ images, videos = [], productName }: Enh
 
   if (!allMedia || allMedia.length === 0) {
     return (
-      <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
-        <p className="text-slate-500 dark:text-slate-400">No media available</p>
+      <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+        <p className="text-gray-500">No media available</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4">
-      {/* Thumbnail Navigation - Desktop Left Side */}
-      {allMedia.length > 1 && (
-        <div className="hidden lg:flex flex-col space-y-2 w-20">
-          {allMedia.map((media, index) => (
-            <button
-              key={index}
-              onClick={() => goToMedia(index)}
-              className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                index === currentImageIndex
-                  ? "border-blue-600 dark:border-blue-400"
-                  : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
-              }`}
-            >
-              {isVideo(index) ? (
-                <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                  <Play className="w-6 h-6 text-slate-600 dark:text-slate-400" />
-                </div>
-              ) : (
-                <Image
-                  src={media}
-                  alt={`${productName} thumbnail ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-
+    <div className="flex flex-col gap-4">
       {/* Main Media Container */}
-      <div className="flex-1">
-        <div className="relative aspect-square bg-white rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 group">
-          {isVideo(currentImageIndex) ? (
-            <video
-              src={allMedia[currentImageIndex]}
-              controls
-              className="w-full h-full object-cover"
-              onLoadedData={() => console.log('Video loaded:', allMedia[currentImageIndex])}
-              onError={(e) => console.error('Video error:', e)}
-            >
-              Your browser does not support the video tag.
-            </video>
-          ) : (
-            <Image
-              src={allMedia[currentImageIndex]}
-              alt={`${productName} - Media ${currentImageIndex + 1}`}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              priority
-            />
-          )}
+      <div className="relative aspect-[8/5] bg-white rounded-lg overflow-hidden border border-gray-200 group">
+        {isVideo(currentImageIndex) ? (
+          <video
+            src={allMedia[currentImageIndex]}
+            controls
+            className="w-full h-full object-cover"
+            onLoadedData={() => console.log('Video loaded:', allMedia[currentImageIndex])}
+            onError={(e) => console.error('Video error:', e)}
+          >
+            Your browser does not support the video tag.
+          </video>
+        ) : hasError ? (
+          <ImageFallback 
+            productName={productName}
+            category={category}
+            aspectRatio="aspect-[8/5]"
+            size="large"
+          />
+        ) : (
+          <Image
+            src={imgSrc}
+            alt={`${productName} - Media ${currentImageIndex + 1}`}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            priority
+            onError={handleError}
+          />
+        )}
 
-          {/* Zoom Overlay (only for images) */}
-          {!isVideo(currentImageIndex) && (
-            <div
-              className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 cursor-zoom-in"
-              onClick={() => setIsZoomed(true)}
-            >
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="bg-white/90 dark:bg-slate-800/90 rounded-full p-2">
-                  <ZoomIn className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-                </div>
+        {/* Zoom Overlay (only for images without errors) */}
+        {!isVideo(currentImageIndex) && !hasError && (
+          <div
+            className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 cursor-zoom-in"
+            onClick={() => setIsZoomed(true)}
+          >
+            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="bg-white/95 rounded-full p-2">
+                <ZoomIn className="w-5 h-5 text-gray-600" />
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Navigation Arrows */}
-          {allMedia.length > 1 && (
-            <>
-              <button
-                onClick={prevMedia}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-slate-800/90 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white dark:hover:bg-slate-800"
-              >
-                <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-              </button>
-              <button
-                onClick={nextMedia}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-slate-800/90 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white dark:hover:bg-slate-800"
-              >
-                <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-              </button>
-            </>
-          )}
+        {/* Navigation Arrows */}
+        {allMedia.length > 1 && (
+          <>
+            <button
+              onClick={prevMedia}
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/95 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <button
+              onClick={nextMedia}
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/95 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white"
+              aria-label="Next image"
+            >
+              <ChevronRight className="w-5 h-5 text-gray-600" />
+            </button>
+          </>
+        )}
 
-          {/* Media Counter */}
-          {allMedia.length > 1 && (
-            <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-              {currentImageIndex + 1} / {allMedia.length}
-            </div>
-          )}
-        </div>
+        {/* Image Counter Overlay - Bottom Right */}
+        {allMedia.length > 1 && (
+          <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-xs">
+            {currentImageIndex + 1}/{allMedia.length}
+          </div>
+        )}
       </div>
 
-      {/* Thumbnail Navigation - Mobile Bottom */}
+      {/* Thumbnail Navigation - Horizontal Bottom (ALL viewports) */}
       {allMedia.length > 1 && (
-        <div className="lg:hidden flex space-x-2 overflow-x-auto scrollbar-hide">
-          {allMedia.map((media, index) => (
-            <button
-              key={index}
-              onClick={() => goToMedia(index)}
-              className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                index === currentImageIndex
-                  ? "border-blue-600 dark:border-blue-400"
-                  : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
-              }`}
-            >
-              {isVideo(index) ? (
-                <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                  <Play className="w-6 h-6 text-slate-600 dark:text-slate-400" />
-                </div>
-              ) : (
-                <Image
-                  src={media}
-                  alt={`${productName} thumbnail ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              )}
-            </button>
-          ))}
+        <div className="flex justify-center mt-3">
+          <div className="flex space-x-2 overflow-x-auto scrollbar-hide max-w-full">
+            {allMedia.map((media, index) => (
+              <button
+                key={index}
+                onClick={() => goToMedia(index)}
+                className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${
+                  index === currentImageIndex
+                    ? "border-blue-800"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+                aria-label={`View image ${index + 1}`}
+              >
+                {isVideo(index) ? (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <Play className="w-6 h-6 text-gray-600" />
+                  </div>
+                ) : thumbnailErrors.has(index) ? (
+                  <ImageFallback 
+                    productName={productName}
+                    category={category}
+                    aspectRatio="aspect-square"
+                    size="small"
+                  />
+                ) : (
+                  <Image
+                    src={media}
+                    alt={`${productName} thumbnail ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    onError={() => handleThumbnailError(index)}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -181,9 +186,10 @@ export function EnhancedProductGallery({ images, videos = [], productName }: Enh
             />
             <button
               onClick={() => setIsZoomed(false)}
-              className="absolute top-4 right-4 bg-white/90 dark:bg-slate-800/90 rounded-full p-2 hover:bg-white dark:hover:bg-slate-800 transition-colors"
+              className="absolute top-4 right-4 bg-white/95 rounded-full p-2 hover:bg-white transition-colors"
+              aria-label="Close zoom"
             >
-              <ChevronLeft className="w-6 h-6 text-slate-600 dark:text-slate-300 rotate-45" />
+              <ChevronLeft className="w-6 h-6 text-gray-600 rotate-45" />
             </button>
           </div>
         </div>

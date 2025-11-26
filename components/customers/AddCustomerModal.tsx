@@ -178,7 +178,7 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
             errorMessage.includes('signal is aborted') ||
             errorMessage.includes('Failed to fetch') ||
             error.code === 'NETWORK_ERROR' ||
-            error.code === 20) {
+            error.code === '20') {
           throw new Error('Connection failed. Please check your internet connection and Supabase configuration.');
         }
         

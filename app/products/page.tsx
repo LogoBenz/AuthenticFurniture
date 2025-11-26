@@ -1,158 +1,92 @@
-"use client";
-
-import { useState, useEffect, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { getFilteredProducts, getProductCategories } from "@/lib/products";
+import { Suspense } from "react";
+import { Metadata } from "next";
+import { getProducts } from "@/lib/products";
 import { ProductGrid } from "@/components/products/ProductGrid";
 import { ProductFilters } from "@/components/products/ProductFilters";
-import { EnquiryCartModal } from "@/components/products/EnquiryCartModal";
-import { Product } from "@/types";
 import { getSpacesForNavigation } from "@/lib/categories";
-import type { Space, Subcategory } from "@/types";
+import ProductSkeleton from "@/components/ui/ProductSkeleton";
+import Pagination from "@/components/products/Pagination";
 
-function ProductsPageContent() {
-  const searchParams = useSearchParams();
-  const urlCategory = searchParams?.get("category") ?? undefined;
-  const urlSpace = searchParams?.get("space") ?? undefined;
-  const urlSubcategory = searchParams?.get("subcategory") ?? undefined;
-  const minPrice = searchParams?.get("minPrice") ? parseInt(searchParams.get("minPrice")!) : 0;
-  const maxPrice = searchParams?.get("maxPrice") ? parseInt(searchParams.get("maxPrice")!) : 1000000;
+// Enable ISR with 3-minute revalidation
+export const revalidate = 180;
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>(urlCategory || "all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [showAvailableOnly, setShowAvailableOnly] = useState<boolean>(false);
-  const [isCartModalOpen, setIsCartModalOpen] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
-  const [spaces, setSpaces] = useState<Space[]>([]);
-  const activeSpace = useMemo(() => spaces.find(s => s.slug === urlSpace), [spaces, urlSpace]);
-  const activeSubcategory = useMemo<Subcategory | undefined>(() => {
-    if (!activeSpace || !urlSubcategory) return undefined;
-    return activeSpace.subcategories?.find(sc => sc.slug === urlSubcategory);
-  }, [activeSpace, urlSubcategory]);
-  
-  // Ensure component is mounted before showing cart functionality
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+interface ProductsPageProps {
+  searchParams: Promise<{
+    space?: string;
+    subcategory?: string;
+    price_min?: string;
+    price_max?: string;
+    page?: string;
+  }>;
+}
 
-  // Load initial data
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [productsData, categoriesData, spacesData] = await Promise.all([
-          getFilteredProducts(),
-          getProductCategories(),
-          getSpacesForNavigation()
-        ]);
-        
-        setProducts(productsData);
-        setCategories(categoriesData);
-        setSpaces(spacesData);
-      } catch (error) {
-        console.error('Error loading data:', error);
-        setProducts([]);
-        setCategories([]);
-        setSpaces([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+// Generate dynamic metadata for SEO
+export async function generateMetadata({ searchParams }: ProductsPageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const spaceSlug = params?.space;
+  const subcategorySlug = params?.subcategory;
 
-    loadData();
-  }, []);
-  
-  // Enhanced filtering with proper search implementation
-  const filteredProducts = useMemo(() => {
-    console.log('🔍 FILTERING PRODUCTS');
-    console.log('  Total products:', products.length);
-    console.log('  URL params:', { urlSpace, urlSubcategory, minPrice, maxPrice });
-    
-    let filtered = products;
+  // Fetch spaces to get names for metadata
+  const spaces = await getSpacesForNavigation();
+  const activeSpace = spaces.find(s => s.slug === spaceSlug);
+  const activeSubcategory = activeSpace?.subcategories?.find(sc => sc.slug === subcategorySlug);
 
-    // Apply search filter first if there's a search query
-    if (searchQuery.trim()) {
-      const searchTerm = searchQuery.toLowerCase().trim();
-      filtered = products.filter(product =>
-        product.name.toLowerCase().includes(searchTerm) ||
-        product.category.toLowerCase().includes(searchTerm) ||
-        product.description.toLowerCase().includes(searchTerm) ||
-        product.features.some(feature =>
-          feature.toLowerCase().includes(searchTerm)
-        )
-      );
-    }
+  // Generate dynamic title based on filters
+  let title = "Products";
+  let description = "Browse our collection of high-quality furniture, perfect for homes, offices, and commercial spaces throughout Nigeria.";
 
-    // Filter by Space and Subcategory (Space → Subspace enforcement)
-    // Also fallback to matching by subcategory name if space/subcategory relationships aren't set
-    if (urlSpace) {
-      filtered = filtered.filter(product => {
-        const productSpaceSlug = (product.space?.slug || "").toLowerCase();
-        return productSpaceSlug === urlSpace.toLowerCase();
-      });
-    }
-    if (urlSubcategory) {
-      filtered = filtered.filter(product => {
-        const productSubSlug = (product.subcategory?.slug || "").toLowerCase();
-        const productCategory = product.category.toLowerCase();
-        const subcategoryName = urlSubcategory.replace(/-/g, ' ').toLowerCase();
-        
-        // Match by subcategory slug OR by category name (fallback)
-        return productSubSlug === urlSubcategory.toLowerCase() || 
-               productCategory.includes(subcategoryName) ||
-               subcategoryName.includes(productCategory);
-      });
-    }
-
-    // Filter by category (fallback to old category system if no space/subcategory)
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter(product => product.category === selectedCategory);
-    }
-
-    // Filter by price range
-    console.log('  Before price filter:', filtered.length);
-    filtered = filtered.filter(product => 
-      product.price >= minPrice && product.price <= maxPrice
-    );
-    console.log('  After price filter:', filtered.length);
-
-    // Filter by availability
-    if (showAvailableOnly) {
-      filtered = filtered.filter(product => product.inStock);
-    }
-
-    console.log('  Final filtered count:', filtered.length);
-    return filtered;
-  }, [products, selectedCategory, searchQuery, showAvailableOnly, urlSpace, urlSubcategory, minPrice, maxPrice]);
-
-  // Update the selected category when the URL parameter changes
-  useEffect(() => {
-    if (urlCategory) {
-      setSelectedCategory(urlCategory);
-    }
-  }, [urlCategory]);
-
-  if (isLoading) {
-    return (
-      <div className="pt-20 sm:pt-24 pb-12 sm:pb-16">
-        <div className="container mx-auto px-4">
-          <div className="mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2">Our Products</h1>
-            <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
-              Browse our collection of high-quality furniture, perfect for homes, offices, 
-              and commercial spaces throughout Nigeria.
-            </p>
-          </div>
-          <div className="flex items-center justify-center py-8 sm:py-12">
-            <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-2 border-blue-600 border-t-transparent mr-3"></div>
-            <span className="text-muted-foreground text-sm sm:text-base">Loading products...</span>
-          </div>
-        </div>
-      </div>
-    );
+  if (activeSubcategory && activeSpace) {
+    title = `${activeSubcategory.name} - ${activeSpace.name} | Authentic Furniture`;
+    description = `Explore our ${activeSubcategory.name.toLowerCase()} collection for ${activeSpace.name.toLowerCase()}. Quality furniture delivered across Nigeria.`;
+  } else if (activeSpace) {
+    title = `${activeSpace.name} Furniture | Authentic Furniture`;
+    description = `Browse our complete ${activeSpace.name.toLowerCase()} furniture collection. Quality products for homes, offices, and commercial spaces in Nigeria.`;
+  } else {
+    title = "All Products | Authentic Furniture";
   }
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+    },
+  };
+}
+
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  // Await search parameters (Next.js 15)
+  const params = await searchParams;
+  
+  // Parse search parameters for filters
+  const page = params?.page ? parseInt(params.page) : 1;
+  const spaceSlug = params?.space;
+  const subcategorySlug = params?.subcategory;
+  const price_min = params?.price_min ? parseFloat(params.price_min) : undefined;
+  const price_max = params?.price_max ? parseFloat(params.price_max) : undefined;
+
+  // Fetch spaces to convert slugs to IDs
+  const spaces = await getSpacesForNavigation();
+
+  // Find active space and subcategory for breadcrumb and get their IDs
+  const activeSpace = spaces.find(s => s.slug === spaceSlug);
+  const activeSubcategory = activeSpace?.subcategories?.find(sc => sc.slug === subcategorySlug);
+
+  // Convert slugs to IDs for the database query
+  const space = activeSpace?.id;
+  const subcategory = activeSubcategory?.id;
+
+  // Fetch data server-side with filters (using IDs)
+  const { products, totalCount, totalPages } = await getProducts({ 
+    space, 
+    subcategory, 
+    price_min, 
+    price_max, 
+    page, 
+    limit: 12 
+  });
 
   return (
     <div className="pt-20 sm:pt-24 pb-12 sm:pb-16">
@@ -160,7 +94,7 @@ function ProductsPageContent() {
         <div className="mb-6 sm:mb-8">
           {activeSpace || activeSubcategory ? (
             <div className="text-sm text-slate-600 dark:text-slate-300 mb-2">
-              <span className="hover:underline cursor-pointer" onClick={() => window.location.assign('/products')}>All</span>
+              <a href="/products" className="hover:underline cursor-pointer">All</a>
               {activeSpace && (
                 <>
                   <span className="mx-2">/</span>
@@ -187,39 +121,36 @@ function ProductsPageContent() {
           <div className="lg:col-span-1">
             <ProductFilters
               spaces={spaces}
-              totalProducts={filteredProducts.length}
+              totalProducts={totalCount}
               isAdmin={false}
             />
           </div>
 
           {/* Products Grid */}
           <div className="lg:col-span-3">
-            <ProductGrid products={filteredProducts} />
+            <Suspense fallback={<ProductSkeleton count={12} />}>
+              <ProductGrid products={products} />
+            </Suspense>
           </div>
         </div>
         
         {/* Results Summary */}
         <div className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-muted-foreground">
-          Showing {filteredProducts.length} of {products.length} products
-          {searchQuery && ` for "${searchQuery}"`}
-          {selectedCategory !== "all" && ` in ${selectedCategory}`}
-          {showAvailableOnly && ` (available only)`}
+          Showing {products.length} of {totalCount} products
+          {activeSpace && ` in ${activeSpace.name}`}
+          {activeSubcategory && ` - ${activeSubcategory.name}`}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            baseUrl="/products"
+            searchParams={params || {}}
+          />
+        )}
       </div>
-
-      {/* Enquiry Cart Modal */}
-      <EnquiryCartModal
-        isOpen={isCartModalOpen}
-        onClose={() => setIsCartModalOpen(false)}
-      />
     </div>
-  );
-}
-
-export default function ProductsPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-      <ProductsPageContent />
-    </Suspense>
   );
 }

@@ -56,6 +56,8 @@ export function ProductImageGallery({
               alt={`${productName} - Image ${currentImageIndex + 1}`}
               fill
               className="object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              priority
               onClick={() => setIsModalOpen(true)}
             />
             
@@ -88,6 +90,8 @@ export function ProductImageGallery({
                 alt={`${productName} - Full size`}
                 fill
                 className="object-contain"
+                sizes="100vw"
+                priority
               />
 
               {/* Modal Navigation for multiple images */}
@@ -128,6 +132,8 @@ export function ProductImageGallery({
                           alt={`Thumbnail ${index + 1}`}
                           fill
                           className="object-cover"
+                          sizes="48px"
+                          loading="lazy"
                         />
                       </button>
                     ))}
@@ -152,6 +158,8 @@ export function ProductImageGallery({
             alt={`${productName} - Image ${currentImageIndex + 1}`}
             fill
             className="object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
             onClick={() => setIsModalOpen(true)}
           />
           
@@ -213,6 +221,8 @@ export function ProductImageGallery({
               alt={`${productName} - Full size`}
               fill
               className="object-contain"
+              sizes="100vw"
+              priority
             />
 
             {/* Modal Navigation */}
@@ -253,6 +263,8 @@ export function ProductImageGallery({
                         alt={`Thumbnail ${index + 1}`}
                         fill
                         className="object-cover"
+                        sizes="48px"
+                        loading="lazy"
                       />
                     </button>
                   ))}

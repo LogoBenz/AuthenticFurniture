@@ -8,6 +8,7 @@ export interface Product {
   features: string[];
   images: string[];
   imageUrl: string; // Keep for backward compatibility - will be first image
+  image_url?: string; // Alternative field name from database
   videos?: string[]; // Optional videos array
   inStock: boolean;
   isFeatured: boolean;

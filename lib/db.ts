@@ -1,9 +1,5 @@
 import { supabase } from './supabase-simple';
 import { Product, Customer, Order } from '@/types';
-import productsData from '@/data/products-fallback.json';
-
-// Fallback data when Supabase is not configured
-const fallbackProducts: Product[] = productsData.products;
 
 // Mock data for customers and orders
 const sampleCustomers: Customer[] = [
@@ -175,75 +171,28 @@ function mapSupabaseRowToProduct(row: any): Product {
   };
 }
 
-// Check if Supabase is properly configured
-function isSupabaseConfigured(): boolean {
-  // Always return true since we're using direct config
-  return true;
-}
 
-// Enhanced error handling - detect CORS and configuration issues
-function shouldUseFallback(error: any): boolean {
-  if (!error) return false;
-  
-  const errorMessage = error?.message || '';
-  const errorCode = error?.code || '';
-  const errorName = error?.name || '';
-  
-  // Network/CORS/Config errors should use fallback silently
-  return (
-    errorMessage.includes('CORS') || 
-    errorMessage.includes('Failed to fetch') ||
-    errorMessage.includes('NetworkError') ||
-    errorMessage.includes('not configured') ||
-    errorMessage.includes('Invalid URL') ||
-    errorMessage.includes('CORS_ERROR') ||
-    errorMessage.includes('Request timeout') ||
-    errorMessage.includes('fetch') ||
-    errorMessage.includes('signal is aborted') ||
-    errorName === 'TypeError' ||
-    errorName === 'NetworkError' ||
-    errorName === 'AbortError' ||
-    errorCode === 'PGRST301' ||
-    errorCode === 'NETWORK_ERROR' ||
-    errorCode === 20 // AbortError code
-  );
-}
 
 export async function getAllProducts(): Promise<Product[]> {
-  if (!isSupabaseConfigured()) {
-    return fallbackProducts;
-  }
-
   try {
     const { data, error } = await supabase
       .from('products')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return fallbackProducts;
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Error fetching products:', error);
+      throw new Error(`Failed to fetch products: ${error.message}`);
     }
 
-    return data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : fallbackProducts;
+    return data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
   } catch (error) {
-    if (shouldUseFallback(error)) {
-      console.warn('Using fallback data due to network error:', error);
-      return fallbackProducts;
-    }
-    return fallbackProducts;
+    console.error('❌ Error in getAllProducts:', error);
+    throw error;
   }
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  if (!isSupabaseConfigured()) {
-    return fallbackProducts.find(p => p.slug === slug) || null;
-  }
-
   try {
     const { data, error } = await supabase
       .from('products')
@@ -251,27 +200,23 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       .eq('slug', slug)
       .single();
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return fallbackProducts.find(p => p.slug === slug) || null;
-    }
-
     if (error) {
-      throw error;
+      // Return null for not found, throw for other errors
+      if (error.code === 'PGRST116' || error.message?.includes('No rows found')) {
+        return null;
+      }
+      console.error('❌ Error fetching product by slug:', error);
+      throw new Error(`Failed to fetch product: ${error.message}`);
     }
 
     return data ? mapSupabaseRowToProduct(data) : null;
   } catch (error) {
-    console.warn('Using fallback data due to network error:', error);
-    return fallbackProducts.find(p => p.slug === slug) || null;
+    console.error('❌ Error in getProductBySlug:', error);
+    throw error;
   }
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
-  if (!isSupabaseConfigured()) {
-    return fallbackProducts.filter(p => p.isFeatured);
-  }
-
   try {
     const { data, error } = await supabase
       .from('products')
@@ -279,75 +224,43 @@ export async function getFeaturedProducts(): Promise<Product[]> {
       .eq('is_featured', true)
       .order('created_at', { ascending: false });
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return fallbackProducts.filter(p => p.isFeatured);
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Error fetching featured products:', error);
+      throw new Error(`Failed to fetch featured products: ${error.message}`);
     }
 
-    return data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : fallbackProducts.filter(p => p.isFeatured);
+    return data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
   } catch (error) {
-    console.warn('Using fallback data due to network error:', error);
-    return fallbackProducts.filter(p => p.isFeatured);
+    console.error('❌ Error in getFeaturedProducts:', error);
+    throw error;
   }
 }
 
 export async function getProductCategories(): Promise<string[]> {
-  if (!isSupabaseConfigured()) {
-    const categories = new Set<string>();
-    fallbackProducts.forEach((product) => {
-      categories.add(product.category);
-    });
-    return Array.from(categories);
-  }
-
   try {
     const { data, error } = await supabase
       .from('categories')
       .select('name')
       .order('name');
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      const categories = new Set<string>();
-      fallbackProducts.forEach((product) => {
-        categories.add(product.category);
-      });
-      return Array.from(categories);
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Error fetching product categories:', error);
+      throw new Error(`Failed to fetch product categories: ${error.message}`);
     }
 
     if (!data || !Array.isArray(data)) {
-      const categories = new Set<string>();
-      fallbackProducts.forEach((product) => {
-        categories.add(product.category);
-      });
-      return Array.from(categories);
+      return [];
     }
 
     // Return the category names from the categories table
     return data.map((item: { name: string }) => item.name);
   } catch (error) {
-    console.warn('Using fallback data due to network error:', error);
-    const categories = new Set<string>();
-    fallbackProducts.forEach((product) => {
-      categories.add(product.category);
-    });
-    return Array.from(categories);
+    console.error('❌ Error in getProductCategories:', error);
+    throw error;
   }
 }
 
 export async function getProductsByCategory(category: string): Promise<Product[]> {
-  if (!isSupabaseConfigured()) {
-    return fallbackProducts.filter(p => p.category === category);
-  }
-
   try {
     const { data, error } = await supabase
       .from('products')
@@ -355,19 +268,15 @@ export async function getProductsByCategory(category: string): Promise<Product[]
       .eq('category', category)
       .order('created_at', { ascending: false });
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return fallbackProducts.filter(p => p.category === category);
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Error fetching products by category:', error);
+      throw new Error(`Failed to fetch products by category: ${error.message}`);
     }
 
-    return data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : fallbackProducts.filter(p => p.category === category);
+    return data && Array.isArray(data) ? data.map(mapSupabaseRowToProduct) : [];
   } catch (error) {
-    console.warn('Using fallback data due to network error:', error);
-    return fallbackProducts.filter(p => p.category === category);
+    console.error('❌ Error in getProductsByCategory:', error);
+    throw error;
   }
 }
 
@@ -380,66 +289,46 @@ export function formatPrice(price: number): string {
 
 // Customer management functions
 export async function getAllCustomers(): Promise<Customer[]> {
-  if (!isSupabaseConfigured()) {
-    return sampleCustomers;
-  }
-
   try {
     const { data, error } = await supabase
       .from('customers')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return sampleCustomers;
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Error fetching customers:', error);
+      throw new Error(`Failed to fetch customers: ${error.message}`);
     }
 
-    return data || sampleCustomers;
+    return data || [];
   } catch (error) {
-    console.warn('Using fallback data due to network error:', error);
-    return sampleCustomers;
+    console.error('❌ Error in getAllCustomers:', error);
+    throw error;
   }
 }
 
 // Order management functions
 export async function getAllOrders(): Promise<Order[]> {
-  if (!isSupabaseConfigured()) {
-    return sampleOrders;
-  }
-
   try {
     const { data, error } = await supabase
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error && shouldUseFallback(error)) {
-      console.warn('Using fallback data due to Supabase connection issue:', error.message);
-      return sampleOrders;
-    }
-
     if (error) {
-      throw error;
+      console.error('❌ Error fetching orders:', error);
+      throw new Error(`Failed to fetch orders: ${error.message}`);
     }
 
-    return data || sampleOrders;
+    return data || [];
   } catch (error) {
-    console.warn('Using fallback data due to network error:', error);
-    return sampleOrders;
+    console.error('❌ Error in getAllOrders:', error);
+    throw error;
   }
 }
 
 // Admin functions for managing products (only work with Supabase)
 export async function createProduct(product: Omit<Product, 'id'>): Promise<Product | null> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured. Cannot create products.');
-  }
-
   // Validate required fields
   if (!product.name || !product.category || !product.description || !product.imageUrl) {
     throw new Error('Missing required fields: name, category, description, and imageUrl are required.');
@@ -472,12 +361,6 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
 
     if (error) {
       console.error('❌ Supabase create error:', error);
-      
-      // Check for CORS/network errors
-      if (shouldUseFallback(error)) {
-        throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-      }
-      
       throw new Error(`Database create failed: ${error.message}`);
     }
 
@@ -489,21 +372,11 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
     return mapSupabaseRowToProduct(data);
   } catch (error) {
     console.error('❌ Create product error:', error);
-    
-    // Check if it's a network error and provide better error message
-    if (shouldUseFallback(error)) {
-      throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-    }
-    
     throw error;
   }
 }
 
 export async function updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured. Cannot update products.');
-  }
-
   // Validate ID
   if (!id || typeof id !== 'string') {
     throw new Error('Invalid product ID provided.');
@@ -543,12 +416,6 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
 
     if (error) {
       console.error('❌ Supabase update error:', error);
-      
-      // Check for CORS/network errors
-      if (shouldUseFallback(error)) {
-        throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-      }
-      
       throw new Error(`Database update failed: ${error.message}`);
     }
 
@@ -560,20 +427,11 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
     return mapSupabaseRowToProduct(data);
   } catch (error) {
     console.error('❌ Update product error:', error);
-    
-    // Check if it's a network error and provide better error message
-    if (shouldUseFallback(error)) {
-      throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-    }
-    
     throw error;
   }
 }
 
 export async function deleteProduct(id: string): Promise<boolean> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured. Cannot delete products.');
-  }
 
   // Validate ID
   if (!id || typeof id !== 'string') {
@@ -590,12 +448,6 @@ export async function deleteProduct(id: string): Promise<boolean> {
 
     if (error) {
       console.error('❌ Supabase delete error:', error);
-      
-      // Check for CORS/network errors
-      if (shouldUseFallback(error)) {
-        throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-      }
-      
       throw new Error(`Database delete failed: ${error.message}`);
     }
 
@@ -603,22 +455,12 @@ export async function deleteProduct(id: string): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('❌ Delete product error:', error);
-    
-    // Check if it's a network error and provide better error message
-    if (shouldUseFallback(error)) {
-      throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-    }
-    
     throw error;
   }
 }
 
 // Image upload helper function
 export async function uploadProductImage(file: File): Promise<string> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured. Cannot upload images.');
-  }
-
   // Validate file
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   if (!allowedTypes.includes(file.type)) {
@@ -648,12 +490,6 @@ export async function uploadProductImage(file: File): Promise<string> {
 
     if (error) {
       console.error('❌ Image upload error:', error);
-      
-      // Check for CORS/network errors
-      if (shouldUseFallback(error)) {
-        throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-      }
-      
       throw new Error(`Image upload failed: ${error.message}`);
     }
 
@@ -666,12 +502,6 @@ export async function uploadProductImage(file: File): Promise<string> {
     return publicUrl;
   } catch (error) {
     console.error('❌ Upload image error:', error);
-    
-    // Check if it's a network error and provide better error message
-    if (shouldUseFallback(error)) {
-      throw new Error('Connection error: Please check your Supabase project configuration and ensure CORS is properly set up.');
-    }
-    
     throw error;
   }
 }

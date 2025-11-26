@@ -24,6 +24,7 @@ import MultiWarehouseStockEditor from "@/components/admin/MultiWarehouseStockEdi
 import { getAllWarehouses } from "@/lib/warehouses";
 import { Warehouse } from "@/types";
 import { ImageCropper } from "@/components/ui/image-cropper";
+import { triggerProductRevalidation } from "@/app/actions/revalidate";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -467,6 +468,15 @@ export default function AdminProductsPage() {
       
       if (editingProduct) {
         console.log('🔄 Updating product:', editingProduct.id);
+        
+        // Store old product data for revalidation (especially slug changes)
+        const oldProductData = {
+          id: editingProduct.id,
+          slug: editingProduct.slug,
+          is_featured: editingProduct.isFeatured,
+          is_featured_deal: (editingProduct as any).is_featured_deal
+        };
+        
         const updated = await updateProduct(editingProduct.id, productData);
         
         if (updated) {
@@ -482,6 +492,10 @@ export default function AdminProductsPage() {
               console.warn('Stock upsert failed', e);
             }
           }
+          
+          // Trigger revalidation with both old and new data for slug change handling
+          await triggerProductRevalidation('UPDATE', updated, oldProductData);
+          
           setProducts(products.map(p => p.id === editingProduct.id ? updated : p));
           alert('Product updated successfully!');
           setIsDialogOpen(false);
@@ -505,6 +519,10 @@ export default function AdminProductsPage() {
               console.warn('Stock upsert failed', e);
             }
           }
+          
+          // Trigger revalidation for the new product
+          await triggerProductRevalidation('INSERT', created);
+          
           setProducts([created, ...products]);
           alert('Product created successfully!');
           setIsDialogOpen(false);
@@ -529,9 +547,23 @@ export default function AdminProductsPage() {
     if (confirm("Are you sure you want to delete this product?")) {
       try {
         console.log('🗑️ Deleting product:', id);
+        
+        // Find the product to get its data before deletion
+        const productToDelete = products.find(p => p.id === id);
+        
         const success = await deleteProduct(id);
         
         if (success) {
+          // Trigger revalidation with deleted product data
+          if (productToDelete) {
+            await triggerProductRevalidation('DELETE', {
+              id: productToDelete.id,
+              slug: productToDelete.slug,
+              is_featured: productToDelete.isFeatured,
+              is_featured_deal: (productToDelete as any).is_featured_deal
+            });
+          }
+          
           // Update local state immediately
           setProducts(products.filter(p => p.id !== id));
           setFilteredProducts(filteredProducts.filter(p => p.id !== id));
