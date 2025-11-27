@@ -1,43 +1,43 @@
 import React from 'react';
-import { Shield, Sparkles, DollarSign, Truck, Headphones, CheckCircle } from 'lucide-react';
+import { StrongIcon, DesignedIcon, PricingIcon, DeliveryIcon, SupportIcon, PeaceIcon } from '../icons/PremiumIcons';
 
 const WhyChooseUs = () => {
   const features = [
     {
-      icon: Shield,
+      icon: StrongIcon,
       title: "STRONG & LONG-LASTING",
       description:
-        "From a single sofa to 200 student chairs, our furniture is built tough to withstand daily use in Nigerian homes, offices, schools, and lounges.",
+        "Our furniture is built tough to withstand daily use in Nigerian homes, offices, schools, and lounges.",
     },
     {
-      icon: Sparkles,
+      icon: DesignedIcon,
       title: "DESIGNED FOR EVERY SPACE",
       description:
-        "Stylish, comfortable, and practical — whether you're furnishing a home, a boardroom, a classroom, or an entire hotel.",
+        "Stylish, comfortable, and practical. Whether you're furnishing a home, a boardroom, a classroom, or an entire hotel.",
     },
     {
-      icon: DollarSign,
+      icon: PricingIcon,
       title: "CLEAR & FLEXIBLE PRICING",
       description:
         "Upfront, no-stories pricing with bulk discounts and flexible deals to fit your budget.",
     },
     {
-      icon: Truck,
-      title: "SWIFT DELIVERY, NO EXCUSES",
+      icon: DeliveryIcon,
+      title: "SWIFT DELIVERY",
       description:
-        "Whether it's 5 pieces or 500, we deliver quickly and reliably, nationwide.",
+        "We deliver quickly and safely to your location, ensuring your furniture arrives in perfect condition.",
     },
     {
-      icon: Headphones,
+      icon: SupportIcon,
       title: "ALWAYS HERE FOR YOU",
       description:
         "Dedicated support on WhatsApp and phone. We don't disappear after payment — we stay with you before, during, and after delivery.",
     },
     {
-      icon: CheckCircle,
+      icon: PeaceIcon,
       title: "YOUR PEACE OF MIND, GUARANTEED",
       description:
-        "We stand by our word. If it's not what you ordered, we'll make it right. Simple.",
+        "We are a fully registered business (CAC & LLC, RC: 927635)",
     },
   ];
 
@@ -48,9 +48,6 @@ const WhyChooseUs = () => {
           <h2 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-slate-50 sm:text-4xl lg:text-5xl font-heading">
             Why You Should Choose Us
           </h2>
-          <p className="mt-4 max-w-2xl mx-auto text-lg text-slate-600 dark:text-slate-400">
-            Discover what makes our furniture and service stand out
-          </p>
         </div>
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, index) => {
@@ -58,9 +55,9 @@ const WhyChooseUs = () => {
             return (
               <div
                 key={index}
-                className="rounded-lg bg-white dark:bg-slate-800 p-8 shadow-sm transition-shadow hover:shadow-lg"
+                className="rounded-2xl bg-white dark:bg-slate-800 p-8 shadow-sm transition-shadow hover:shadow-lg group"
               >
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 transition-colors duration-300 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                   <Icon className="w-8 h-8" />
                 </div>
                 <h3 className="mt-6 text-xl font-bold text-slate-950 dark:text-slate-50 font-heading">
