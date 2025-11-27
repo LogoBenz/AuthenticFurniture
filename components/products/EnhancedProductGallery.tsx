@@ -56,9 +56,9 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 h-full">
       {/* Main Media Container */}
-      <div className="relative aspect-[8/5] bg-white rounded-lg overflow-hidden border border-gray-200 group">
+      <div className="relative aspect-[8/5] lg:aspect-auto lg:flex-1 bg-white rounded-lg overflow-hidden border border-gray-200 group">
         {isVideo(currentImageIndex) ? (
           <video
             src={allMedia[currentImageIndex]}
@@ -131,15 +131,15 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
 
       {/* Thumbnail Navigation - Horizontal Bottom (ALL viewports) */}
       {allMedia.length > 1 && (
-        <div className="flex justify-center mt-3">
-          <div className="flex space-x-2 overflow-x-auto scrollbar-hide max-w-full">
+        <div className="flex justify-start">
+          <div className="flex space-x-3 overflow-x-auto scrollbar-hide max-w-full">
             {allMedia.map((media, index) => (
               <button
                 key={index}
                 onClick={() => goToMedia(index)}
-                className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${index === currentImageIndex
-                    ? "border-blue-800"
-                    : "border-gray-200 hover:border-gray-300"
+                className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${index === currentImageIndex
+                  ? "border-blue-800"
+                  : "border-gray-200 hover:border-gray-300"
                   }`}
                 aria-label={`View image ${index + 1}`}
               >

@@ -16,9 +16,9 @@ interface ProductPageProps {
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
   console.log('🔍 generateMetadata: Looking for product with slug:', slug);
-  
+
   const product = await getProductBySlug(slug);
-  
+
   if (!product) {
     console.log('❌ generateMetadata: Product not found for slug:', slug);
     return {
@@ -37,15 +37,15 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
   console.log('🔍 ProductPage: Looking for product with slug:', slug);
-  
+
   let product = await getProductBySlug(slug);
-  
+
   // If not found by slug, try to find by ID as fallback
   if (!product) {
     console.log('🔄 ProductPage: Not found by slug, trying to find by ID...');
     const allProducts = await getAllProducts();
     product = allProducts.find(p => p.id === slug) || null;
-    
+
     if (product) {
       console.log('✅ ProductPage: Found product by ID:', product.name);
     } else {
@@ -54,17 +54,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
   } else {
     console.log('✅ ProductPage: Found product by slug:', product.name);
   }
-  
+
   if (!product) {
     console.log('❌ ProductPage: Calling notFound() for slug:', slug);
     notFound();
   }
 
   return (
-    <main className="pt-16 pb-16">
-      <div className="container mx-auto px-4 max-w-7xl">
+    <main className="pt-6 pb-16">
+      <div className="container mx-auto px-4 max-w-[1450px]">
         {/* Breadcrumbs */}
-        <Breadcrumb 
+        <Breadcrumb
           items={[
             { label: "Home", href: "/" },
             { label: "Products", href: "/products" },
@@ -75,7 +75,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         {/* Main Product Section */}
         <article className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6 lg:gap-10 mb-12">
           {/* Product Gallery */}
-          <section aria-label="Product images">
+          <section aria-label="Product images" className="h-full">
             <EnhancedProductGallery
               images={product.images}
               videos={product.videos}

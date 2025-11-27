@@ -42,46 +42,39 @@ const WhyChooseUs = () => {
   ];
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-900/50 py-16 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
+    <section className="py-16 sm:py-24 bg-slate-50 dark:bg-slate-900">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 lg:mb-16">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-slate-50 sm:text-4xl lg:text-5xl font-heading">
             Why You Should Choose Us
           </h2>
-          <p className="text-xl text-slate-600 dark:text-slate-300">
+          <p className="mt-4 max-w-2xl mx-auto text-lg text-slate-600 dark:text-slate-400">
             Discover what makes our furniture and service stand out
           </p>
         </div>
-
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <div key={index} className="text-center group">
-                {/* Icon Circle */}
-                <div className="flex justify-center mb-6">
-                  <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-lg group-hover:bg-blue-700 group-hover:scale-105 transition-all duration-300">
-                    <Icon className="text-white w-10 h-10" strokeWidth={2} />
-                  </div>
+              <div
+                key={index}
+                className="rounded-lg bg-white dark:bg-slate-800 p-8 shadow-sm transition-shadow hover:shadow-lg"
+              >
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white">
+                  <Icon className="w-8 h-8" />
                 </div>
-
-              {/* Title */}
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 tracking-wide uppercase">
-                {feature.title}
-              </h3>
-
-              {/* Description */}
-              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-base">
-                {feature.description}
-              </p>
-            </div>
+                <h3 className="mt-6 text-xl font-bold text-slate-950 dark:text-slate-50 font-heading">
+                  {feature.title}
+                </h3>
+                <p className="mt-2 text-base text-slate-600 dark:text-slate-400">
+                  {feature.description}
+                </p>
+              </div>
             );
           })}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

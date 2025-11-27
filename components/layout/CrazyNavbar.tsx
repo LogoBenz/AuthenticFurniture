@@ -13,21 +13,22 @@ import {
   Linkedin,
   Twitter,
 } from "lucide-react";
-import { 
-  SofaIcon, 
-  BedIcon, 
-  ChairIcon, 
-  TableIcon, 
-  DeskIcon, 
-  CabinetIcon, 
-  LampIcon, 
+import {
+  SofaIcon,
+  BedIcon,
+  ChairIcon,
+  TableIcon,
+  DeskIcon,
+  CabinetIcon,
+  LampIcon,
   ShelfIcon,
   HomeIcon,
   OfficeIcon,
   HotelIcon,
   RestaurantIcon,
-  OutdoorIcon
-} from "@/components/icons/FurnitureIcons";
+  OutdoorIcon,
+  WarehouseIcon
+} from "@/components/icons/PremiumIcons";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/ui/mode-toggle";
@@ -68,6 +69,7 @@ export function CrazyNavbar() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [activeSpace, setActiveSpace] = useState<string | null>(null);
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
   const [showTopHeader, setShowTopHeader] = useState(true);
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -80,13 +82,13 @@ export function CrazyNavbar() {
 
   useEffect(() => {
     let ticking = false;
-    
+
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
           const scrollDiff = currentScrollY - lastScrollY;
-          
+
           // Top header: hide on first scroll down
           if (currentScrollY > 10) {
             setShowTopHeader(false);
@@ -95,26 +97,26 @@ export function CrazyNavbar() {
             setShowTopHeader(true);
             setIsScrolled(false);
           }
-          
+
           // Navbar: hide when scrolling down past 100px, show when scrolling up
           if (currentScrollY > 100 && scrollDiff > 5) {
             setShowNavbar(false);
           } else if (scrollDiff < -5) {
             setShowNavbar(true);
           }
-          
+
           // Always show navbar at the very top
           if (currentScrollY < 50) {
             setShowNavbar(true);
           }
-          
+
           setLastScrollY(currentScrollY);
           ticking = false;
         });
         ticking = true;
       }
     };
-    
+
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
@@ -198,13 +200,13 @@ export function CrazyNavbar() {
       // Spaces
       Home: HomeIcon,
       Briefcase: OfficeIcon,
-      Building: OfficeIcon,
+      Building: HotelIcon, // Changed from OfficeIcon to HotelIcon
       Building2: HotelIcon,
       TreePine: OutdoorIcon,
       Hotel: HotelIcon,
-      School: OfficeIcon,
+      School: DeskIcon,
       Store: OfficeIcon,
-      Warehouse: OfficeIcon,
+      Warehouse: WarehouseIcon,
       // Furniture types
       Sofa: SofaIcon,
       Bed: BedIcon,
@@ -237,7 +239,7 @@ export function CrazyNavbar() {
         <div className="px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" ref={logoRef} className="flex items-center">
-              <h1 className="text-lg sm:text-xl font-bold tracking-tighter">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tighter font-heading">
                 Authentic <span className="text-blue-600">Furniture</span>
               </h1>
             </Link>
@@ -303,7 +305,7 @@ export function CrazyNavbar() {
                 <TikTokIcon className="h-4 w-4" />
               </a>
             </div>
-            <div className="hidden md:block text-xs sm:text-sm">
+            <div className="hidden md:block text-xs sm:text-sm font-medium">
               Bulk? Wholesale Quote Available. Contact: 09037725829
             </div>
             <div className="md:hidden text-[11px]">Bulk Quote Available</div>
@@ -313,7 +315,7 @@ export function CrazyNavbar() {
 
       <motion.header
         initial={{ y: -100 }}
-        animate={{ 
+        animate={{
           y: showNavbar ? 0 : -100,
           top: showTopHeader ? 40 : 0
         }}
@@ -344,7 +346,7 @@ export function CrazyNavbar() {
                     <div className="h-full flex flex-col">
                       <div className="flex items-center justify-between px-4 py-3 border-b">
                         <Link href="/">
-                          <h1 className="text-lg font-bold">
+                          <h1 className="text-lg font-bold font-heading">
                             Authentic{" "}
                             <span className="text-blue-600">Furniture</span>
                           </h1>
@@ -359,31 +361,31 @@ export function CrazyNavbar() {
                       <nav className="px-2 space-y-1">
                         <Link
                           href="/products"
-                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted"
+                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
                         >
                           Products
                         </Link>
                         <Link
                           href="/blog"
-                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted"
+                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
                         >
                           Blog
                         </Link>
                         <Link
                           href="/e-catalogue"
-                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted"
+                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
                         >
                           E-Catalogue
                         </Link>
                         <Link
                           href="/showroom"
-                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted"
+                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
                         >
                           Showroom
                         </Link>
                         <Link
                           href="/about"
-                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted"
+                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
                         >
                           About Us
                         </Link>
@@ -391,7 +393,7 @@ export function CrazyNavbar() {
                       <div className="px-2 py-3">
                         <Accordion type="single" collapsible>
                           <AccordionItem value="spaces">
-                            <AccordionTrigger className="px-2">
+                            <AccordionTrigger className="px-2 font-heading">
                               Shop by Space
                             </AccordionTrigger>
                             <AccordionContent>
@@ -400,7 +402,7 @@ export function CrazyNavbar() {
                                   <Link
                                     key={space.id}
                                     href={`/products?space=${space.slug}`}
-                                    className="block py-2 text-sm hover:bg-muted rounded-md"
+                                    className="block py-2 text-sm hover:bg-muted rounded-md font-medium"
                                   >
                                     {space.name}
                                   </Link>
@@ -418,14 +420,14 @@ export function CrazyNavbar() {
                         {!isAuthenticated ? (
                           <Link
                             href="/auth/login"
-                            className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md"
+                            className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-heading"
                           >
                             Login
                           </Link>
                         ) : (
                           <button
                             onClick={handleSignOut}
-                            className="w-full text-center border border-red-600 text-red-600 py-2 rounded-md"
+                            className="w-full text-center border border-red-600 text-red-600 py-2 rounded-md font-heading"
                           >
                             Log out
                           </button>
@@ -439,7 +441,7 @@ export function CrazyNavbar() {
               <Link href="/" ref={logoRef}>
                 <motion.h1
                   whileHover={{ scale: 1.02 }}
-                  className="text-lg sm:text-xl font-bold tracking-tighter"
+                  className="text-lg sm:text-xl font-bold tracking-tighter font-heading"
                 >
                   Authentic <span className="text-blue-600">Furniture</span>
                 </motion.h1>
@@ -451,12 +453,18 @@ export function CrazyNavbar() {
               {/* Shop by Space with Mega Menu */}
               <div
                 className="relative group"
-                onMouseEnter={() => setActiveSpace("spaces")}
+                onMouseEnter={() => {
+                  setActiveSpace("spaces");
+                  // Default to first space if none selected
+                  if (!selectedSpaceId && spaces.length > 0) {
+                    setSelectedSpaceId(spaces[0].id);
+                  }
+                }}
                 onMouseLeave={() => setActiveSpace(null)}
               >
                 <motion.button
                   whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium transition-colors"
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium transition-colors font-heading"
                 >
                   <span>Shop by Space</span>
                   <motion.div
@@ -472,92 +480,145 @@ export function CrazyNavbar() {
                 <AnimatePresence>
                   {activeSpace === "spaces" && (
                     <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 10, scale: 0.98, x: "-50%" }}
+                      animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
+                      exit={{ opacity: 0, y: 10, scale: 0.98, x: "-50%" }}
                       transition={{ duration: 0.2 }}
-                      className="absolute top-full left-0 mt-2 w-[600px] bg-white dark:bg-slate-950 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+                      className="absolute top-full left-1/2 mt-2 w-[800px] bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden ring-1 ring-slate-900/5"
                     >
-                      <div className="p-6">
-                        <div className="grid grid-cols-2 gap-4">
-                          {spaces.map((space, index) => {
-                            const IconComponent = getIconComponent(
-                              space.icon || "Table"
-                            );
-                            return (
-                              <motion.div
-                                key={space.id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                className="space-y-2"
-                              >
-                                <Link
-                                  href={`/products?space=${space.slug}`}
-                                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors group"
-                                >
-                                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950 group-hover:bg-blue-100 dark:group-hover:bg-blue-900 transition-colors">
-                                    <IconComponent className="h-5 w-5 text-blue-600" />
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold text-sm">
-                                      {space.name}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {space.subcategories?.length || 0}{" "}
-                                      categories
-                                    </p>
-                                  </div>
-                                </Link>
+                      <div className="flex h-[400px]">
+                        {/* Sidebar */}
+                        <div className="w-72 bg-slate-50/50 dark:bg-slate-900/50 border-r border-slate-100 dark:border-slate-800 p-4 overflow-y-auto custom-scrollbar">
+                          <div className="space-y-1">
+                            {spaces.map((space) => {
+                              const IconComponent = getIconComponent(
+                                space.icon || "Table"
+                              );
+                              const isActive = selectedSpaceId === space.id;
 
-                                {/* Subcategories */}
-                                <div className="ml-10 space-y-1">
-                                  {space.subcategories
-                                    ?.slice(0, 3)
-                                    .map((subcategory) => {
-                                      const SubIconComponent = getIconComponent(
-                                        subcategory.icon || "Table"
-                                      );
-                                      return (
-                                        <Link
-                                          key={subcategory.id}
-                                          href={`/products?space=${space.slug}&subcategory=${subcategory.slug}`}
-                                          className="flex items-center gap-2 px-2 py-1.5 text-xs rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors group/sub"
-                                        >
-                                          <SubIconComponent className="h-3.5 w-3.5 text-muted-foreground group-hover/sub:text-foreground transition-colors" />
-                                          <span className="truncate">
-                                            {subcategory.name}
-                                          </span>
-                                        </Link>
-                                      );
-                                    })}
-                                  {space.subcategories &&
-                                    space.subcategories.length > 3 && (
+                              return (
+                                <motion.button
+                                  key={space.id}
+                                  onClick={() => setSelectedSpaceId(space.id)}
+                                  onMouseEnter={() => setSelectedSpaceId(space.id)}
+                                  className={cn(
+                                    "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 font-heading",
+                                    isActive
+                                      ? "bg-white dark:bg-slate-800 text-blue-600 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
+                                      : "text-slate-600 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+                                  )}
+                                >
+                                  <div className={cn(
+                                    "p-2 rounded-lg transition-colors",
+                                    isActive ? "bg-blue-50 dark:bg-blue-900/30" : "bg-transparent"
+                                  )}>
+                                    <IconComponent className={cn(
+                                      "w-4 h-4",
+                                      isActive ? "text-blue-600" : "text-slate-500 dark:text-slate-400"
+                                    )} />
+                                  </div>
+                                  <span>{space.name}</span>
+                                  {isActive && (
+                                    <motion.div
+                                      layoutId="activeIndicator"
+                                      className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600"
+                                    />
+                                  )}
+                                </motion.button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Content Area */}
+                        <div className="flex-1 p-6 bg-white dark:bg-slate-950">
+                          {selectedSpaceId && (
+                            <div className="h-full flex flex-col">
+                              {spaces.map((space) => {
+                                if (space.id !== selectedSpaceId) return null;
+
+                                return (
+                                  <motion.div
+                                    key={space.id}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.3, ease: "easeOut" }}
+                                    className="h-full flex flex-col"
+                                  >
+                                    <div className="flex items-center justify-between mb-6">
+                                      <div>
+                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1 font-heading">
+                                          {space.name}
+                                        </h3>
+                                      </div>
                                       <Link
                                         href={`/products?space=${space.slug}`}
-                                        className="flex items-center px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                        className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 group/link font-heading"
                                       >
-                                        +{space.subcategories.length - 3} more
+                                        View All
+                                        <ChevronDown className="w-4 h-4 -rotate-90 transition-transform group-hover/link:translate-x-1" />
                                       </Link>
-                                    )}
-                                </div>
-                              </motion.div>
-                            );
-                          })}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 overflow-y-auto pr-2 custom-scrollbar">
+                                      {space.subcategories?.map((subcategory, idx) => {
+                                        // Override icon for Complementary
+                                        const iconName = subcategory.name.toLowerCase().includes('complementary')
+                                          ? 'Lamp'
+                                          : (subcategory.icon || "Table");
+
+                                        const SubIconComponent = getIconComponent(iconName);
+
+                                        return (
+                                          <Link
+                                            key={subcategory.id}
+                                            href={`/products?space=${space.slug}&subcategory=${subcategory.slug}`}
+                                          >
+                                            <motion.div
+                                              initial={{ opacity: 0, y: 10 }}
+                                              animate={{ opacity: 1, y: 0 }}
+                                              transition={{ delay: idx * 0.05 }}
+                                              className="group/card flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/50 border border-transparent hover:border-slate-100 dark:hover:border-slate-800 transition-all duration-200"
+                                            >
+                                              <div className="mt-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-900 group-hover/card:bg-white dark:group-hover/card:bg-slate-800 group-hover/card:shadow-sm transition-all">
+                                                <SubIconComponent className="w-5 h-5 text-slate-500 group-hover/card:text-blue-600 transition-colors" />
+                                              </div>
+                                              <div>
+                                                <h4 className="font-medium text-sm text-slate-900 dark:text-slate-200 group-hover/card:text-blue-600 transition-colors font-heading">
+                                                  {subcategory.name}
+                                                </h4>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
+                                                  {subcategory.description || `Browse ${subcategory.name} collection`}
+                                                </p>
+                                              </div>
+                                            </motion.div>
+                                          </Link>
+                                        );
+                                      })}
+                                    </div>
+
+                                    {/* Featured / Promo Area (Optional) */}
+                                    <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
+                                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-4 flex items-center justify-between">
+                                        <div>
+                                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 font-heading">
+                                            Looking to furnish your {space.name}?
+                                          </p>
+                                          <p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5 font-medium">
+                                            Wholesale rate available. Contact: 09037725829
+                                          </p>
+                                        </div>
+                                        <Button size="sm" variant="secondary" className="bg-white dark:bg-slate-800 text-blue-600 hover:bg-blue-50 font-heading">
+                                          Contact Us
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.3 }}
-                          className="mt-4 pt-4 border-t"
-                        >
-                          <Link
-                            href="/products"
-                            className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors"
-                          >
-                            View All Products
-                          </Link>
-                        </motion.div>
                       </div>
                     </motion.div>
                   )}
@@ -595,9 +656,9 @@ export function CrazyNavbar() {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setIsSearchModalOpen(true)}
                   className="p-2"
                 >
