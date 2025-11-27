@@ -31,7 +31,7 @@ const WhyChooseUs = () => {
       icon: SupportIcon,
       title: "ALWAYS HERE FOR YOU",
       description:
-        "Dedicated support on WhatsApp and phone. We don't disappear after payment — we stay with you before, during, and after delivery.",
+        "Dedicated support on WhatsApp and phone. We don't disappear after payment. We stay with you before, during, and after delivery.",
     },
     {
       icon: PeaceIcon,
@@ -42,20 +42,20 @@ const WhyChooseUs = () => {
   ];
 
   return (
-    <section className="py-16 sm:py-24 bg-slate-50 dark:bg-slate-900">
+    <section className="py-10 sm:py-14 bg-slate-50 dark:bg-slate-900">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 lg:mb-16">
-          <h2 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-slate-50 sm:text-4xl lg:text-5xl font-heading">
+        <div className="text-left mb-12 lg:mb-16">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-50 sm:text-3xl lg:text-4xl font-heading">
             Why You Should Choose Us
           </h2>
         </div>
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="flex overflow-x-auto pb-8 -mx-4 px-4 snap-x snap-mandatory md:grid md:grid-cols-2 md:gap-8 lg:grid-cols-3 md:overflow-visible md:pb-0 md:mx-0 md:px-0 scrollbar-hide">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
               <div
                 key={index}
-                className="rounded-2xl bg-white dark:bg-slate-800 p-8 shadow-sm transition-shadow hover:shadow-lg group"
+                className="min-w-[85vw] sm:min-w-[calc(50vw-2rem)] md:min-w-0 snap-center rounded-2xl bg-white dark:bg-slate-800 p-8 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-slate-100 dark:border-slate-700 group"
               >
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 transition-colors duration-300 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                   <Icon className="w-8 h-8" />
