@@ -22,7 +22,7 @@ export function Testimonials() {
       name: "Oluwaseun Adebayo",
       role: "Office Manager, Lagos Tech Hub",
       content: "We furnished our entire office with Authentic Furniture. The quality is exceptional, and their team was professional throughout the process. Highly recommend for corporate spaces.",
-      image: "/catImg/compCat.png", // Using existing image as background
+      image: "/modern_office_workspace.png",
       avatar: "https://i.pravatar.cc/150?u=1",
       rating: 5
     },
@@ -31,7 +31,7 @@ export function Testimonials() {
       name: "Chioma Okonkwo",
       role: "Interior Designer",
       content: "As an interior designer, I've worked with many furniture suppliers. Authentic Furniture stands out for their attention to detail and quality control. My clients are always impressed.",
-      image: "/catImg/sofaCar.png",
+      image: "/stylish_lounge_area.png",
       avatar: "https://i.pravatar.cc/150?u=2",
       rating: 5
     },
@@ -40,7 +40,7 @@ export function Testimonials() {
       name: "Ibrahim Musa",
       role: "Hotel Owner",
       content: "We ordered custom reception furniture for our boutique hotel. The craftsmanship and finish exceeded our expectations. Will definitely work with them for our next expansion.",
-      image: "/catImg/patioCat.png",
+      image: "/luxury_hotel_lobby.png",
       avatar: "https://i.pravatar.cc/150?u=3",
       rating: 5
     },
@@ -49,7 +49,7 @@ export function Testimonials() {
       name: "Ngozi Eze",
       role: "Homeowner",
       content: "The delivery was swift and the installation team was very polite. The sofa fits perfectly in my living room and is incredibly comfortable.",
-      image: "/promoHero/HomeHero.png",
+      image: "/modern_living_room.png",
       avatar: "https://i.pravatar.cc/150?u=4",
       rating: 5
     },
@@ -58,7 +58,7 @@ export function Testimonials() {
   return (
     <section className="py-16 bg-white dark:bg-slate-950 overflow-hidden">
       <div className="container mx-auto px-4 relative">
-        <div className="text-center mb-12">
+        <div className="text-left mb-12">
           <span className="text-sm font-semibold tracking-wider text-amber-500 uppercase mb-2 block">Testimonials</span>
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">
             Our Client Reviews
