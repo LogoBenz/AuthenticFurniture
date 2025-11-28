@@ -7,10 +7,10 @@ import { Product } from "@/types";
 // Convert Supabase row to Product type
 function mapSupabaseRowToProduct(row: any): Product {
   console.log('🔄 Mapping database row:', row);
-  
+
   // Handle images - could be stored as JSON array, comma-separated string, or single URL
   let images: string[] = [];
-  
+
   if (row.images) {
     console.log('📝 Found images field:', row.images, 'Type:', typeof row.images);
     // If images is already an array
@@ -31,13 +31,13 @@ function mapSupabaseRowToProduct(row: any): Product {
       }
     }
   }
-  
+
   // Fallback to single image_url if no images array
   if (images.length === 0 && row.image_url) {
     images = [row.image_url];
     console.log('🔄 Fallback to image_url:', images);
   }
-  
+
   // Ensure we have at least one image
   if (images.length === 0) {
     images = ['/placeholder-product.jpg']; // Fallback placeholder
@@ -46,7 +46,7 @@ function mapSupabaseRowToProduct(row: any): Product {
 
   // Handle videos - similar to images
   let videos: string[] = [];
-  
+
   if (row.videos) {
     console.log('📝 Found videos field:', row.videos, 'Type:', typeof row.videos);
     // If videos is already an array
@@ -113,7 +113,7 @@ function mapSupabaseRowToProduct(row: any): Product {
     is_featured_deal: Boolean(row.is_featured_deal),
     deal_priority: row.deal_priority ? Number(row.deal_priority) : undefined,
   };
-  
+
   console.log('✅ Mapped product:', product);
   return product;
 }
@@ -130,10 +130,12 @@ function mapSupabaseRowToProduct(row: any): Product {
 export interface ProductFilters {
   space?: string;
   subcategory?: string;
+  collection?: string; // New collection filter
   price_min?: number;
   price_max?: number;
   page?: number;
   limit?: number;
+  sort?: string;
 }
 
 /**
@@ -155,7 +157,7 @@ export interface PaginatedProducts {
  */
 export const getProducts = cache(async (filters: ProductFilters = {}): Promise<PaginatedProducts> => {
   console.log('🔍 getProducts: Fetching with filters:', filters);
-  
+
   const supabase = createAdminClient(); // Use admin client for server-side
   const page = filters.page || 1;
   const limit = filters.limit || 12;
@@ -175,6 +177,9 @@ export const getProducts = cache(async (filters: ProductFilters = {}): Promise<P
         category,
         space_id,
         subcategory_id,
+        is_best_seller,
+        is_featured,
+        is_promo,
         space:spaces(id, name, slug),
         subcategory:subcategories(id, name, slug)
       `, { count: 'exact' });
@@ -184,17 +189,28 @@ export const getProducts = cache(async (filters: ProductFilters = {}): Promise<P
       console.log('🔍 Applying space filter:', filters.space);
       query = query.eq('space_id', filters.space);
     }
-    
+
     if (filters.subcategory) {
       console.log('🔍 Applying subcategory filter:', filters.subcategory);
       query = query.eq('subcategory_id', filters.subcategory);
     }
-    
+
+    if (filters.collection) {
+      console.log('🔍 Applying collection filter:', filters.collection);
+      if (filters.collection === 'best-sellers') {
+        query = query.eq('is_best_seller', true);
+      } else if (filters.collection === 'featured') {
+        query = query.eq('is_featured', true);
+      } else if (filters.collection === 'promo') {
+        query = query.eq('is_promo', true);
+      }
+    }
+
     if (filters.price_min !== undefined) {
       console.log('🔍 Applying price_min filter:', filters.price_min);
       query = query.gte('price', filters.price_min);
     }
-    
+
     if (filters.price_max !== undefined) {
       console.log('🔍 Applying price_max filter:', filters.price_max);
       query = query.lte('price', filters.price_max);
@@ -202,9 +218,34 @@ export const getProducts = cache(async (filters: ProductFilters = {}): Promise<P
 
     // Apply pagination
     query = query.range(offset, offset + limit - 1);
-    
-    // Order by created_at descending (newest first)
-    query = query.order('created_at', { ascending: false });
+
+    // Apply sorting
+    if (filters.sort) {
+      switch (filters.sort) {
+        case 'oldest':
+          query = query.order('created_at', { ascending: true });
+          break;
+        case 'price_low':
+          query = query.order('price', { ascending: true });
+          break;
+        case 'price_high':
+          query = query.order('price', { ascending: false });
+          break;
+        case 'name_asc':
+          query = query.order('name', { ascending: true });
+          break;
+        case 'name_desc':
+          query = query.order('name', { ascending: false });
+          break;
+        case 'newest':
+        default:
+          query = query.order('created_at', { ascending: false });
+          break;
+      }
+    } else {
+      // Default sort
+      query = query.order('created_at', { ascending: false });
+    }
 
     console.log('🔍 Executing query with offset:', offset, 'limit:', limit);
     const { data, error, count } = await query;
@@ -241,29 +282,29 @@ export async function debugDatabaseState(): Promise<void> {
     const { data: allProducts, error: allError } = await supabase
       .from('products')
       .select('id, name, slug, is_promo, is_best_seller, original_price, discount_percent');
-    
+
     console.log('📊 All products with slugs:', { data: allProducts, error: allError });
-    
+
     if (allProducts) {
       console.log('📝 Product slugs:', allProducts.map((p: any) => ({ id: p.id, name: p.name, slug: p.slug })));
     }
-    
+
     // Check promo products
     const { data: promoProducts, error: promoError } = await supabase
       .from('products')
       .select('id, name, slug, is_promo')
       .eq('is_promo', true);
-    
+
     console.log('🔥 Promo products:', { data: promoProducts, error: promoError });
-    
+
     // Check best sellers
     const { data: bestSellers, error: bestError } = await supabase
       .from('products')
       .select('id, name, slug, is_best_seller')
       .eq('is_best_seller', true);
-    
+
     console.log('⭐ Best sellers:', { data: bestSellers, error: bestError });
-    
+
   } catch (error) {
     console.error('❌ Debug error:', error);
   }
@@ -327,11 +368,11 @@ export const getProductBySlug = unstable_cache(
 
       if (error) {
         console.error('❌ Supabase error:', error);
-        
+
         // If it's a "not found" error, try to find by ID as fallback
         if (error.code === 'PGRST116' || error.message?.includes('No rows found')) {
           console.log('🔄 No product found with slug, trying to find by ID...');
-          
+
           // Check if slug might be an ID
           const { data: idData, error: idError } = await supabase
             .from('products')
@@ -342,19 +383,19 @@ export const getProductBySlug = unstable_cache(
             `)
             .eq('id', slug)
             .single();
-            
+
           if (idData && !idError) {
             console.log('✅ Found product by ID:', idData.name);
             return mapSupabaseRowToProduct(idData);
           }
         }
-        
+
         // Return null for not found, throw for other errors
         if (error.code === 'PGRST116' || error.message?.includes('No rows found')) {
           console.log('❌ No product found with slug:', slug);
           return null;
         }
-        
+
         throw new Error(`Failed to fetch product: ${error.message}`);
       }
 
@@ -406,21 +447,21 @@ export async function getPromoProducts(): Promise<any[]> {
       .select('*')
       .eq('is_promo', true)
       .order('created_at', { ascending: false });
-    
+
     console.log('📊 Promo products query result:', { data, error });
-    
+
     if (error) {
       console.error('❌ Error fetching promo products:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
       throw new Error(`Failed to fetch promo products: ${error.message}`);
     }
-    
+
     const mappedProducts = (data || []).map(mapSupabaseRowToProduct).map((p: any) => ({
       ...p,
       original_price: Number((p as any).original_price ?? p.price),
       discount_percent: Number((p as any).discount_percent ?? 0)
     }));
-    
+
     console.log('✅ Mapped promo products:', mappedProducts);
     return mappedProducts;
   } catch (error) {
@@ -827,7 +868,7 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
 
   try {
     const updateData: any = {};
-    
+
     if (updates.name !== undefined) updateData.name = updates.name;
     if (updates.slug !== undefined) updateData.slug = updates.slug;
     if (updates.category !== undefined) updateData.category = updates.category;
@@ -851,15 +892,15 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
     // Space and subcategory fields - handle UUID validation
     if (updates.space_id !== undefined) {
       // Only set if it's a valid UUID or null
-      if (updates.space_id === null || updates.space_id === '' || 
-          (typeof updates.space_id === 'string' && updates.space_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))) {
+      if (updates.space_id === null || updates.space_id === '' ||
+        (typeof updates.space_id === 'string' && updates.space_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))) {
         updateData.space_id = updates.space_id || null;
       }
     }
     if (updates.subcategory_id !== undefined) {
       // Only set if it's a valid UUID or null
-      if (updates.subcategory_id === null || updates.subcategory_id === '' || 
-          (typeof updates.subcategory_id === 'string' && updates.subcategory_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))) {
+      if (updates.subcategory_id === null || updates.subcategory_id === '' ||
+        (typeof updates.subcategory_id === 'string' && updates.subcategory_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))) {
         updateData.subcategory_id = updates.subcategory_id || null;
       }
     }
@@ -965,10 +1006,10 @@ export async function deleteProduct(id: string | number): Promise<boolean> {
       .eq('id', id)
       .select();
 
-    console.log('📊 Delete response:', { 
-      data: deletedProduct, 
-      error, 
-      status, 
+    console.log('📊 Delete response:', {
+      data: deletedProduct,
+      error,
+      status,
       statusText,
       deletedCount: deletedProduct?.length || 0
     });
@@ -979,16 +1020,16 @@ export async function deleteProduct(id: string | number): Promise<boolean> {
       console.error('   Error message:', error.message);
       console.error('   Error details:', error.details);
       console.error('   Error hint:', error.hint);
-      
+
       // Check for specific error codes
       if (error.code === '42501') {
         throw new Error('Permission denied: Row Level Security (RLS) is blocking the delete. Check your Supabase policies.');
       }
-      
+
       if (error.code === '23503') {
         throw new Error('Cannot delete: Product is referenced by other records (foreign key constraint).');
       }
-      
+
       throw new Error(`Database delete failed: ${error.message} (Code: ${error.code})`);
     }
 

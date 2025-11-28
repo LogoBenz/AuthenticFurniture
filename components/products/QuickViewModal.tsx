@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { X, Plus, Minus, ShoppingCart, MessageCircle, Share2, Facebook, Twitter, Linkedin } from "lucide-react";
+import { X, Plus, Minus, ShoppingCart, MessageCircle, Facebook, Twitter, Linkedin, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Product } from "@/types";
 import { useEnquiryCart } from "@/hooks/use-enquiry-cart";
 import { formatPrice } from "@/lib/products-client";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface QuickViewModalProps {
   product: Product | null;
@@ -46,7 +47,7 @@ Can you provide more details and availability?`;
   const handleSocialShare = (platform: string) => {
     const url = typeof window !== 'undefined' ? window.location.href : '';
     const text = `Check out this ${product.name} from Authentic Furniture!`;
-    
+
     let shareUrl = '';
     switch (platform) {
       case 'facebook':
@@ -59,7 +60,7 @@ Can you provide more details and availability?`;
         shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
         break;
     }
-    
+
     if (shareUrl) {
       window.open(shareUrl, '_blank', 'width=600,height=400');
     }
@@ -67,150 +68,146 @@ Can you provide more details and availability?`;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[95vh] overflow-hidden p-0 w-[95vw] sm:w-full">
-        <div className="flex flex-col lg:flex-row h-full">
+      <DialogContent className="max-w-5xl p-0 overflow-hidden bg-white dark:bg-slate-900 border-none shadow-2xl rounded-2xl">
+        <div className="flex flex-col lg:flex-row h-[90vh] lg:h-[600px]">
           {/* Product Image - Left Side */}
-          <div className="lg:w-1/2 relative">
-            <div className="relative aspect-square lg:aspect-auto lg:h-full max-h-[50vh] lg:max-h-none">
+          <div className="lg:w-1/2 relative bg-slate-50 dark:bg-slate-800 flex items-center justify-center p-8">
+            <div className="relative w-full h-full max-h-[300px] lg:max-h-none">
               <Image
                 src={imageUrl}
                 alt={product.name}
                 fill
-                className="object-cover"
+                className="object-contain"
                 priority
               />
-              <Button
-                onClick={onClose}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-lg"
-                size="sm"
-              >
-                <X className="w-4 h-4" />
-              </Button>
             </div>
-            <div className="absolute bottom-4 left-4">
+
+            {/* Close Button (Mobile) */}
+            <Button
+              onClick={onClose}
+              className="absolute top-4 right-4 lg:hidden rounded-full bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm text-slate-500"
+              size="icon"
+              variant="ghost"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+
+            {/* View Details Link */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
               <Link
                 href={`/products/${product.slug}`}
                 onClick={onClose}
-                className="bg-black text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors"
+                className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-blue-800 transition-colors border-b border-transparent hover:border-blue-800 pb-0.5"
               >
-                VIEW DETAILS
+                View Full Details
               </Link>
             </div>
           </div>
 
           {/* Product Info - Right Side */}
-          <div className="lg:w-1/2 p-4 sm:p-6 flex flex-col justify-between overflow-y-auto">
-            <div>
-              {/* Product Name */}
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
-                {product.name}
-              </h2>
+          <div className="lg:w-1/2 p-6 lg:p-10 flex flex-col h-full overflow-y-auto bg-white dark:bg-slate-900">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-400 mb-2 uppercase tracking-wider">
+                  {product.category}
+                </p>
+                <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
+                  {product.name}
+                </h2>
+              </div>
+              <Button
+                onClick={onClose}
+                className="hidden lg:flex rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                size="icon"
+                variant="ghost"
+              >
+                <X className="w-6 h-6" />
+              </Button>
+            </div>
 
-              {/* Price */}
-              <div className="flex items-center space-x-3 mb-4">
-                <span className="text-xl sm:text-2xl font-bold text-red-600">
-                  {formatPrice(currentPrice)}
-                </span>
-                {discountPercent > 0 && (
-                  <span className="text-base sm:text-lg text-slate-500 line-through">
+            {/* Price */}
+            <div className="flex items-baseline gap-3 mb-6">
+              <span className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">
+                {formatPrice(currentPrice)}
+              </span>
+              {discountPercent > 0 && (
+                <>
+                  <span className="text-lg text-slate-400 line-through">
                     {formatPrice(originalPrice)}
                   </span>
-                )}
-              </div>
+                  <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full">
+                    -{discountPercent}%
+                  </span>
+                </>
+              )}
+            </div>
 
-              {/* Description */}
-              <p className="text-slate-600 mb-6 leading-relaxed">
-                {product.description || `The ${product.name} is designed to combine elegance, comfort, and functionality, making it a perfect addition to your space. With its refined craftsmanship and premium finish, it transforms everyday living into a stylish experience.`}
-              </p>
+            {/* Description */}
+            <div className="prose prose-slate dark:prose-invert text-sm text-slate-600 dark:text-slate-300 mb-8 line-clamp-3">
+              {product.description || `The ${product.name} is designed to combine elegance, comfort, and functionality, making it a perfect addition to your space.`}
+            </div>
 
-              {/* Quantity Selector */}
-              <div className="flex items-center space-x-4 mb-6">
-                <span className="text-sm font-medium text-slate-700">Quantity:</span>
-                <div className="flex items-center border border-slate-300 rounded-lg">
-                  <Button
-                    variant="ghost"
-                    size="sm"
+            <div className="mt-auto space-y-6">
+              {/* Quantity & Add to Cart */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg h-12 w-fit">
+                  <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-8 h-8 p-0"
+                    className="w-10 h-full flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-l-lg transition-colors"
                   >
                     <Minus className="w-4 h-4" />
-                  </Button>
-                  <span className="w-12 text-center font-medium">{quantity}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  </button>
+                  <span className="w-12 text-center font-medium text-slate-900 dark:text-white">{quantity}</span>
+                  <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="w-8 h-8 p-0"
+                    className="w-10 h-full flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-r-lg transition-colors"
                   >
                     <Plus className="w-4 h-4" />
-                  </Button>
+                  </button>
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-3 mb-6">
                 <Button
                   onClick={handleAddToCart}
-                  className={`w-full py-2 sm:py-3 text-base sm:text-lg font-semibold ${
-                    isInCart(product.id) 
-                      ? 'bg-red-600 hover:bg-red-700 text-white' 
-                      : 'bg-green-600 hover:bg-green-700 text-white'
-                  }`}
+                  className={`flex-1 h-12 text-base font-semibold transition-all duration-300 ${isInCart(product.id)
+                      ? 'bg-slate-900 text-white hover:bg-slate-800'
+                      : 'bg-blue-800 hover:bg-blue-900 text-white shadow-lg shadow-blue-900/20'
+                    }`}
                 >
-                  <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  {isInCart(product.id) ? 'REMOVE FROM CART' : 'ADD TO CART'}
+                  {isInCart(product.id) ? (
+                    <>
+                      <Check className="w-5 h-5 mr-2" />
+                      ADDED TO CART
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-5 h-5 mr-2" />
+                      ADD TO CART
+                    </>
+                  )}
                 </Button>
+              </div>
 
+              {/* Secondary Actions */}
+              <div className="grid grid-cols-2 gap-4">
                 <Button
                   onClick={handleWhatsAppOrder}
                   variant="outline"
-                  className="w-full py-2 sm:py-3 text-base sm:text-lg font-semibold border-green-600 text-green-600 hover:bg-green-50"
+                  className="h-11 border-slate-200 hover:bg-slate-50 text-slate-700"
                 >
-                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  ORDER
+                  <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
+                  WhatsApp
                 </Button>
-              </div>
-
-              {/* Product Details */}
-              <div className="space-y-2 text-sm text-slate-600 mb-6">
-                {product.modelNo && (
-                  <div>
-                    <span className="font-medium">SKU:</span> {product.modelNo}
-                  </div>
-                )}
-                <div>
-                  <span className="font-medium">Category:</span> {product.category}
-                </div>
-              </div>
-
-              {/* Social Share */}
-              <div className="flex items-center space-x-3">
-                <span className="text-sm font-medium text-slate-700">Share:</span>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSocialShare('facebook')}
-                    className="w-8 h-8 p-0 text-blue-600 border-blue-600 hover:bg-blue-50"
-                  >
+                <div className="flex items-center justify-end gap-2">
+                  <span className="text-sm text-slate-500">Share:</span>
+                  <button onClick={() => handleSocialShare('facebook')} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
                     <Facebook className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSocialShare('twitter')}
-                    className="w-8 h-8 p-0 text-blue-400 border-blue-400 hover:bg-blue-50"
-                  >
+                  </button>
+                  <button onClick={() => handleSocialShare('twitter')} className="p-2 text-slate-400 hover:text-blue-400 transition-colors">
                     <Twitter className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSocialShare('linkedin')}
-                    className="w-8 h-8 p-0 text-blue-700 border-blue-700 hover:bg-blue-50"
-                  >
+                  </button>
+                  <button onClick={() => handleSocialShare('linkedin')} className="p-2 text-slate-400 hover:text-blue-700 transition-colors">
                     <Linkedin className="w-4 h-4" />
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>

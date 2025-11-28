@@ -51,7 +51,7 @@ import {
 import { EnquiryCartModal } from "@/components/products/EnquiryCartModal";
 import { SearchModal } from "@/components/ui/SearchModal";
 import { useAuth } from "@/hooks/use-auth";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { getSpacesForNavigation } from "@/lib/categories";
 import { Space } from "@/types";
 
@@ -77,8 +77,16 @@ export function CrazyNavbar() {
   const { isAuthenticated, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const isAdminArea = pathname?.startsWith("/admin");
+
+  // Close dropdowns on navigation
+  useEffect(() => {
+    setActiveSpace(null);
+    setIsSearchModalOpen(false);
+    // We don't close the cart modal automatically as user might want to keep shopping
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     let ticking = false;
@@ -240,7 +248,7 @@ export function CrazyNavbar() {
           <div className="flex items-center justify-between">
             <Link href="/" ref={logoRef} className="flex items-center">
               <h1 className="text-lg sm:text-xl font-bold tracking-tighter font-heading">
-                Authentic <span className="text-blue-600">Furniture</span>
+                Authentic <span className="text-blue-800">Furniture</span>
               </h1>
             </Link>
             <div className="flex items-center space-x-2 sm:space-x-4">
@@ -348,7 +356,7 @@ export function CrazyNavbar() {
                         <Link href="/">
                           <h1 className="text-lg font-bold font-heading">
                             Authentic{" "}
-                            <span className="text-blue-600">Furniture</span>
+                            <span className="text-blue-800">Furniture</span>
                           </h1>
                         </Link>
                       </div>
@@ -420,7 +428,7 @@ export function CrazyNavbar() {
                         {!isAuthenticated ? (
                           <Link
                             href="/auth/login"
-                            className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-heading"
+                            className="block w-full text-center bg-blue-800 hover:bg-blue-700 text-white py-2 rounded-md font-heading"
                           >
                             Login
                           </Link>
@@ -443,7 +451,7 @@ export function CrazyNavbar() {
                   whileHover={{ scale: 1.02 }}
                   className="text-lg sm:text-xl font-bold tracking-tighter font-heading"
                 >
-                  Authentic <span className="text-blue-600">Furniture</span>
+                  Authentic <span className="text-blue-800">Furniture</span>
                 </motion.h1>
               </Link>
             </div>
@@ -475,7 +483,7 @@ export function CrazyNavbar() {
                   </motion.div>
                 </motion.button>
                 {/* Animated underline */}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-800 transition-all duration-300 group-hover:w-full"></span>
 
                 <AnimatePresence>
                   {activeSpace === "spaces" && (
@@ -504,24 +512,24 @@ export function CrazyNavbar() {
                                   className={cn(
                                     "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 font-heading",
                                     isActive
-                                      ? "bg-white dark:bg-slate-800 text-blue-600 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
+                                      ? "bg-white dark:bg-slate-800 text-blue-800 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
                                       : "text-slate-600 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
                                   )}
                                 >
                                   <div className={cn(
                                     "p-2 rounded-lg transition-colors",
-                                    isActive ? "bg-blue-50 dark:bg-blue-900/30" : "bg-transparent"
+                                    isActive ? "bg-slate-100 dark:bg-blue-900/30" : "bg-transparent"
                                   )}>
                                     <IconComponent className={cn(
                                       "w-4 h-4",
-                                      isActive ? "text-blue-600" : "text-slate-500 dark:text-slate-400"
+                                      isActive ? "text-blue-800" : "text-slate-500 dark:text-slate-400"
                                     )} />
                                   </div>
                                   <span>{space.name}</span>
                                   {isActive && (
                                     <motion.div
                                       layoutId="activeIndicator"
-                                      className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600"
+                                      className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-800"
                                     />
                                   )}
                                 </motion.button>
@@ -553,7 +561,7 @@ export function CrazyNavbar() {
                                       </div>
                                       <Link
                                         href={`/products?space=${space.slug}`}
-                                        className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 group/link font-heading"
+                                        className="text-sm font-medium text-blue-800 hover:text-blue-700 flex items-center gap-1 group/link font-heading"
                                       >
                                         View All
                                         <ChevronDown className="w-4 h-4 -rotate-90 transition-transform group-hover/link:translate-x-1" />
@@ -581,10 +589,10 @@ export function CrazyNavbar() {
                                               className="group/card flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/50 border border-transparent hover:border-slate-100 dark:hover:border-slate-800 transition-all duration-200"
                                             >
                                               <div className="mt-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-900 group-hover/card:bg-white dark:group-hover/card:bg-slate-800 group-hover/card:shadow-sm transition-all">
-                                                <SubIconComponent className="w-5 h-5 text-slate-500 group-hover/card:text-blue-600 transition-colors" />
+                                                <SubIconComponent className="w-5 h-5 text-slate-500 group-hover/card:text-blue-800 transition-colors" />
                                               </div>
                                               <div>
-                                                <h4 className="font-medium text-sm text-slate-900 dark:text-slate-200 group-hover/card:text-blue-600 transition-colors font-heading">
+                                                <h4 className="font-medium text-sm text-slate-900 dark:text-slate-200 group-hover/card:text-blue-800 transition-colors font-heading">
                                                   {subcategory.name}
                                                 </h4>
                                                 <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
@@ -608,7 +616,7 @@ export function CrazyNavbar() {
                                             Wholesale rate available. Contact: 09037725829
                                           </p>
                                         </div>
-                                        <Button size="sm" variant="secondary" className="bg-white dark:bg-slate-800 text-blue-600 hover:bg-blue-50 font-heading">
+                                        <Button size="sm" variant="secondary" className="bg-white dark:bg-slate-800 text-blue-800 hover:bg-slate-100 font-heading">
                                           Contact Us
                                         </Button>
                                       </div>
@@ -645,7 +653,7 @@ export function CrazyNavbar() {
                     {link.label}
                   </Link>
                   {/* Animated underline */}
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-800 transition-all duration-300 group-hover:w-full"></span>
                 </motion.div>
               ))}
             </nav>

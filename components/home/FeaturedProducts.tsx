@@ -7,6 +7,7 @@ import { QuickViewModal } from "@/components/products/QuickViewModal";
 import { Product } from "@/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export function NewArrivals() {
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
@@ -125,13 +126,16 @@ export function NewArrivals() {
       <div className="max-w-[85rem] mx-auto px-4">
         {/* Header with Navigation */}
         <div className="flex items-center justify-between mb-6">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-[28px] font-heading font-semibold tracking-tight text-slate-900 dark:text-white"
-          >
-            New Arrivals
-          </motion.h2>
+          <Link href="/products?sort=newest" className="group">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-[28px] font-heading font-semibold tracking-tight text-slate-900 dark:text-white group-hover:text-blue-800 transition-colors flex items-center gap-2"
+            >
+              New Arrivals
+              <ChevronRight className="w-6 h-6 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
+            </motion.h2>
+          </Link>
 
           {/* Navigation Buttons */}
           <div className="hidden md:flex items-center gap-2">
@@ -189,7 +193,7 @@ export function NewArrivals() {
           {/* Minimal Scrollbar */}
           <div className="mt-6">
             <div
-              className="relative h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden cursor-pointer"
+              className="relative h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden cursor-pointer"
               onClick={(e) => {
                 if (!scrollContainerRef.current) return;
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -205,7 +209,7 @@ export function NewArrivals() {
               }}
             >
               <div
-                className="absolute left-0 top-0 h-full bg-blue-600 dark:bg-blue-500 rounded-full transition-all duration-300"
+                className="absolute left-0 top-0 h-full bg-blue-800 dark:bg-blue-500 rounded-full transition-all duration-300"
                 style={{ width: `${scrollProgress}%` }}
               />
             </div>

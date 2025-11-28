@@ -63,7 +63,7 @@ export function Categories() {
 
   // Priority subcategories in order
   const getPrioritySubcategories = () => {
-    const priorityNames = ['Office Tables', 'Student Chairs', 'Office Chairs', 'Complementary'];
+    const priorityNames = ['Desks & Tables', 'Office Tables', 'Student Chairs', 'Office Chairs', 'Sofa Sets', 'Complementary'];
 
     return subcategories
       .filter(sub => priorityNames.includes(sub.name))
@@ -76,7 +76,7 @@ export function Categories() {
 
   // Get remaining subcategories (not in priority list)
   const getRemainingSubcategories = () => {
-    const priorityNames = ['Office Tables', 'Student Chairs', 'Office Chairs', 'Complementary'];
+    const priorityNames = ['Desks & Tables', 'Office Tables', 'Student Chairs', 'Office Chairs', 'Sofa Sets', 'Complementary'];
     return subcategories.filter(sub => !priorityNames.includes(sub.name));
   };
 
@@ -102,57 +102,25 @@ export function Categories() {
 
   const orderedSubcategories = getOrderedSubcategories();
 
-  // Define popular categories with clean product images on white backgrounds
-  const popularCategories = [
-    { 
-      name: 'Student Chairs', 
-      slug: 'student-chairs', 
-      image: '/catImg/student-chair.png',
-      productCount: 8
-    },
-    { 
-      name: 'Office Tables', 
-      slug: 'office-tables', 
-      image: '/catImg/oTable.png',
-      productCount: 21
-    },
-    { 
-      name: 'Complementory', 
-      slug: 'complementory', 
-      image: '/catImg/compCat.png',
-      productCount: 0
-    },
-    { 
-      name: 'Office Chairs', 
-      slug: 'office-chairs', 
-      image: '/catImg/oChair.png',
-      productCount: 11
-    },
-    { 
-      name: 'Sofa Sets', 
-      slug: 'sofa-sets', 
-      image: '/catImg/sofaCar.png',
-      productCount: 30
-    },
-    { 
-      name: 'Auditorium Chairs', 
-      slug: 'auditorium-chairs', 
-      image: '/catImg/AuditoriumCat.png',
-      productCount: 0
-    },
-    { 
-      name: 'Conference Table', 
-      slug: 'conference-table', 
-      image: '/catImg/cabinet.png',
-      productCount: 0
-    },
-    { 
-      name: 'Dining Sets', 
-      slug: 'dining-sets', 
-      image: '/catImg/patioCat.png',
-      productCount: 0
-    },
-  ];
+  // Map slugs to images
+  const categoryImages: { [key: string]: string } = {
+    'student-chairs': '/catImg/student-chair.png',
+    'office-tables': '/catImg/oTable.png',
+    'desks-tables': '/catImg/oTable.png', // Map fallback slug to same image
+    'complementory': '/catImg/compCat.png',
+    'complementary': '/catImg/compCat.png', // Fix typo
+    'office-chairs': '/catImg/oChair.png',
+    'sofa-sets': '/catImg/sofaCar.png',
+    'auditorium-chairs': '/catImg/AuditoriumCat.png',
+    'conference-table': '/catImg/cabinet.png',
+    'dining-sets': '/catImg/dining-set.png',
+    'beds': '/catImg/bed.png', // Need a placeholder or real image
+    'cabinets': '/catImg/cabinet.png',
+    'storage-cabinets': '/catImg/cabinet.png',
+    'lounges-bars': '/catImg/lounge-bar.png',
+    'canopy': '/catImg/canopy.png',
+    'patio-sets': '/catImg/patioCat.png',
+  };
 
   return (
     <section className="pt-4 pb-8 sm:pt-6 sm:pb-10 bg-white">
@@ -169,14 +137,15 @@ export function Categories() {
           {/* Scrollable Container */}
           <div className="overflow-x-auto scrollbar-hide pb-4">
             <div className="flex gap-6 px-2">
-              {popularCategories.map((category) => {
+              {orderedSubcategories.map((subcategory) => {
                 // Categories that need zoom out (padding)
-                const needsZoomOut = ['complementory', 'office-chairs', 'auditorium-chairs', 'conference-table'].includes(category.slug);
-                
+                const needsZoomOut = ['complementory', 'complementary', 'office-chairs', 'auditorium-chairs', 'conference-table', 'cabinets', 'storage-cabinets', 'lounges-bars', 'canopy'].includes(subcategory.slug);
+                const imagePath = categoryImages[subcategory.slug] || '/catImg/oTable.png'; // Fallback image
+
                 return (
                   <Link
-                    href={`/products?subcategory=${category.slug}`}
-                    key={category.slug}
+                    href={`/products?subcategory=${subcategory.slug}`}
+                    key={subcategory.id}
                     className="group flex-shrink-0 w-[200px] sm:w-[220px]"
                   >
                     {/* Card with sharp corners */}
@@ -184,20 +153,20 @@ export function Categories() {
                       {/* Pure White Image Container - Landscape */}
                       <div className={`relative aspect-[4/3] bg-white overflow-hidden ${needsZoomOut ? 'p-4' : ''}`}>
                         <img
-                          src={category.image}
-                          alt={category.name}
+                          src={imagePath}
+                          alt={subcategory.name}
                           className={`w-full h-full transition-transform duration-500 ease-out group-hover:scale-110 ${needsZoomOut ? 'object-contain' : 'object-cover'}`}
                         />
                       </div>
-                    
-                    {/* Clean Text - Center Aligned */}
-                    <div className="text-center px-3 py-2 border-t border-slate-100">
-                      <h3 className="text-sm font-heading font-semibold text-slate-900 tracking-tight">
-                        {category.name}
-                      </h3>
+
+                      {/* Clean Text - Center Aligned */}
+                      <div className="text-center px-3 py-2 border-t border-slate-100">
+                        <h3 className="text-sm font-heading font-semibold text-slate-900 tracking-tight">
+                          {subcategory.name}
+                        </h3>
+                      </div>
                     </div>
-                  </div>
-                </Link>
+                  </Link>
                 );
               })}
             </div>

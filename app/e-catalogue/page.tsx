@@ -1,76 +1,146 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, ArrowLeft, Download, Eye } from 'lucide-react';
+import { BookOpen, ArrowLeft, Download, Eye, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { Input } from '@/components/ui/input';
 
 export default function ECataloguePage() {
+  const [email, setEmail] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email) {
+      setIsSubmitted(true);
+      // Here you would typically send the email to your backend
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-slate-900 dark:to-slate-800">
-      <div className="text-center max-w-2xl mx-auto px-4">
-        {/* Icon */}
-        <div className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-          <BookOpen className="w-12 h-12 text-white" />
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 py-12">
+      <div className="max-w-4xl mx-auto w-full">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-100 dark:border-slate-800"
+        >
+          <div className="grid md:grid-cols-2">
+            {/* Left Content Side */}
+            <div className="p-8 md:p-12 flex flex-col justify-center">
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-8 text-blue-800 dark:text-blue-400">
+                <BookOpen className="w-8 h-8" />
+              </div>
 
-        {/* Main Content */}
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
-          E-Catalogue Coming Soon
-        </h1>
-        
-        <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
-          We're working on something amazing! Our comprehensive digital catalogue will showcase 
-          all our furniture collections in an interactive, beautiful format.
-        </p>
+              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4 font-heading">
+                E-Catalogue Coming Soon
+              </h1>
 
-        {/* Features Preview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white/50 dark:bg-slate-800/50 p-4 rounded-lg border border-yellow-200 dark:border-slate-700">
-            <Eye className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
-            <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Interactive View</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-300">360° product views and zoom</p>
-          </div>
-          <div className="bg-white/50 dark:bg-slate-800/50 p-4 rounded-lg border border-yellow-200 dark:border-slate-700">
-            <Download className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
-            <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Downloadable PDF</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-300">Save and share offline</p>
-          </div>
-          <div className="bg-white/50 dark:bg-slate-800/50 p-4 rounded-lg border border-yellow-200 dark:border-slate-700">
-            <BookOpen className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
-            <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Complete Collection</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-300">All products in one place</p>
-          </div>
-        </div>
+              <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+                We're crafting a comprehensive digital experience. Our new e-catalogue will feature
+                interactive 3D views, detailed specifications, and our complete premium collection.
+              </p>
 
-        {/* Call to Action */}
-        <div className="space-y-4">
-          <p className="text-slate-600 dark:text-slate-300">
-            In the meantime, explore our products online or visit our showroom.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild className="bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-semibold px-8 py-3">
-              <Link href="/products" className="flex items-center gap-2">
-                <Eye className="w-5 h-5" />
-                Browse Products
-              </Link>
-            </Button>
-            
-            <Button asChild variant="outline" className="border-yellow-400 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 px-8 py-3">
-              <Link href="/showroom" className="flex items-center gap-2">
-                <ArrowLeft className="w-5 h-5" />
-                Visit Showroom
-              </Link>
-            </Button>
-          </div>
-        </div>
+              {!isSubmitted ? (
+                <form onSubmit={handleSubmit} className="mb-8">
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Get notified when it launches
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="email"
+                      id="email"
+                      placeholder="Enter your email"
+                      className="flex-1"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                    <Button type="submit" className="bg-blue-800 hover:bg-blue-900 text-white">
+                      <Bell className="w-4 h-4 mr-2" />
+                      Notify Me
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 p-4 rounded-lg mb-8 flex items-center"
+                >
+                  <Bell className="w-5 h-5 mr-2" />
+                  Thanks! We'll let you know when it's ready.
+                </motion.div>
+              )}
 
-        {/* Back to Home */}
-        <div className="mt-8 pt-6 border-t border-yellow-200 dark:border-slate-700">
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button asChild className="bg-slate-900 hover:bg-slate-800 text-white">
+                  <Link href="/products">
+                    Browse Online
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/showroom">
+                    Visit Showroom
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Feature Side */}
+            <div className="bg-slate-50 dark:bg-slate-800/50 p-8 md:p-12 flex flex-col justify-center border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-800">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-6">What to expect</h3>
+
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center shrink-0 text-blue-600">
+                    <Eye className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 dark:text-white">Interactive Views</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      Explore products in 360° detail with high-resolution zoom capabilities.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center shrink-0 text-blue-600">
+                    <Download className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 dark:text-white">Offline Access</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      Download specific collections or the full catalogue for offline presentation.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center shrink-0 text-blue-600">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900 dark:text-white">Complete Specs</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      Detailed dimensions, material options, and customization guides.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="mt-8 text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center text-sm text-slate-500 hover:text-blue-800 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Link>
         </div>

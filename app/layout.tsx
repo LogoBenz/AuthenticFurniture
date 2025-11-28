@@ -7,16 +7,17 @@ import { ThemeProvider } from '@/components/layout/ThemeProvider';
 import { FloatingWhatsAppButton } from '@/components/ui/whatsapp-button';
 import { EnquiryCartProvider } from '@/hooks/use-enquiry-cart';
 import { NewsletterPopup } from '@/components/ui/NewsletterPopup';
+import { CompareBar } from '@/components/products/CompareBar';
 
 // Professional font pairing - DM Sans for headings, Inter for body
-const dmSans = DM_Sans({ 
+const dmSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-heading',
   weight: ['400', '500', '600', '700'],
   display: 'swap',
 });
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-body',
   weight: ['400', '500', '600', '700'],
@@ -49,6 +50,7 @@ export default function RootLayout({
               <Footer />
               <FloatingWhatsAppButton />
               <NewsletterPopup />
+              <CompareBar />
             </div>
           </EnquiryCartProvider>
         </ThemeProvider>

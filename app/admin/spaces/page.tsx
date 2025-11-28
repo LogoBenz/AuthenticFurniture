@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAllSpaces, createSpace, updateSpace, deleteSpace, createSubcategory, updateSubcategory, deleteSubcategory } from "@/lib/categories";
+import { getAllSpaces } from "@/lib/categories";
+import { createSpace, updateSpace, deleteSpace, createSubcategory, updateSubcategory, deleteSubcategory } from "@/app/actions/categories";
 import { Space, Subcategory } from "@/types";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,7 @@ export default function AdminSpacesPage() {
   const [editingSpace, setEditingSpace] = useState<Space | null>(null);
   const [editingSubcategory, setEditingSubcategory] = useState<Subcategory | null>(null);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string>("");
-  
+
   const [spaceFormData, setSpaceFormData] = useState({
     name: "",
     slug: "",
@@ -132,7 +133,7 @@ export default function AdminSpacesPage() {
 
     try {
       setSavingId(editingSpace?.id || "new");
-      
+
       if (editingSpace) {
         const updatedSpace = await updateSpace(editingSpace.id, spaceFormData);
         if (updatedSpace) {
@@ -144,7 +145,7 @@ export default function AdminSpacesPage() {
           setSpaces([...spaces, newSpace]);
         }
       }
-      
+
       setIsSpaceDialogOpen(false);
       resetSpaceForm();
     } catch (error) {
@@ -160,7 +161,7 @@ export default function AdminSpacesPage() {
 
     try {
       setSavingId(editingSubcategory?.id || "new");
-      
+
       if (editingSubcategory) {
         const updatedSubcategory = await updateSubcategory(editingSubcategory.id, subcategoryFormData);
         if (updatedSubcategory) {
@@ -196,7 +197,7 @@ export default function AdminSpacesPage() {
           }));
         }
       }
-      
+
       setIsSubcategoryDialogOpen(false);
       resetSubcategoryForm();
     } catch (error) {
@@ -309,7 +310,7 @@ export default function AdminSpacesPage() {
                   <Input
                     id="space-slug"
                     value={spaceFormData.slug}
-                    onChange={(e) => setSpaceFormData({...spaceFormData, slug: e.target.value})}
+                    onChange={(e) => setSpaceFormData({ ...spaceFormData, slug: e.target.value })}
                     placeholder="e.g., home, office, outdoor"
                     required
                   />
@@ -319,7 +320,7 @@ export default function AdminSpacesPage() {
                   <Textarea
                     id="space-description"
                     value={spaceFormData.description}
-                    onChange={(e) => setSpaceFormData({...spaceFormData, description: e.target.value})}
+                    onChange={(e) => setSpaceFormData({ ...spaceFormData, description: e.target.value })}
                     placeholder="Brief description of this space"
                   />
                 </div>
@@ -327,7 +328,7 @@ export default function AdminSpacesPage() {
                   <Label htmlFor="space-icon">Icon</Label>
                   <Select
                     value={spaceFormData.icon}
-                    onValueChange={(value) => setSpaceFormData({...spaceFormData, icon: value})}
+                    onValueChange={(value) => setSpaceFormData({ ...spaceFormData, icon: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -353,14 +354,14 @@ export default function AdminSpacesPage() {
                     id="space-sort"
                     type="number"
                     value={spaceFormData.sort_order}
-                    onChange={(e) => setSpaceFormData({...spaceFormData, sort_order: parseInt(e.target.value) || 0})}
+                    onChange={(e) => setSpaceFormData({ ...spaceFormData, sort_order: parseInt(e.target.value) || 0 })}
                   />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="space-active"
                     checked={spaceFormData.is_active}
-                    onCheckedChange={(checked) => setSpaceFormData({...spaceFormData, is_active: checked})}
+                    onCheckedChange={(checked) => setSpaceFormData({ ...spaceFormData, is_active: checked })}
                   />
                   <Label htmlFor="space-active">Active</Label>
                 </div>
@@ -394,7 +395,7 @@ export default function AdminSpacesPage() {
                   <Label htmlFor="subcategory-space">Space</Label>
                   <Select
                     value={subcategoryFormData.space_id}
-                    onValueChange={(value) => setSubcategoryFormData({...subcategoryFormData, space_id: value})}
+                    onValueChange={(value) => setSubcategoryFormData({ ...subcategoryFormData, space_id: value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a space" />
@@ -430,7 +431,7 @@ export default function AdminSpacesPage() {
                   <Input
                     id="subcategory-slug"
                     value={subcategoryFormData.slug}
-                    onChange={(e) => setSubcategoryFormData({...subcategoryFormData, slug: e.target.value})}
+                    onChange={(e) => setSubcategoryFormData({ ...subcategoryFormData, slug: e.target.value })}
                     placeholder="e.g., sofa-sets, office-chairs"
                     required
                   />
@@ -440,7 +441,7 @@ export default function AdminSpacesPage() {
                   <Textarea
                     id="subcategory-description"
                     value={subcategoryFormData.description}
-                    onChange={(e) => setSubcategoryFormData({...subcategoryFormData, description: e.target.value})}
+                    onChange={(e) => setSubcategoryFormData({ ...subcategoryFormData, description: e.target.value })}
                     placeholder="Brief description of this subcategory"
                   />
                 </div>
@@ -448,7 +449,7 @@ export default function AdminSpacesPage() {
                   <Label htmlFor="subcategory-icon">Icon</Label>
                   <Select
                     value={subcategoryFormData.icon}
-                    onValueChange={(value) => setSubcategoryFormData({...subcategoryFormData, icon: value})}
+                    onValueChange={(value) => setSubcategoryFormData({ ...subcategoryFormData, icon: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -474,14 +475,14 @@ export default function AdminSpacesPage() {
                     id="subcategory-sort"
                     type="number"
                     value={subcategoryFormData.sort_order}
-                    onChange={(e) => setSubcategoryFormData({...subcategoryFormData, sort_order: parseInt(e.target.value) || 0})}
+                    onChange={(e) => setSubcategoryFormData({ ...subcategoryFormData, sort_order: parseInt(e.target.value) || 0 })}
                   />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="subcategory-active"
                     checked={subcategoryFormData.is_active}
-                    onCheckedChange={(checked) => setSubcategoryFormData({...subcategoryFormData, is_active: checked})}
+                    onCheckedChange={(checked) => setSubcategoryFormData({ ...subcategoryFormData, is_active: checked })}
                   />
                   <Label htmlFor="subcategory-active">Active</Label>
                 </div>

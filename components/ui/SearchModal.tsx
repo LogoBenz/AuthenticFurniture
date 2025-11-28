@@ -170,7 +170,6 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    key={placeholderIndex}
                     placeholder={`Search for ${placeholder}...`}
                     className="w-full pl-12 pr-4 py-4 text-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all animate-in fade-in duration-300"
                   />

@@ -1,17 +1,29 @@
+"use client";
+
+import { useState } from "react";
 import ProductCard from "@/components/products/ProductCard";
+import { QuickViewModal } from "@/components/products/QuickViewModal";
 import { Product } from "@/types";
 
 interface ProductGridProps {
   products: Product[];
+  variant?: 'simple' | 'detailed';
 }
 
-export function ProductGrid({ products }: ProductGridProps) {
+export function ProductGrid({ products, variant = 'simple' }: ProductGridProps) {
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+
   return (
     <div className="space-y-6">
       {products.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              variant={variant}
+              onQuickView={(product) => setQuickViewProduct(product)}
+            />
           ))}
         </div>
       ) : (
@@ -24,6 +36,12 @@ export function ProductGrid({ products }: ProductGridProps) {
           </div>
         </div>
       )}
+
+      <QuickViewModal
+        product={quickViewProduct}
+        isOpen={!!quickViewProduct}
+        onClose={() => setQuickViewProduct(null)}
+      />
     </div>
   );
 }

@@ -141,7 +141,7 @@ export function Header() {
           router.push('/auth/login');
         }
       }, 2000); // 2 second long press
-      
+
       setLongPressTimer(timer);
     };
 
@@ -225,7 +225,7 @@ export function Header() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center">
               <h1 className="text-lg sm:text-xl font-bold tracking-tighter text-foreground">
-                Authentic <span className="text-blue-600 dark:text-blue-500">Furniture</span>
+                Authentic <span className="text-blue-800 dark:text-blue-500">Furniture</span>
               </h1>
             </Link>
 
@@ -273,19 +273,17 @@ export function Header() {
       )}
 
       <header id="site-header"
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          isScrolled
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled
             ? "bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm"
             : "bg-transparent"
-        }`}
+          }`}
         style={{ top: showPromoHeader ? '40px' : '0' }}
       >
         {/* Top social bar */}
         <div
-          className={`transition-all duration-300 bg-slate-900 text-white ${
-            isMobile && isScrolled ? "max-h-0 opacity-0" : "max-h-10 opacity-100"
-          } overflow-hidden`}
-      >
+          className={`transition-all duration-300 bg-slate-900 text-white ${isMobile && isScrolled ? "max-h-0 opacity-0" : "max-h-10 opacity-100"
+            } overflow-hidden`}
+        >
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between py-2 text-white/90">
               <div className="flex items-center space-x-4">
@@ -332,7 +330,7 @@ export function Header() {
                       {/* Top area with logo */}
                       <div className="flex items-center justify-between px-4 py-3 border-b">
                         <Link href="/" className="flex items-center">
-                          <h1 className="text-lg font-bold tracking-tighter">Authentic <span className="text-blue-600 dark:text-blue-500">Furniture</span></h1>
+                          <h1 className="text-lg font-bold tracking-tighter">Authentic <span className="text-blue-800 dark:text-blue-500">Furniture</span></h1>
                         </Link>
                       </div>
                       {/* Search bar */}
@@ -377,7 +375,7 @@ export function Header() {
                                               const SubIconComponent = getIconComponent(subcategory.icon || 'Table');
                                               return (
                                                 <li key={subcategory.id}>
-                                                  <Link 
+                                                  <Link
                                                     href={`/products?space=${space.slug}&subcategory=${subcategory.slug}`}
                                                     className="flex items-center gap-3 text-sm py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                                                   >
@@ -396,7 +394,7 @@ export function Header() {
                                 <div className="border-t border-slate-200 dark:border-slate-700 my-2"></div>
                                 <Link
                                   href="/products"
-                                  className="flex items-center gap-3 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 py-2 rounded-md transition-colors"
+                                  className="flex items-center gap-3 text-sm font-medium text-blue-800 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 py-2 rounded-md transition-colors"
                                 >
                                   <span>View All Products</span>
                                 </Link>
@@ -418,7 +416,7 @@ export function Header() {
                           <ModeToggle />
                         </div>
                         {!isAuthenticated ? (
-                          <Link href="/auth/login" className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md text-sm font-semibold">Login / Sign Up</Link>
+                          <Link href="/auth/login" className="block w-full text-center bg-blue-800 hover:bg-blue-700 text-white py-2 rounded-md text-sm font-semibold">Login / Sign Up</Link>
                         ) : (
                           <button
                             onClick={handleSignOut}
@@ -432,21 +430,21 @@ export function Header() {
                   </SheetContent>
                 </Sheet>
               </div>
-            <Link href="/" ref={logoRef} className="flex items-center">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tighter text-foreground">
-                Authentic <span className="text-blue-600 dark:text-blue-500">Furniture</span>
-              </h1>
-            </Link>
+              <Link href="/" ref={logoRef} className="flex items-center">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tighter text-foreground">
+                  Authentic <span className="text-blue-800 dark:text-blue-500">Furniture</span>
+                </h1>
+              </Link>
             </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
               <div className="relative group">
-                <button className="flex items-center space-x-1 text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors">
+                <button className="flex items-center space-x-1 text-sm font-medium text-foreground hover:text-blue-800 dark:hover:text-blue-500 transition-colors">
                   <span>Shop by Space</span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
-                
+
                 {/* shadcn-style Professional Mega Menu */}
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[580px] bg-popover dark:bg-slate-950 rounded-lg shadow-lg border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="p-4">
@@ -473,7 +471,7 @@ export function Header() {
                               </div>
                               <ChevronDown className="h-4 w-4 text-muted-foreground rotate-[-90deg] opacity-0 group-hover/header:opacity-100 transition-opacity" />
                             </Link>
-                            
+
                             {/* Subcategories - shadcn style */}
                             <div className="ml-10 space-y-1">
                               {space.subcategories?.slice(0, 4).map((subcategory) => {
@@ -502,7 +500,7 @@ export function Header() {
                         );
                       })}
                     </div>
-                    
+
                     {/* Footer - shadcn style */}
                     <div className="mt-4 pt-4 border-t">
                       <Link
@@ -518,31 +516,31 @@ export function Header() {
               </div>
               <Link
                 href="/blog"
-                className="text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                className="text-sm font-medium text-foreground hover:text-blue-800 dark:hover:text-blue-500 transition-colors"
               >
                 Blog
               </Link>
               <Link
                 href="/e-catalogue"
-                className="text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                className="text-sm font-medium text-foreground hover:text-blue-800 dark:hover:text-blue-500 transition-colors"
               >
                 E-Catalogue
               </Link>
               <Link
                 href="/showroom"
-                className="text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                className="text-sm font-medium text-foreground hover:text-blue-800 dark:hover:text-blue-500 transition-colors"
               >
                 Showroom
               </Link>
               <Link
                 href="/about"
-                className="text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                className="text-sm font-medium text-foreground hover:text-blue-800 dark:hover:text-blue-500 transition-colors"
               >
                 About Us
               </Link>
               <Link
                 href="/careers"
-                className="text-sm font-medium text-foreground hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+                className="text-sm font-medium text-foreground hover:text-blue-800 dark:hover:text-blue-500 transition-colors"
               >
                 Careers
               </Link>
@@ -550,9 +548,9 @@ export function Header() {
 
             {/* Right icons: search, wishlist, profile, cart */}
             <div className="flex items-center space-x-1 sm:space-x-3">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsSearchModalOpen(true)}
                 className="p-2 hover:bg-blue-50 dark:hover:bg-blue-950"
               >
@@ -585,15 +583,15 @@ export function Header() {
       </header>
 
       {/* Enquiry Cart Modal */}
-      <EnquiryCartModal 
-        isOpen={isCartModalOpen} 
-        onClose={() => setIsCartModalOpen(false)} 
+      <EnquiryCartModal
+        isOpen={isCartModalOpen}
+        onClose={() => setIsCartModalOpen(false)}
       />
 
       {/* Search Modal */}
-      <SearchModal 
-        isOpen={isSearchModalOpen} 
-        onClose={() => setIsSearchModalOpen(false)} 
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
       />
     </>
   );

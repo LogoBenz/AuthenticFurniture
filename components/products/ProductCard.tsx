@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Heart, RotateCcw, Eye, MessageCircle, Plus } from 'lucide-react';
+import { ShoppingCart, Heart, ArrowLeftRight, Eye, MessageCircle, Plus } from 'lucide-react';
 import { Product } from '@/types';
 import { useEnquiryCart } from '@/hooks/use-enquiry-cart';
 import { WishlistButton } from '@/components/ui/WishlistButton';
@@ -15,9 +15,10 @@ import { useCompare } from '@/hooks/use-compare';
 interface ProductCardProps {
   product: Product;
   onQuickView?: (product: Product) => void;
+  variant?: 'simple' | 'detailed';
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView, variant = 'simple' }) => {
   const { addToCart, removeFromCart, isInCart } = useEnquiryCart();
   const { isInCompare, toggleCompare } = useCompare();
   const [isHovered, setIsHovered] = useState(false);
@@ -60,6 +61,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }) => {
 
   const imageUrl = getImageUrl();
 
+  // Get second image for hover effect
+  const getSecondImageUrl = () => {
+    if (product.images && Array.isArray(product.images) && product.images.length > 1) {
+      const secondImage = product.images[1];
+      if (secondImage?.trim()) {
+        return secondImage;
+      }
+    }
+    return null;
+  };
+
+  const secondImageUrl = getSecondImageUrl();
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -86,145 +100,158 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }) => {
 
   return (
     <NextUICard
-      variant="bordered"
-      radius="none"
-      className="group cursor-pointer flex flex-col h-full border-slate-200 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 transition-all duration-300 hover:shadow-lg bg-white dark:bg-slate-900"
+      variant="flat"
+      radius="sm"
+      className="group cursor-pointer flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-blue-800 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-xl"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link href={`/products/${product.slug}`} className="block">
-        {/* Image Container */}
-        <div className="relative w-full h-[215px] bg-white dark:bg-slate-900 overflow-hidden">
+      <Link href={`/products/${product.slug}`} className="block h-full flex flex-col">
+        {/* Image Container - Taller and Centered */}
+        <div className={`relative w-full ${variant === 'detailed' ? 'h-[300px]' : 'h-[260px]'} bg-white dark:bg-slate-900 overflow-hidden flex items-center justify-center rounded-t-sm transition-all duration-300`}>
           <Image
             src={imageUrl}
             alt={product.name}
             fill
-            className={`${product.category?.toLowerCase().includes('chair')
-                ? 'object-contain scale-110 group-hover:scale-125'
-                : 'object-cover group-hover:scale-105'
-              } transition-transform duration-500 ease-out`}
+            className={`${product.category.toLowerCase().includes('chair') || product.category.toLowerCase().includes('seating') ? 'object-contain' : 'object-cover'} group-hover:scale-105 transition-transform duration-500 ease-out`}
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwABmX/9k="
           />
 
+          {/* Second Image (Hover) */}
+          {secondImageUrl && (
+            <Image
+              src={secondImageUrl}
+              alt={`${product.name} - view 2`}
+              fill
+              className={`absolute inset-0 z-10 ${product.category.toLowerCase().includes('chair') || product.category.toLowerCase().includes('seating') ? 'object-contain' : 'object-cover'} opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out`}
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
+          )}
+
           {/* NEW Badge */}
           {isNew && (
-            <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 text-xs font-bold z-10 rounded">
-              NEW
+            <div className="absolute top-4 left-4 bg-slate-900 text-white px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm z-10">
+              New
             </div>
           )}
 
           {/* Discount Badge */}
           {discountPercent > 0 && (
-            <div className={`absolute top-2 ${isNew ? 'left-14' : 'left-2'} bg-red-500 text-white px-2 py-1 text-xs font-bold z-10 rounded`}>
+            <div className={`absolute top-4 ${isNew ? 'left-16' : 'left-4'} bg-red-500 text-white px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm z-10`}>
               -{discountPercent}%
             </div>
           )}
 
-          {/* NextUI Action Icons - Top Right */}
-          <div className={`absolute top-3 right-3 flex flex-col gap-2 transition-opacity duration-200 z-20 ${isHovered ? 'opacity-100' : 'opacity-0 sm:opacity-100 md:opacity-0'
-            }`}>
-            <NextUIButton
+          {/* Action Icons - Top Right (Visible on Hover) */}
+          <div className={`absolute top-4 right-4 flex flex-col gap-2 transition-all duration-300 z-20 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
+            <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleCompare(product);
               }}
-              variant="flat"
-              radius="full"
-              size="sm"
-              className={`w-8 h-8 min-w-8 p-0 backdrop-blur-md transition-colors ${isCompared
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-white/90 text-slate-600 hover:text-blue-600 hover:bg-white'
-                }`}
+              className={`w-9 h-9 flex items-center justify-center rounded-full bg-white shadow-sm border border-slate-100 hover:bg-slate-50 text-slate-600 hover:text-blue-800 transition-colors ${isCompared ? 'text-blue-800 bg-slate-100' : ''}`}
               title={isCompared ? "Remove from compare" : "Compare"}
             >
-              <RotateCcw className={`w-3.5 h-3.5 ${isCompared ? 'text-white' : ''}`} />
-            </NextUIButton>
-            <NextUIButton
+              <ArrowLeftRight className="w-4 h-4" />
+            </button>
+            <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 onQuickView?.(product);
               }}
-              variant="flat"
-              radius="full"
-              size="sm"
-              className="w-8 h-8 min-w-8 p-0 bg-white/90 backdrop-blur-md text-slate-600 hover:text-blue-600 hover:bg-white"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-white shadow-sm border border-slate-100 hover:bg-slate-50 text-slate-600 hover:text-blue-800 transition-colors"
               title="Quick View"
             >
-              <Eye className="w-3.5 h-3.5" />
-            </NextUIButton>
-            <div className="w-8 h-8 min-w-8 flex items-center justify-center">
+              <Eye className="w-4 h-4" />
+            </button>
+            <div className="w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-sm border border-slate-100 hover:bg-slate-50">
               <WishlistButton
                 productId={product.id.toString()}
-                size="md"
-                className="w-8 h-8 p-1.5 bg-white/90 backdrop-blur-md border-none shadow-none hover:shadow-none hover:scale-100"
+                size="sm"
+                className="w-full h-full p-2 hover:bg-transparent shadow-none border-none"
               />
             </div>
           </div>
         </div>
 
         {/* Product Info */}
-        <div className="p-3">
-          {/* Category Label */}
-          <p className="text-[10px] text-slate-500 uppercase tracking-wide font-medium">
-            {product.category}
-          </p>
+        <div className="px-4 py-2 flex-1 flex flex-col justify-between border-t border-slate-100 dark:border-slate-800 h-[100px]">
+          <div>
+            {/* Category Label */}
+            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold mb-0.5">
+              {product.category}
+            </p>
 
-          {/* Product Name */}
-          <h3 className="font-heading font-semibold text-slate-900 dark:text-slate-100 text-base leading-tight line-clamp-1 mt-1 mb-2">
-            {product.name}
-          </h3>
+            {/* Product Name */}
+            <h3 className="font-medium text-slate-900 dark:text-slate-100 text-sm leading-tight mb-1 group-hover:text-blue-800 dark:group-hover:text-blue-300 transition-colors line-clamp-1">
+              {product.name}
+            </h3>
+          </div>
 
-          {/* Price and Add to Cart Row */}
-          <div className="flex items-center justify-between">
-            {/* Pricing */}
+          {/* Price and Add to Cart */}
+          <div className="flex items-center justify-between mt-1">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-heading font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+              <div className="flex items-baseline gap-2">
+                <span className="text-base font-bold text-slate-900 dark:text-slate-100">
                   {formatPrice(currentPrice)}
                 </span>
                 {discountPercent > 0 && (
-                  <span className="text-xs text-slate-400 line-through font-medium">
+                  <span className="text-[10px] text-slate-400 line-through">
                     {formatPrice(originalPrice)}
                   </span>
                 )}
               </div>
+              {/* Savings Text - Visible for all variants now */}
               {discountPercent > 0 && (
-                <div className="text-green-600 text-xs font-semibold mt-0.5">
-                  Save {formatPrice(savingsAmount)}
-                </div>
+                <p className="text-[10px] text-green-600 font-medium">
+                  You save {formatPrice(savingsAmount)}
+                </p>
               )}
             </div>
 
-            <NextUIButton
-              onClick={handleAddToCart}
-              variant={isInCart(product.id) ? "solid" : "flat"}
-              radius="full"
-              size="sm"
-              className={`w-10 h-10 min-w-10 p-0 flex-shrink-0 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative overflow-hidden group/btn ${isInCart(product.id)
-                ? 'bg-red-500 hover:bg-red-600 text-white shadow-md shadow-red-500/20 hover:shadow-lg hover:shadow-red-500/40 hover:scale-105 active:scale-95'
-                : 'bg-white text-slate-900 border border-slate-200 hover:border-blue-600 hover:text-white shadow-sm hover:shadow-xl hover:shadow-blue-900/20 hover:scale-110 active:scale-90'
-                }`}
-              title={isInCart(product.id) ? 'Remove from cart' : 'Add to cart'}
-            >
-              {!isInCart(product.id) && (
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
-              )}
-              <div className="relative z-10">
+            {variant === 'detailed' ? (
+              <NextUIButton
+                onClick={handleAddToCart}
+                radius="full"
+                size="sm"
+                className={`w-12 h-12 mr-1 mb-1 transition-all duration-300 ${isInCart(product.id)
+                  ? 'bg-slate-900 text-white hover:bg-slate-800'
+                  : 'bg-white text-black border border-slate-200 hover:bg-blue-800 hover:text-white hover:border-blue-800'
+                  }`}
+                title={isInCart(product.id) ? 'Remove from cart' : 'Add to cart'}
+              >
                 {isInCart(product.id) ? (
-                  <ShoppingCart className="w-4 h-4" />
+                  <ShoppingCart className="w-5 h-5" />
                 ) : (
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-8 h-8" strokeWidth={3} />
                 )}
-              </div>
-            </NextUIButton>
+              </NextUIButton>
+            ) : (
+              <NextUIButton
+                onClick={handleAddToCart}
+                radius="full"
+                size="sm"
+                className={`w-12 h-12 mr-1 mb-1 transition-all duration-300 border ${isInCart(product.id)
+                  ? 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800'
+                  : 'bg-white text-black border-slate-200 hover:bg-blue-800 hover:text-white hover:border-blue-800'
+                  }`}
+                title={isInCart(product.id) ? 'Remove from cart' : 'Add to cart'}
+              >
+                {isInCart(product.id) ? (
+                  <ShoppingCart className="w-5 h-5" />
+                ) : (
+                  <Plus className="w-8 h-8" strokeWidth={3} />
+                )}
+              </NextUIButton>
+            )}
           </div>
         </div>
       </Link>
-    </NextUICard >
+    </NextUICard>
   );
 };
 

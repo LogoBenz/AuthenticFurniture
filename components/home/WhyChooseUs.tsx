@@ -57,7 +57,7 @@ const WhyChooseUs = () => {
                 key={index}
                 className="min-w-[85vw] sm:min-w-[calc(50vw-2rem)] md:min-w-0 snap-center rounded-2xl bg-white dark:bg-slate-800 p-8 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-slate-100 dark:border-slate-700 group"
               >
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 transition-colors duration-300 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 transition-colors duration-300 group-hover:bg-accent dark:group-hover:bg-accent group-hover:text-accent-foreground dark:group-hover:text-accent-foreground">
                   <Icon className="w-8 h-8" />
                 </div>
                 <h3 className="mt-6 text-xl font-bold text-slate-950 dark:text-slate-50 font-heading">

@@ -76,8 +76,8 @@ export function OfficeTablesSection({ products }: OfficeTablesSectionProps) {
               key={type}
               onClick={() => setSelectedType(type)}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${selectedType === type
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
+                ? "bg-blue-800 text-white shadow-md"
+                : "bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
                 }`}
             >
               {type}
