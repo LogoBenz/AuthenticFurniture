@@ -100,8 +100,8 @@ export default function AdminProductsPage() {
       setCategories(categoriesData);
       setSpaces(spacesData);
       setAllWarehouses(warehousesData.map(w => ({ id: w.id, name: w.name })) as Warehouse[]);
-    } finally { 
-      setLoading(false); 
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,7 +112,7 @@ export default function AdminProductsPage() {
   // Filter and sort products based on search term and sort option
   useEffect(() => {
     let filtered = products;
-    
+
     if (searchTerm.trim()) {
       filtered = products.filter(product =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -199,9 +199,9 @@ export default function AdminProductsPage() {
 
   const handleEdit = (product: Product) => {
     console.log('📝 Editing product:', product.name);
-    console.log('DOTW values:', { 
-      is_featured_deal: (product as any).is_featured_deal, 
-      deal_priority: (product as any).deal_priority 
+    console.log('DOTW values:', {
+      is_featured_deal: (product as any).is_featured_deal,
+      deal_priority: (product as any).deal_priority
     });
     setEditingProduct(product);
     setFormData({
@@ -248,11 +248,11 @@ export default function AdminProductsPage() {
     setProductImages(product.images && product.images.length > 0 ? product.images : (product.imageUrl ? [product.imageUrl] : []));
     // Set videos if available
     setProductVideos((product as any).videos || []);
-    
+
     // Set initial stock and warehouse location for editing
     setInitialStock(String((product as any).stock_count ?? ""));
     setSelectedWarehouseId(String((product as any).warehouseLocation ?? ""));
-    
+
     setIsDialogOpen(true);
   };
 
@@ -294,7 +294,7 @@ export default function AdminProductsPage() {
   };
 
   const handleCategoryChange = (value: string) => {
-    setFormData({...formData, category: value});
+    setFormData({ ...formData, category: value });
     if (value !== "custom") {
       setCustomCategory("");
     }
@@ -352,11 +352,11 @@ export default function AdminProductsPage() {
     }
 
     // Parse popular_with and badges arrays
-    const popularWith = formData.popular_with.trim() 
+    const popularWith = formData.popular_with.trim()
       ? formData.popular_with.split(',').map(item => item.trim()).filter(Boolean)
       : undefined;
-    
-    const badges = formData.badges.trim() 
+
+    const badges = formData.badges.trim()
       ? formData.badges.split(',').map(item => item.trim()).filter(Boolean)
       : undefined;
 
@@ -410,8 +410,8 @@ export default function AdminProductsPage() {
     };
 
     console.log('🔄 Submitting product data:', productData);
-    console.log('📊 Featured deals values:', { 
-      is_featured_deal: formData.is_featured_deal, 
+    console.log('📊 Featured deals values:', {
+      is_featured_deal: formData.is_featured_deal,
       deal_priority: formData.deal_priority,
       deal_priority_number: formData.deal_priority ? Number(formData.deal_priority) : undefined
     });
@@ -423,7 +423,7 @@ export default function AdminProductsPage() {
       if (formData.is_featured_deal && formData.deal_priority) {
         const newPosition = Number(formData.deal_priority);
         console.log('🔄 Handling DOTW position conflict for position:', newPosition);
-        
+
         // Get all current DOTW products
         const { data: dotwProducts } = await supabase
           .from('products')
@@ -435,17 +435,17 @@ export default function AdminProductsPage() {
         if (dotwProducts && dotwProducts.length > 0) {
           // Check if position is taken
           const conflictingProduct = dotwProducts.find(p => p.deal_priority === newPosition);
-          
+
           if (conflictingProduct) {
             console.log('⚠️ Position conflict detected, cascading products...');
-            
+
             // Get all products at or after the new position
             const productsToShift = dotwProducts.filter(p => p.deal_priority >= newPosition);
-            
+
             // Shift them down by 1
             for (const product of productsToShift) {
               const newPos = product.deal_priority + 1;
-              
+
               if (newPos > 7) {
                 // Remove from DOTW if beyond position 7
                 console.log(`❌ Removing ${product.name} from DOTW (position ${newPos} > 7)`);
@@ -465,10 +465,10 @@ export default function AdminProductsPage() {
           }
         }
       }
-      
+
       if (editingProduct) {
         console.log('🔄 Updating product:', editingProduct.id);
-        
+
         // Store old product data for revalidation (especially slug changes)
         const oldProductData = {
           id: editingProduct.id,
@@ -476,15 +476,15 @@ export default function AdminProductsPage() {
           is_featured: editingProduct.isFeatured,
           is_featured_deal: (editingProduct as any).is_featured_deal
         };
-        
+
         const updated = await updateProduct(editingProduct.id, productData);
-        
+
         if (updated) {
           // Only update inventory if stock and warehouse are provided
           if (initialStock && selectedWarehouseId && qty > 0) {
             try {
-              await fetch('/api/inventory/upsert', {
-                method: 'POST',
+              await fetch('/api/inventory', {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ entries: [{ warehouse_id: selectedWarehouseId, product_id: updated.id, stock_count: qty }] })
               });
@@ -492,10 +492,10 @@ export default function AdminProductsPage() {
               console.warn('Stock upsert failed', e);
             }
           }
-          
+
           // Trigger revalidation with both old and new data for slug change handling
           await triggerProductRevalidation('UPDATE', updated, oldProductData);
-          
+
           setProducts(products.map(p => p.id === editingProduct.id ? updated : p));
           alert('Product updated successfully!');
           setIsDialogOpen(false);
@@ -510,8 +510,8 @@ export default function AdminProductsPage() {
           // Only update inventory if stock and warehouse are provided
           if (initialStock && selectedWarehouseId && qty > 0) {
             try {
-              await fetch('/api/inventory/upsert', {
-                method: 'POST',
+              await fetch('/api/inventory', {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ entries: [{ warehouse_id: selectedWarehouseId, product_id: created.id, stock_count: qty }] })
               });
@@ -519,10 +519,10 @@ export default function AdminProductsPage() {
               console.warn('Stock upsert failed', e);
             }
           }
-          
+
           // Trigger revalidation for the new product
           await triggerProductRevalidation('INSERT', created);
-          
+
           setProducts([created, ...products]);
           alert('Product created successfully!');
           setIsDialogOpen(false);
@@ -547,12 +547,12 @@ export default function AdminProductsPage() {
     if (confirm("Are you sure you want to delete this product?")) {
       try {
         console.log('🗑️ Deleting product:', id);
-        
+
         // Find the product to get its data before deletion
         const productToDelete = products.find(p => p.id === id);
-        
+
         const success = await deleteProduct(id);
-        
+
         if (success) {
           // Trigger revalidation with deleted product data
           if (productToDelete) {
@@ -563,7 +563,7 @@ export default function AdminProductsPage() {
               is_featured_deal: (productToDelete as any).is_featured_deal
             });
           }
-          
+
           // Update local state immediately
           setProducts(products.filter(p => p.id !== id));
           setFilteredProducts(filteredProducts.filter(p => p.id !== id));
@@ -578,7 +578,7 @@ export default function AdminProductsPage() {
         } else if (typeof error === 'string') {
           errorMessage = error;
         }
-        
+
         console.error('❌ Delete error:', error);
         alert('Error deleting product: ' + errorMessage);
       }
@@ -618,7 +618,7 @@ export default function AdminProductsPage() {
   );
 
   return (
-    <div>
+    <div className="p-6 lg:p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -670,7 +670,7 @@ export default function AdminProductsPage() {
               {editingProduct ? "Update product information and media." : "Create a new product with details and images."}
             </DialogDescription>
           </DialogHeader>
-          
+
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Left Column - Product Details */}
@@ -681,21 +681,21 @@ export default function AdminProductsPage() {
                     <Input
                       id="name"
                       value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="modelNo">Model No</Label>
                     <Input
                       id="modelNo"
                       value={formData.modelNo}
-                      onChange={(e) => setFormData({...formData, modelNo: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, modelNo: e.target.value })}
                       placeholder="e.g., CH-001, TB-2024"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="price">Original Price (NGN)</Label>
                     <Input
@@ -704,7 +704,7 @@ export default function AdminProductsPage() {
                       min="0"
                       step="0.01"
                       value={formData.price}
-                      onChange={(e) => setFormData({...formData, price: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                       required
                     />
                   </div>
@@ -720,10 +720,10 @@ export default function AdminProductsPage() {
                       max="100"
                       step="0.01"
                       value={formData.discount_percent}
-                      onChange={(e) => setFormData({...formData, discount_percent: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, discount_percent: e.target.value })}
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="discounted_price">Discounted Price (NGN)</Label>
                     <Input
@@ -741,7 +741,7 @@ export default function AdminProductsPage() {
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="category">Category</Label>
                   <Select
@@ -777,7 +777,7 @@ export default function AdminProductsPage() {
                   <Select
                     value={formData.space_id}
                     onValueChange={(value) => {
-                      setFormData({...formData, space_id: value, subcategory_id: ""});
+                      setFormData({ ...formData, space_id: value, subcategory_id: "" });
                     }}
                   >
                     <SelectTrigger>
@@ -798,7 +798,7 @@ export default function AdminProductsPage() {
                   <Label htmlFor="subcategory">Subcategory</Label>
                   <Select
                     value={formData.subcategory_id}
-                    onValueChange={(value) => setFormData({...formData, subcategory_id: value})}
+                    onValueChange={(value) => setFormData({ ...formData, subcategory_id: value })}
                     disabled={!formData.space_id}
                   >
                     <SelectTrigger>
@@ -821,7 +821,7 @@ export default function AdminProductsPage() {
                   const selectedSubcategory = spaces
                     .find(space => space.id === formData.space_id)
                     ?.subcategories?.find(sub => sub.id === formData.subcategory_id);
-                  
+
                   const subcategoryName = selectedSubcategory?.name?.toLowerCase() || "";
                   const isOfficeTables = subcategoryName.includes("office tables");
                   const isOfficeChairs = subcategoryName.includes("office chairs");
@@ -835,7 +835,7 @@ export default function AdminProductsPage() {
                       </Label>
                       <Select
                         value={formData.product_type || "none"}
-                        onValueChange={(value) => setFormData({...formData, product_type: value === "none" ? undefined : value})}
+                        onValueChange={(value) => setFormData({ ...formData, product_type: value === "none" ? undefined : value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={`Select ${isOfficeTables ? "table" : "chair"} type`} />
@@ -903,24 +903,24 @@ export default function AdminProductsPage() {
                     />
                   </div>
                 )}
-                
+
                 <div>
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={4}
                     required
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="features">Features (one per line)</Label>
                   <Textarea
                     id="features"
                     value={formData.features}
-                    onChange={(e) => setFormData({...formData, features: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, features: e.target.value })}
                     rows={4}
                     placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
                   />
@@ -933,27 +933,27 @@ export default function AdminProductsPage() {
                     <Input
                       id="dimensions"
                       value={formData.dimensions}
-                      onChange={(e) => setFormData({...formData, dimensions: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, dimensions: e.target.value })}
                       placeholder="e.g., 120cm x 80cm x 45cm"
                     />
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="inStock"
                       checked={formData.inStock}
-                      onCheckedChange={(checked) => setFormData({...formData, inStock: checked})}
+                      onCheckedChange={(checked) => setFormData({ ...formData, inStock: checked })}
                     />
                     <Label htmlFor="inStock">In Stock</Label>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="isFeatured"
                       checked={formData.isFeatured}
-                      onCheckedChange={(checked) => setFormData({...formData, isFeatured: checked})}
+                      onCheckedChange={(checked) => setFormData({ ...formData, isFeatured: checked })}
                     />
                     <Label htmlFor="isFeatured">Featured</Label>
                   </div>
@@ -964,7 +964,7 @@ export default function AdminProductsPage() {
                     <Switch
                       id="is_promo"
                       checked={formData.is_promo}
-                      onCheckedChange={(checked) => setFormData({...formData, is_promo: checked})}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_promo: checked })}
                     />
                     <Label htmlFor="is_promo">Promo Product</Label>
                   </div>
@@ -973,7 +973,7 @@ export default function AdminProductsPage() {
                     <Switch
                       id="is_best_seller"
                       checked={formData.is_best_seller}
-                      onCheckedChange={(checked) => setFormData({...formData, is_best_seller: checked})}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_best_seller: checked })}
                     />
                     <Label htmlFor="is_best_seller">Best Seller</Label>
                   </div>
@@ -982,7 +982,7 @@ export default function AdminProductsPage() {
                     <Switch
                       id="is_new"
                       checked={formData.is_new}
-                      onCheckedChange={(checked) => setFormData({...formData, is_new: checked})}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_new: checked })}
                     />
                     <Label htmlFor="is_new">New Product</Label>
                   </div>
@@ -998,7 +998,7 @@ export default function AdminProductsPage() {
                       <Switch
                         id="is_featured_deal"
                         checked={formData.is_featured_deal}
-                        onCheckedChange={(checked) => setFormData({...formData, is_featured_deal: checked})}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_featured_deal: checked })}
                       />
                       <Label htmlFor="is_featured_deal">Feature in Deals of the Week</Label>
                     </div>
@@ -1012,7 +1012,7 @@ export default function AdminProductsPage() {
                           min="1"
                           max="7"
                           value={formData.deal_priority}
-                          onChange={(e) => setFormData({...formData, deal_priority: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, deal_priority: e.target.value })}
                           placeholder="1"
                         />
                         <p className="text-xs text-gray-500 mt-1">1-2 = big cards, 3-7 = normal cards</p>
@@ -1024,22 +1024,22 @@ export default function AdminProductsPage() {
                 {/* Enhanced Product Features */}
                 <div className="border-t pt-6">
                   <h3 className="text-lg font-semibold mb-4">Enhanced Product Features</h3>
-                  
+
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="flex items-center space-x-2">
                       <Switch
                         id="discount_enabled"
                         checked={formData.discount_enabled}
-                        onCheckedChange={(checked) => setFormData({...formData, discount_enabled: checked})}
+                        onCheckedChange={(checked) => setFormData({ ...formData, discount_enabled: checked })}
                       />
                       <Label htmlFor="discount_enabled">Discount Enabled</Label>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <Switch
                         id="bulk_pricing_enabled"
                         checked={formData.bulk_pricing_enabled}
-                        onCheckedChange={(checked) => setFormData({...formData, bulk_pricing_enabled: checked})}
+                        onCheckedChange={(checked) => setFormData({ ...formData, bulk_pricing_enabled: checked })}
                       />
                       <Label htmlFor="bulk_pricing_enabled">Bulk Pricing Enabled</Label>
                     </div>
@@ -1051,7 +1051,7 @@ export default function AdminProductsPage() {
                       <Textarea
                         id="bulk_pricing_tiers"
                         value={formData.bulk_pricing_tiers}
-                        onChange={(e) => setFormData({...formData, bulk_pricing_tiers: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, bulk_pricing_tiers: e.target.value })}
                         rows={4}
                         placeholder='[{"min_quantity": 10, "max_quantity": 49, "price": 45000, "discount_percent": 5}, {"min_quantity": 50, "price": 40000, "discount_percent": 10}]'
                       />
@@ -1066,7 +1066,7 @@ export default function AdminProductsPage() {
                       <Label htmlFor="ships_from">Ships From</Label>
                       <Select
                         value={formData.ships_from}
-                        onValueChange={(value) => setFormData({...formData, ships_from: value})}
+                        onValueChange={(value) => setFormData({ ...formData, ships_from: value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select shipping location" />
@@ -1081,7 +1081,7 @@ export default function AdminProductsPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="stock_count">Stock Count</Label>
                       <Input
@@ -1089,7 +1089,7 @@ export default function AdminProductsPage() {
                         type="number"
                         min="0"
                         value={formData.stock_count}
-                        onChange={(e) => setFormData({...formData, stock_count: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, stock_count: e.target.value })}
                         placeholder="Leave empty for unlimited"
                       />
                     </div>
@@ -1101,17 +1101,17 @@ export default function AdminProductsPage() {
                       <Input
                         id="popular_with"
                         value={formData.popular_with}
-                        onChange={(e) => setFormData({...formData, popular_with: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, popular_with: e.target.value })}
                         placeholder="Schools, Offices, Hotels, Lounges"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="badges">Badges (comma-separated)</Label>
                       <Input
                         id="badges"
                         value={formData.badges}
-                        onChange={(e) => setFormData({...formData, badges: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, badges: e.target.value })}
                         placeholder="Best Seller, New Arrival, Limited Stock"
                       />
                     </div>
@@ -1123,17 +1123,17 @@ export default function AdminProductsPage() {
                       <Input
                         id="materials"
                         value={formData.materials}
-                        onChange={(e) => setFormData({...formData, materials: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, materials: e.target.value })}
                         placeholder="e.g., Solid Wood, Metal Frame, Leather"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="weight_capacity">Weight Capacity</Label>
                       <Input
                         id="weight_capacity"
                         value={formData.weight_capacity}
-                        onChange={(e) => setFormData({...formData, weight_capacity: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, weight_capacity: e.target.value })}
                         placeholder="e.g., 150kg, 200lbs"
                       />
                     </div>
@@ -1145,17 +1145,17 @@ export default function AdminProductsPage() {
                       <Input
                         id="warranty"
                         value={formData.warranty}
-                        onChange={(e) => setFormData({...formData, warranty: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, warranty: e.target.value })}
                         placeholder="e.g., 2 years, 1 year parts & labor"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="delivery_timeframe">Delivery Timeframe</Label>
                       <Input
                         id="delivery_timeframe"
                         value={formData.delivery_timeframe}
-                        onChange={(e) => setFormData({...formData, delivery_timeframe: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, delivery_timeframe: e.target.value })}
                         placeholder="e.g., 2-3 business days, Same day"
                       />
                     </div>
@@ -1167,11 +1167,11 @@ export default function AdminProductsPage() {
                       <Switch
                         id="limited_time_deal_enabled"
                         checked={formData.limited_time_deal_enabled}
-                        onCheckedChange={(checked) => setFormData({...formData, limited_time_deal_enabled: checked})}
+                        onCheckedChange={(checked) => setFormData({ ...formData, limited_time_deal_enabled: checked })}
                       />
                       <Label htmlFor="limited_time_deal_enabled">Limited Time Deal</Label>
                     </div>
-                    
+
                     {formData.limited_time_deal_enabled && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -1180,10 +1180,10 @@ export default function AdminProductsPage() {
                             id="limited_time_deal_end_date"
                             type="date"
                             value={formData.limited_time_deal_end_date}
-                            onChange={(e) => setFormData({...formData, limited_time_deal_end_date: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, limited_time_deal_end_date: e.target.value })}
                           />
                         </div>
-                        
+
                         <div>
                           <Label htmlFor="limited_time_deal_discount_percent">Deal Discount %</Label>
                           <Input
@@ -1192,7 +1192,7 @@ export default function AdminProductsPage() {
                             min="0"
                             max="100"
                             value={formData.limited_time_deal_discount_percent}
-                            onChange={(e) => setFormData({...formData, limited_time_deal_discount_percent: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, limited_time_deal_discount_percent: e.target.value })}
                           />
                         </div>
                       </div>
@@ -1216,18 +1216,18 @@ export default function AdminProductsPage() {
                 />
               </div>
             </div>
-            
+
             <div className="flex justify-end space-x-2 pt-4 border-t">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => handleDialogClose(false)}
                 disabled={isUploading}
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="bg-blue-600 hover:bg-blue-700"
                 disabled={isUploading || productImages.length === 0 || savingId !== null}
               >
@@ -1254,15 +1254,15 @@ export default function AdminProductsPage() {
           const original = Number(product.original_price ?? product.price);
           const discounted = discount > 0 ? Math.max(0, original * (1 - discount / 100)) : original;
           const images = product.images && product.images.length > 0 ? product.images : (product.imageUrl ? [product.imageUrl] : []);
-          
+
           return (
             <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               <div className="relative h-48 bg-slate-50 dark:bg-slate-900">
-                <Image 
-                  src={images[0] || "/placeholder-product.jpg"} 
-                  alt={product.name} 
-                  fill 
-                  className="object-cover" 
+                <Image
+                  src={images[0] || "/placeholder-product.jpg"}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
                 />
                 {discount > 0 && (
                   <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
@@ -1280,13 +1280,13 @@ export default function AdminProductsPage() {
                   </Badge>
                 </div>
               </div>
-              
+
               <CardContent className="p-4">
                 <h3 className="font-semibold text-lg mb-1 line-clamp-2">{product.name}</h3>
                 {(product as any).modelNo && (
                   <p className="text-sm text-muted-foreground mb-2">Model: {(product as any).modelNo}</p>
                 )}
-                
+
                 <div className="flex items-center gap-2 mb-3">
                   {discount > 0 ? (
                     <>

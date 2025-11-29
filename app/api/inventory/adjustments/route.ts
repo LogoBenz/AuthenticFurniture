@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 interface StockAdjustment {
   warehouse_id: string;
@@ -13,31 +13,26 @@ interface StockAdjustment {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔄 Stock adjustment API called');
-    
-    const body: StockAdjustment = await request.json();
-    console.log('📊 Request body:', body);
-    
-    const { warehouse_id, product_id, type, quantity, reason, notes, adjusted_by } = body;
+    const supabase = await createClient();
 
-    // Validate required fields
-    if (!warehouse_id || !product_id || !type || !quantity || !reason) {
-      console.error('❌ Missing required fields');
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
       return NextResponse.json(
-        { error: 'Missing required fields: warehouse_id, product_id, type, quantity, and reason are required' },
-        { status: 400 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       );
     }
 
-    // Check if Supabase is configured
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('❌ Supabase not configured');
-      return NextResponse.json({ 
-        error: 'Supabase not configured. Please check your environment variables.' 
-      }, { status: 503 });
+    const body: StockAdjustment = await request.json();
+    const { warehouse_id, product_id, type, quantity, reason, notes } = body;
+
+    // Validate required fields
+    if (!warehouse_id || !product_id || !type || !quantity || !reason) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
     }
 
     // Validate quantity
@@ -111,7 +106,7 @@ export async function POST(request: NextRequest) {
         new_quantity: newQuantity,
         reason,
         notes: notes || null,
-        adjusted_by: adjusted_by || 'admin',
+        adjusted_by: user.email || 'system', // Use authenticated user email
         created_at: new Date().toISOString()
       })
       .select()
@@ -165,6 +160,17 @@ export async function POST(request: NextRequest) {
 // Get stock adjustment history
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createClient();
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const warehouse_id = searchParams.get('warehouse_id');
     const product_id = searchParams.get('product_id');

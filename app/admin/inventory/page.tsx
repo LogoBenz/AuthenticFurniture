@@ -60,7 +60,7 @@ export default function AdminInventoryPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch warehouses
         const warehousesResponse = await fetch('/api/inventory/warehouses');
         if (warehousesResponse.ok) {
@@ -95,7 +95,7 @@ export default function AdminInventoryPage() {
   // Handle warehouse selection change
   const handleWarehouseChange = async (warehouseId: string) => {
     setSelectedWarehouse(warehouseId);
-    
+
     try {
       setLoading(true);
       const response = await fetch(`/api/inventory/all?warehouseId=${warehouseId}`);
@@ -118,7 +118,7 @@ export default function AdminInventoryPage() {
 
   const handleStockUpdate = async (adjustment: any) => {
     try {
-      const response = await fetch('/api/inventory/adjust', {
+      const response = await fetch('/api/inventory/adjustments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -151,15 +151,15 @@ export default function AdminInventoryPage() {
   };
 
   const filteredInventory = inventory.filter(item => {
-    const matchesSearch = 
+    const matchesSearch =
       item.product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.product.model_no?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     // Filter by warehouse if selected
     if (selectedWarehouse !== 'all') {
       return matchesSearch && item.warehouses.some(w => w.warehouse_id === selectedWarehouse);
     }
-    
+
     return matchesSearch;
   }).sort((a, b) => {
     switch (sortBy) {
@@ -195,13 +195,13 @@ export default function AdminInventoryPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 lg:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Inventory Management</h1>
           <p className="text-muted-foreground">Track and manage stock across all warehouses</p>
         </div>
-        <Button 
+        <Button
           onClick={async () => {
             setLoading(true);
             try {
@@ -239,7 +239,7 @@ export default function AdminInventoryPage() {
             />
           </div>
         </div>
-        
+
         <div className="sm:w-48">
           <Label htmlFor="warehouse">Warehouse</Label>
           <Select value={selectedWarehouse} onValueChange={handleWarehouseChange}>
@@ -288,7 +288,7 @@ export default function AdminInventoryPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredInventory.map((item) => {
             const stockStatus = getStockStatus(item.totalStock, Math.max(...item.warehouses.map(w => w.reorder_level)));
-            
+
             // Handle images - they might be a JSON string, array, or null
             let imageUrl = null;
             if (item.product.images) {
@@ -304,7 +304,7 @@ export default function AdminInventoryPage() {
                 imageUrl = item.product.images[0];
               }
             }
-            
+
             return (
               <Card key={item.product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Product Image */}
@@ -334,15 +334,15 @@ export default function AdminInventoryPage() {
                       <Package className="h-16 w-16 text-gray-300" />
                     </div>
                   )}
-                  
+
                   {/* Stock Status Badge */}
                   <div className="absolute top-2 right-2">
-                    <Badge 
+                    <Badge
                       variant={stockStatus.color as any}
                       className="shadow-md"
                     >
                       {stockStatus.status === 'out' ? 'Out of Stock' :
-                       stockStatus.status === 'low' ? 'Low Stock' : 'In Stock'}
+                        stockStatus.status === 'low' ? 'Low Stock' : 'In Stock'}
                     </Badge>
                   </div>
                 </div>
@@ -379,8 +379,8 @@ export default function AdminInventoryPage() {
                       Warehouses
                     </div>
                     {item.warehouses.map((warehouse) => (
-                      <div 
-                        key={warehouse.id} 
+                      <div
+                        key={warehouse.id}
                         className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded"
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -421,7 +421,7 @@ export default function AdminInventoryPage() {
             setShowStockModal(false);
             setEditingWarehouse(null);
           }}
-          productName={inventory.find(item => 
+          productName={inventory.find(item =>
             item.warehouses.some(w => w.id === editingWarehouse.id)
           )?.product.name || ''}
           currentStock={editingWarehouse.stock_quantity}

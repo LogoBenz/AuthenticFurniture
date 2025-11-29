@@ -11,13 +11,13 @@ export function AdminMainContent({ children }: AdminMainContentProps) {
   const { isCollapsed } = useAdminSidebar();
 
   return (
-    <main 
+    <main
       className={cn(
         "transition-all duration-300 ease-in-out min-h-screen",
         isCollapsed ? "lg:pl-20" : "lg:pl-80"
       )}
     >
-      <div className="p-6 lg:p-8">
+      <div>
         {children}
       </div>
     </main>

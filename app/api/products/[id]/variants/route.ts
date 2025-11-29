@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 // GET /api/products/[id]/variants - Get variants for a product
 export async function GET(
@@ -7,9 +7,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
     const { id } = await params;
     const productId = parseInt(id);
-    
+
     if (isNaN(productId)) {
       return NextResponse.json(
         { error: 'Invalid product ID' },
@@ -48,9 +49,20 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const productId = parseInt(id);
-    
+
     if (isNaN(productId)) {
       return NextResponse.json(
         { error: 'Invalid product ID' },
@@ -110,9 +122,20 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const productId = parseInt(id);
-    
+
     if (isNaN(productId)) {
       return NextResponse.json(
         { error: 'Invalid product ID' },
@@ -157,9 +180,9 @@ export async function PUT(
 
     const results = await Promise.all(updatePromises);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       variants: results.flat(),
-      message: 'Variants updated successfully' 
+      message: 'Variants updated successfully'
     });
   } catch (error) {
     console.error('Error in product variants PUT API:', error);
@@ -176,9 +199,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const productId = parseInt(id);
-    
+
     if (isNaN(productId)) {
       return NextResponse.json(
         { error: 'Invalid product ID' },
@@ -199,8 +233,8 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json({ 
-      message: 'Product variants deleted successfully' 
+    return NextResponse.json({
+      message: 'Product variants deleted successfully'
     });
   } catch (error) {
     console.error('Error in product variants DELETE API:', error);
@@ -210,3 +244,4 @@ export async function DELETE(
     );
   }
 }
+

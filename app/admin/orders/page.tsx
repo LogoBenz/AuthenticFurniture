@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  ShoppingCart, 
-  Clock, 
-  CheckCircle, 
+import {
+  ShoppingCart,
+  Clock,
+  CheckCircle,
   XCircle,
   Search,
   Filter,
@@ -51,11 +51,11 @@ function OrdersContent() {
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         order.customerPhone.includes(searchQuery);
+      order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.customerPhone.includes(searchQuery);
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     const matchesPayment = paymentFilter === "all" || order.paymentStatus === paymentFilter;
-    
+
     return matchesSearch && matchesStatus && matchesPayment;
   });
 
@@ -103,7 +103,7 @@ function OrdersContent() {
   }
 
   return (
-    <div className="pt-24 pb-16">
+    <div className="p-6 lg:p-8 pb-16">
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight mb-2">Order Management</h1>
@@ -183,7 +183,7 @@ function OrdersContent() {
                   className="pl-10"
                 />
               </div>
-              
+
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -197,7 +197,7 @@ function OrdersContent() {
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
               </select>
-              
+
               <select
                 value={paymentFilter}
                 onChange={(e) => setPaymentFilter(e.target.value)}
@@ -232,7 +232,7 @@ function OrdersContent() {
                         {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
                       </Badge>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Phone className="h-3 w-3" />
@@ -248,14 +248,14 @@ function OrdersContent() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="text-right mr-4">
                     <div className="font-medium">{formatPrice(order.total)}</div>
                     <div className="text-sm text-muted-foreground">
                       {order.items.length} item{order.items.length > 1 ? 's' : ''}
                     </div>
                   </div>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -270,7 +270,7 @@ function OrdersContent() {
                 </div>
               ))}
             </div>
-            
+
             {filteredOrders.length === 0 && (
               <div className="text-center py-12">
                 <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -289,7 +289,7 @@ function OrdersContent() {
             <DialogHeader>
               <DialogTitle>Order Details - {selectedOrder?.id}</DialogTitle>
             </DialogHeader>
-            
+
             {selectedOrder && (
               <div className="space-y-6">
                 {/* Customer Info */}

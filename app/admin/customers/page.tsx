@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  Users, 
-  UserPlus, 
+import {
+  Users,
+  UserPlus,
   Star,
   Search,
   Phone,
@@ -45,7 +45,7 @@ function CustomersContent() {
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       return !!(supabaseUrl && supabaseKey && supabaseUrl !== '' && supabaseKey !== '' && supabaseUrl.includes('supabase.co'));
     };
-    
+
     setIsSupabaseConfigured(checkSupabaseConfig());
     loadCustomersData();
   }, []);
@@ -69,12 +69,12 @@ function CustomersContent() {
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch = customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         customer.phone.includes(searchQuery) ||
-                         customer.id.toLowerCase().includes(searchQuery.toLowerCase());
+      customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.phone.includes(searchQuery) ||
+      customer.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = customerTypeFilter === "all" || customer.customerType === customerTypeFilter;
     const matchesStatus = statusFilter === "all" || customer.status === statusFilter;
-    
+
     return matchesSearch && matchesType && matchesStatus;
   });
 
@@ -117,7 +117,7 @@ function CustomersContent() {
   }
 
   return (
-    <div className="pt-24 pb-16">
+    <div className="p-6 lg:p-8 pb-16">
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight mb-2">Customer Management</h1>
@@ -207,7 +207,7 @@ function CustomersContent() {
                   className="pl-10"
                 />
               </div>
-              
+
               <select
                 value={customerTypeFilter}
                 onChange={(e) => setCustomerTypeFilter(e.target.value)}
@@ -218,7 +218,7 @@ function CustomersContent() {
                 <option value="bulk">Bulk</option>
                 <option value="corporate">Corporate</option>
               </select>
-              
+
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -230,7 +230,7 @@ function CustomersContent() {
                 <option value="inactive">Inactive</option>
               </select>
 
-              <Button 
+              <Button
                 onClick={() => setIsAddCustomerModalOpen(true)}
                 disabled={!isSupabaseConfigured}
                 className="bg-blue-600 hover:bg-blue-700"
@@ -262,7 +262,7 @@ function CustomersContent() {
                         {customer.status.toUpperCase()}
                       </Badge>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Phone className="h-3 w-3" />
@@ -282,14 +282,14 @@ function CustomersContent() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="text-right mr-4">
                     <div className="font-medium">{formatPrice(customer.totalSpent)}</div>
                     <div className="text-sm text-muted-foreground">
                       Avg: {formatPrice(customer.averageOrderValue)}
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
@@ -310,7 +310,7 @@ function CustomersContent() {
                 </div>
               ))}
             </div>
-            
+
             {filteredCustomers.length === 0 && (
               <div className="text-center py-12">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -329,7 +329,7 @@ function CustomersContent() {
             <DialogHeader>
               <DialogTitle>Customer Details - {selectedCustomer?.name}</DialogTitle>
             </DialogHeader>
-            
+
             {selectedCustomer && (
               <div className="space-y-6">
                 {/* Customer Info */}

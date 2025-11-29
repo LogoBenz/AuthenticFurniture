@@ -942,8 +942,7 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
       .from('products')
       .update(updateData)
       .eq('id', id)
-      .select()
-      .single();
+      .select();
 
     if (error) {
       console.error('❌ Supabase update error:', error);
@@ -951,12 +950,12 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
       throw new Error(`Database update failed: ${error.message}`);
     }
 
-    if (!data) {
-      throw new Error('No data returned from update operation.');
+    if (!data || data.length === 0) {
+      throw new Error('No data returned from update operation. The product might not exist or you may lack permissions.');
     }
 
-    console.log('✅ Product updated successfully:', data);
-    return mapSupabaseRowToProduct(data);
+    console.log('✅ Product updated successfully:', data[0]);
+    return mapSupabaseRowToProduct(data[0]);
   } catch (error) {
     console.error('❌ Update product error:', error);
     throw error;

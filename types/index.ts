@@ -151,8 +151,16 @@ export interface Order {
   deliveryAddress: string;
   deliveryZone: string;
   orderDate: string;
+  created_at: string; // Added for compatibility
   expectedDelivery: string | null;
   notes: string | null;
+  shipping_address?: {
+    fullName: string;
+    phone: string;
+    address: string;
+    city: string;
+    state: string;
+  };
 }
 
 export interface DeliveryZone {

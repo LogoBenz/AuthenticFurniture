@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { 
+import {
   LayoutDashboard,
   Package,
   ShoppingCart,
@@ -138,7 +138,7 @@ const adminNavItems = [
 const categories = {
   overview: "Dashboard",
   content: "Content Management",
-  management: "User Management", 
+  management: "User Management",
   analytics: "Reports & Analytics",
   settings: "Settings"
 };
@@ -161,7 +161,7 @@ export function AdminSidebar() {
 
   const SidebarContent = ({ isMobile = false }) => {
     const shouldShowExpanded = isMobile || showExpanded;
-    
+
     return (
       <div className="flex flex-col h-full">
         {/* Header */}
@@ -203,7 +203,7 @@ export function AdminSidebar() {
         {/* Navigation */}
         <nav className={cn(
           "flex-1 overflow-y-auto space-y-6 scrollbar-hide scrollbar-hover",
-          isCollapsed && !isMobile && !isHovered ? "p-2" : "p-4"
+          "p-4" // Consistent padding
         )}>
           {Object.entries(groupedItems).map(([category, items]) => (
             <div key={category}>
@@ -216,15 +216,14 @@ export function AdminSidebar() {
                 {items.map((item) => {
                   const isActive = pathname === item.href;
                   const isIconOnly = isCollapsed && !isMobile && !isHovered;
-                  
+
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={() => isMobile && setIsMobileOpen(false)}
                       className={cn(
-                        "group flex items-center rounded-lg text-sm font-medium transition-all duration-200 relative",
-                        isIconOnly ? "p-3 justify-center mx-auto w-12 h-12" : "p-3",
+                        "group flex items-center rounded-lg text-sm font-medium transition-all duration-200 relative p-3",
                         isActive
                           ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 shadow-sm"
                           : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
@@ -234,7 +233,8 @@ export function AdminSidebar() {
                       <item.icon
                         className={cn(
                           "flex-shrink-0 transition-colors",
-                          isIconOnly ? "h-6 w-6" : "h-5 w-5 mr-3",
+                          "h-5 w-5", // Consistent size
+                          !isIconOnly && "mr-3",
                           isActive
                             ? "text-blue-600 dark:text-blue-300"
                             : "text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-400"
@@ -282,7 +282,7 @@ export function AdminSidebar() {
       )}
 
       {/* Desktop Sidebar */}
-      <div 
+      <div
         className={cn(
           "hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:bg-white lg:dark:bg-slate-900 lg:border-r lg:border-slate-200 lg:dark:border-slate-700 transition-all duration-300 ease-in-out z-40",
           isCollapsed && !isHovered ? "lg:w-20" : "lg:w-80",

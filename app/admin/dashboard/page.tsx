@@ -2,24 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  TrendingUp, 
-  Package, 
-  Users, 
-  MapPin, 
+import {
+  TrendingUp,
+  Package,
+  Users,
+  MapPin,
   AlertTriangle,
   DollarSign,
   ShoppingCart,
-  Calendar,
   BarChart3,
-  PieChart
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { getAllProducts, getAllCustomers, getAllOrders, formatPrice } from "@/lib/db";
 import { Product, Customer, Order } from "@/types";
 import Link from "next/link";
+import { DashboardCharts } from "@/components/admin/DashboardCharts";
+import { RecentOrders } from "@/components/admin/RecentOrders";
+import { TopProducts } from "@/components/admin/TopProducts";
 
 function DashboardContent() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -52,11 +52,11 @@ function DashboardContent() {
         getAllCustomers(),
         getAllOrders()
       ]);
-      
+
       setProducts(productsData);
       setCustomers(customersData);
       setOrders(ordersData);
-      
+
       // Calculate dashboard statistics
       const stats = {
         totalProducts: productsData.length,
@@ -72,7 +72,7 @@ function DashboardContent() {
         totalRevenue: ordersData.reduce((sum, o) => sum + o.total, 0),
         averageOrderValue: ordersData.length > 0 ? ordersData.reduce((sum, o) => sum + o.total, 0) / ordersData.length : 0
       };
-      
+
       setDashboardStats(stats);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -90,14 +90,6 @@ function DashboardContent() {
     { label: "Marketing Tools", href: "/admin/marketing", icon: TrendingUp, color: "bg-pink-600" }
   ];
 
-  const recentActivity = [
-    { type: "order", message: "New order from Lagos", time: "2 minutes ago", status: "new" },
-    { type: "payment", message: "Payment confirmed", time: "15 minutes ago", status: "success" },
-    { type: "inquiry", message: "WhatsApp inquiry about Executive Chair", time: "1 hour ago", status: "pending" },
-    { type: "delivery", message: "Delivery completed in Ikeja", time: "2 hours ago", status: "success" },
-    { type: "stock", message: "Low stock alert: Gaming Chairs", time: "3 hours ago", status: "warning" }
-  ];
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -110,7 +102,7 @@ function DashboardContent() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="p-6 lg:p-8 space-y-8 pb-8">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
@@ -176,29 +168,30 @@ function DashboardContent() {
         </Card>
       </div>
 
-      {/* Alerts & Notifications */}
+      {/* Alerts */}
       {dashboardStats.lowStockProducts > 0 && (
         <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
-          <CardHeader>
-            <CardTitle className="flex items-center text-orange-800 dark:text-orange-200">
+          <CardHeader className="py-4">
+            <CardTitle className="flex items-center text-base text-orange-800 dark:text-orange-200">
               <AlertTriangle className="h-5 w-5 mr-2" />
-              Stock Alerts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-orange-700 dark:text-orange-300">
-              {dashboardStats.lowStockProducts} products are running low on stock. 
-              <Link href="/admin/inventory" className="ml-2 underline font-medium hover:text-orange-800 dark:hover:text-orange-200">
+              Stock Alert: {dashboardStats.lowStockProducts} products are running low on stock.
+              <Link href="/admin/inventory" className="ml-auto text-sm underline font-medium hover:text-orange-900 dark:hover:text-orange-100">
                 View inventory →
               </Link>
-            </p>
-          </CardContent>
+            </CardTitle>
+          </CardHeader>
         </Card>
       )}
 
+      {/* Charts Section */}
+      <DashboardCharts />
+
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Quick Actions */}
-        <div className="lg:col-span-2">
+        {/* Left Column: Recent Orders */}
+        <div className="lg:col-span-2 space-y-8">
+          <RecentOrders orders={orders} />
+
           <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
@@ -209,9 +202,9 @@ function DashboardContent() {
                   <Link key={index} href={action.href}>
                     <Button
                       variant="outline"
-                      className="h-20 w-full flex flex-col items-center justify-center space-y-2 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700"
+                      className="h-24 w-full flex flex-col items-center justify-center space-y-3 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700 transition-all hover:scale-105"
                     >
-                      <div className={`p-2 rounded-lg ${action.color} text-white`}>
+                      <div className={`p-2.5 rounded-full ${action.color} text-white shadow-sm`}>
                         <action.icon className="h-5 w-5" />
                       </div>
                       <span className="text-sm font-medium">{action.label}</span>
@@ -221,106 +214,43 @@ function DashboardContent() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Recent Activity */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-2 h-2 rounded-full ${
-                        activity.status === 'success' ? 'bg-green-500' :
-                        activity.status === 'warning' ? 'bg-orange-500' :
-                        activity.status === 'new' ? 'bg-blue-500' : 'bg-gray-500'
-                      }`} />
-                      <span className="text-sm">{activity.message}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">{activity.time}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Nigerian Market Insights */}
-        <div>
+        {/* Right Column: Top Products & Insights */}
+        <div className="space-y-8">
+          <TopProducts products={products} />
+
           <Card>
-            <CardHeader>
-              <CardTitle>Market Insights</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">Lagos Sales</span>
-                  <span className="text-sm text-green-600">+12%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-green-600 h-2 rounded-full transition-all duration-300" style={{ width: '75%' }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">Abuja Sales</span>
-                  <span className="text-sm text-green-600">+8%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: '60%' }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">Port Harcourt</span>
-                  <span className="text-sm text-green-600">+15%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-purple-600 h-2 rounded-full transition-all duration-300" style={{ width: '45%' }}></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-6">
             <CardHeader>
               <CardTitle>Payment Methods</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm">Bank Transfer</span>
-                <Badge variant="secondary">45%</Badge>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Bank Transfer</span>
+                  <span className="font-medium">45%</span>
+                </div>
+                <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-600 rounded-full" style={{ width: '45%' }} />
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm">Mobile Money</span>
-                <Badge variant="secondary">30%</Badge>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Mobile Money</span>
+                  <span className="font-medium">30%</span>
+                </div>
+                <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-green-600 rounded-full" style={{ width: '30%' }} />
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm">Installments</span>
-                <Badge variant="secondary">20%</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">Cash on Delivery</span>
-                <Badge variant="secondary">5%</Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Customer Inquiries</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">15</div>
-                <p className="text-sm text-muted-foreground">Pending responses</p>
-                <Button className="mt-3 w-full" size="sm">
-                  View All Inquiries
-                </Button>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Card Payment</span>
+                  <span className="font-medium">25%</span>
+                </div>
+                <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-purple-600 rounded-full" style={{ width: '25%' }} />
+                </div>
               </div>
             </CardContent>
           </Card>
