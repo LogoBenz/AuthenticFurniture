@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  EyeOff, 
-  Star, 
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  EyeOff,
+  Star,
   StarOff,
   Search,
   Filter,
@@ -23,25 +23,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -49,6 +49,8 @@ import { Switch } from '@/components/ui/switch';
 import { getAllBlogPostsAdmin, getAllBlogCategories, deleteBlogPost, updateBlogPost, createBlogPost, formatBlogDate } from '@/lib/blog';
 import { BlogPost, BlogCategory } from '@/types';
 import { toast } from 'sonner';
+
+export const dynamic = 'force-dynamic';
 
 export default function BlogAdminPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -84,7 +86,7 @@ export default function BlogAdminPage() {
         getAllBlogPostsAdmin(),
         getAllBlogCategories()
       ]);
-      
+
       setPosts(postsData);
       setCategories(categoriesData);
     } catch (error) {
@@ -112,7 +114,7 @@ export default function BlogAdminPage() {
 
   const handleUpdatePost = async () => {
     if (!editingPost) return;
-    
+
     try {
       const updatedPost = await updateBlogPost(editingPost.id, formData);
       if (updatedPost) {
@@ -131,7 +133,7 @@ export default function BlogAdminPage() {
 
   const handleDeletePost = async (postId: string) => {
     if (!confirm('Are you sure you want to delete this blog post?')) return;
-    
+
     try {
       await deleteBlogPost(postId);
       setPosts(prev => prev.filter(p => p.id !== postId));
@@ -205,7 +207,7 @@ export default function BlogAdminPage() {
 
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -237,7 +239,7 @@ export default function BlogAdminPage() {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Blog Management</h1>
           <p className="text-slate-600 dark:text-slate-300">Manage your blog posts and content</p>
         </div>
-        
+
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
           <DialogTrigger asChild>
             <Button onClick={resetForm}>
@@ -249,7 +251,7 @@ export default function BlogAdminPage() {
             <DialogHeader>
               <DialogTitle>Create New Blog Post</DialogTitle>
             </DialogHeader>
-            <BlogPostForm 
+            <BlogPostForm
               formData={formData}
               setFormData={setFormData}
               categories={categories}
@@ -310,7 +312,7 @@ export default function BlogAdminPage() {
                 )}
               </div>
             </div>
-            
+
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2 text-xs text-slate-500">
                 <span className="flex items-center gap-1">
@@ -322,15 +324,15 @@ export default function BlogAdminPage() {
                   {post.author}
                 </span>
               </div>
-              
+
               <h3 className="font-semibold mb-2 text-slate-900 dark:text-white line-clamp-2">
                 {post.title}
               </h3>
-              
+
               <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 line-clamp-2">
                 {post.excerpt}
               </p>
-              
+
               <div className="flex items-center justify-between text-xs text-slate-500 mb-4">
                 <div className="flex items-center gap-4">
                   <span className="flex items-center gap-1">
@@ -346,7 +348,7 @@ export default function BlogAdminPage() {
                   {post.category_info?.name || post.category}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
@@ -355,7 +357,7 @@ export default function BlogAdminPage() {
                 >
                   {post.published ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                 </Button>
-                
+
                 <Button
                   size="sm"
                   variant="outline"
@@ -363,7 +365,7 @@ export default function BlogAdminPage() {
                 >
                   {post.featured ? <StarOff className="w-3 h-3" /> : <Star className="w-3 h-3" />}
                 </Button>
-                
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button size="sm" variant="outline">
@@ -375,7 +377,7 @@ export default function BlogAdminPage() {
                       <Edit className="w-3 h-3 mr-2" />
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={() => handleDeletePost(post.id)}
                       className="text-red-600"
                     >
@@ -415,7 +417,7 @@ export default function BlogAdminPage() {
           <DialogHeader>
             <DialogTitle>Edit Blog Post</DialogTitle>
           </DialogHeader>
-          <BlogPostForm 
+          <BlogPostForm
             formData={formData}
             setFormData={setFormData}
             categories={categories}
@@ -429,12 +431,12 @@ export default function BlogAdminPage() {
 }
 
 // Blog Post Form Component
-function BlogPostForm({ 
-  formData, 
-  setFormData, 
-  categories, 
-  onSubmit, 
-  onCancel 
+function BlogPostForm({
+  formData,
+  setFormData,
+  categories,
+  onSubmit,
+  onCancel
 }: {
   formData: any;
   setFormData: (data: any) => void;
@@ -472,7 +474,7 @@ function BlogPostForm({
             placeholder="Enter blog post title"
           />
         </div>
-        
+
         <div>
           <Label htmlFor="slug">Slug *</Label>
           <Input
@@ -516,7 +518,7 @@ function BlogPostForm({
             placeholder="https://example.com/image.jpg"
           />
         </div>
-        
+
         <div>
           <Label htmlFor="video_url">Video URL (Optional)</Label>
           <Input
@@ -538,7 +540,7 @@ function BlogPostForm({
             placeholder="Author name"
           />
         </div>
-        
+
         <div>
           <Label htmlFor="category">Category</Label>
           <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
@@ -565,7 +567,7 @@ function BlogPostForm({
           />
           <Label htmlFor="published">Published</Label>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Switch
             id="featured"

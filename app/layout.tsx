@@ -8,6 +8,7 @@ import { FloatingWhatsAppButton } from '@/components/ui/whatsapp-button';
 import { EnquiryCartProvider } from '@/hooks/use-enquiry-cart';
 import { NewsletterPopup } from '@/components/ui/NewsletterPopup';
 import { CompareBar } from '@/components/products/CompareBar';
+import { QueryProvider } from '@/components/providers/QueryProvider';
 
 // Professional font pairing - DM Sans for headings, Inter for body
 const dmSans = DM_Sans({
@@ -43,16 +44,18 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <EnquiryCartProvider>
-            <div className="flex flex-col min-h-screen">
-              <CrazyNavbar />
-              <main className="flex-grow pt-[90px] md:pt-[95px]">{children}</main>
-              <Footer />
-              <FloatingWhatsAppButton />
-              <NewsletterPopup />
-              <CompareBar />
-            </div>
-          </EnquiryCartProvider>
+          <QueryProvider>
+            <EnquiryCartProvider>
+              <div className="flex flex-col min-h-screen">
+                <CrazyNavbar />
+                <main className="flex-grow pt-[90px] md:pt-[95px]">{children}</main>
+                <Footer />
+                <FloatingWhatsAppButton />
+                <NewsletterPopup />
+                <CompareBar />
+              </div>
+            </EnquiryCartProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
