@@ -80,6 +80,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "baseline-browser-mapping": "^2.8.32",
     "puppeteer": "^24.27.0"
   }
 }
