@@ -1,8 +1,9 @@
 "use client";
+// Force rebuild
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Settings, LogOut, Lock, Facebook, Instagram, Linkedin, Twitter, Armchair, Gamepad2, Sofa, Table, Leaf, Puzzle, Search, User, ChevronDown, Home, Briefcase, Building, TreePine, Archive, Bed, GraduationCap, Users, Sun, Lamp, Utensils, Wine, Umbrella, Building2, School, Hotel, Store, Warehouse } from "lucide-react";
+import { Menu, X, Settings, LogOut, Lock, Facebook, Instagram, Linkedin, Twitter, Armchair, Gamepad2, Sofa, Table, Leaf, Puzzle, Search, User, ChevronDown, Home, Briefcase, Building, TreePine, Archive, Bed, GraduationCap, Users, Sun, Lamp, Utensils, Wine, Umbrella, Building2, School, Hotel, Store, Warehouse, Heart } from "lucide-react";
 
 function TikTokIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -22,6 +23,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { EnquiryCartModal } from "@/components/products/EnquiryCartModal";
 import { SearchModal } from "@/components/ui/SearchModal";
 import { useAuth } from "@/hooks/use-auth";
+import { useWishlist } from "@/hooks/use-wishlist";
 import { useRouter, usePathname } from "next/navigation";
 import { getSpacesForNavigation } from "@/lib/categories";
 import { Space, Subcategory } from "@/types";
@@ -39,6 +41,7 @@ export function Header() {
   const [showPromoHeader, setShowPromoHeader] = useState(false);
   const logoRef = useRef<HTMLAnchorElement>(null);
   const { isAuthenticated, signOut, loading } = useAuth();
+  const { wishlistCount } = useWishlist();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -224,7 +227,7 @@ export function Header() {
         <div className="px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center">
-              <h1 className="text-lg sm:text-xl font-bold tracking-tighter text-foreground">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tighter text-foreground whitespace-nowrap">
                 Authentic <span className="text-blue-800 dark:text-blue-500">Furniture</span>
               </h1>
             </Link>
@@ -274,8 +277,8 @@ export function Header() {
 
       <header id="site-header"
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled
-            ? "bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm"
-            : "bg-transparent"
+          ? "bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm"
+          : "bg-transparent"
           }`}
         style={{ top: showPromoHeader ? '40px' : '0' }}
       >
@@ -330,7 +333,7 @@ export function Header() {
                       {/* Top area with logo */}
                       <div className="flex items-center justify-between px-4 py-3 border-b">
                         <Link href="/" className="flex items-center">
-                          <h1 className="text-lg font-bold tracking-tighter">Authentic <span className="text-blue-800 dark:text-blue-500">Furniture</span></h1>
+                          <h1 className="text-lg font-bold tracking-tighter whitespace-nowrap">Authentic <span className="text-blue-800 dark:text-blue-500">Furniture</span></h1>
                         </Link>
                       </div>
                       {/* Search bar */}
@@ -345,6 +348,17 @@ export function Header() {
                         <Link href="/showroom" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">Showroom</Link>
                         <Link href="/about" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">About Us</Link>
                         <Link href="/careers" className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">Careers</Link>
+                        <Link href="/wishlist" className="flex items-center justify-between py-2 px-2 text-sm font-medium rounded-md hover:bg-muted">
+                          <span className="flex items-center gap-2">
+                            <Heart className="h-4 w-4" />
+                            Wishlist
+                          </span>
+                          {wishlistCount > 0 && (
+                            <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5">
+                              {wishlistCount > 99 ? '99+' : wishlistCount}
+                            </span>
+                          )}
+                        </Link>
                       </nav>
                       {/* Shop by Space accordion */}
                       <div className="px-2 py-3">
@@ -431,7 +445,7 @@ export function Header() {
                 </Sheet>
               </div>
               <Link href="/" ref={logoRef} className="flex items-center">
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tighter text-foreground">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tighter text-foreground whitespace-nowrap">
                   Authentic <span className="text-blue-800 dark:text-blue-500">Furniture</span>
                 </h1>
               </Link>
@@ -557,7 +571,7 @@ export function Header() {
                 <Search className="h-5 w-5" />
                 <span className="sr-only">Search</span>
               </Button>
-              <WishlistIndicator />
+              {/* Wishlist moved to sidebar/mobile menu */}
               <Button
                 variant="ghost"
                 size="sm"

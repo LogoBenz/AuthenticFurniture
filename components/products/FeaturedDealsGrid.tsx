@@ -208,14 +208,14 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
 
                 {/* Price */}
                 <div className="mb-4">
-                  <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-                    {formatPrice(currentPrice)}
-                  </div>
                   {discountPercent > 0 && (
-                    <div className="text-green-600 dark:text-green-400 text-sm font-semibold mt-1">
+                    <div className="text-green-600 dark:text-green-400 text-sm font-semibold mb-1">
                       💰 You save {formatPrice(originalPrice - currentPrice)}
                     </div>
                   )}
+                  <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                    {formatPrice(currentPrice)}
+                  </div>
                 </div>
               </div>
 
@@ -242,13 +242,13 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
     );
   }
 
-  // SMALL CARD - Compact 316x381px desktop, responsive mobile
+  // SMALL CARD - Compact responsive design
   return (
     <div
       onClick={handleClick}
-      className="bg-white border border-slate-300 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group cursor-pointer overflow-hidden flex flex-col w-full lg:w-[316px] h-auto lg:h-[381px]"
+      className="bg-white border border-slate-300 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group cursor-pointer overflow-hidden flex flex-col w-full h-full"
     >
-      <div className="relative overflow-hidden aspect-square lg:h-[270px] lg:aspect-auto bg-white">
+      <div className="relative overflow-hidden aspect-square bg-white shrink-0">
         <img
           src={imageUrl}
           alt={product.name}
@@ -285,13 +285,18 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
       </div>
 
       {/* Product Info - Compact */}
-      <div className="p-2 flex flex-col justify-between flex-grow">
-        <h3 className="font-semibold text-slate-900 dark:text-white text-base line-clamp-2 mb-1">
+      <div className="p-3 flex flex-col justify-between flex-grow">
+        <h3 className="font-semibold text-slate-900 dark:text-white text-base line-clamp-2 mb-2">
           {product.name}
         </h3>
 
         {/* Pricing */}
-        <div>
+        <div className="mt-auto">
+          {discountPercent > 0 && (
+            <div className="text-green-600 dark:text-green-400 text-xs font-semibold mb-1">
+              Save {formatPrice(originalPrice - currentPrice)}
+            </div>
+          )}
           <div className="flex items-baseline space-x-2 mb-1">
             <span className="font-bold text-slate-900 dark:text-white text-lg">
               {formatPrice(currentPrice)}
@@ -302,11 +307,6 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
               </span>
             )}
           </div>
-          {discountPercent > 0 && (
-            <div className="text-green-600 dark:text-green-400 text-xs font-semibold">
-              Save {formatPrice(originalPrice - currentPrice)}
-            </div>
-          )}
         </div>
       </div>
     </div>

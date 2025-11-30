@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Edit, Trash2, Eye, EyeOff, Crop } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Eye, EyeOff, Crop, LayoutGrid, LayoutList } from "lucide-react";
 import Image from "next/image";
 import { formatPrice } from "@/lib/products";
 import { MultiImageUpload } from "@/components/products/MultiImageUpload";
@@ -46,6 +46,7 @@ export default function AdminProductsPage() {
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("");
   const [allWarehouses, setAllWarehouses] = useState<Warehouse[]>([]);
   const [cropExistingImage, setCropExistingImage] = useState<{ index: number; url: string } | null>(null);
+  const [mobileColumns, setMobileColumns] = useState<1 | 2>(1);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -635,10 +636,10 @@ export default function AdminProductsPage() {
   );
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 pt-2 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
+        <div className="flex flex-col w-full md:w-auto md:flex-row items-start md:items-center gap-3">
           <h1 className="text-2xl font-bold">Products</h1>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -646,7 +647,7 @@ export default function AdminProductsPage() {
               placeholder="Search products, model numbers, or categories..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-80"
+              className="pl-10 w-full md:w-80"
             />
           </div>
           <Select value={sortBy} onValueChange={setSortBy}>
@@ -665,16 +666,36 @@ export default function AdminProductsPage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={fetchProducts} variant="outline" disabled={loading}>
-            Refresh
-          </Button>
-          <Button onClick={openAddDialog} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Product
-          </Button>
-        </div>
       </div>
+      <div className="flex items-center gap-2">
+        {/* Mobile Column Toggle */}
+        <div className="flex md:hidden bg-slate-100 dark:bg-slate-800 rounded-lg p-1 mr-2">
+          <button
+            onClick={() => setMobileColumns(1)}
+            className={`p-2 rounded-md transition-all ${mobileColumns === 1 ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-500'}`}
+            title="Single Column"
+          >
+            <LayoutList className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setMobileColumns(2)}
+            className={`p-2 rounded-md transition-all ${mobileColumns === 2 ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600' : 'text-slate-500'}`}
+            title="Two Columns"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+        </div>
+
+        <Button onClick={fetchProducts} variant="outline" disabled={loading} size="icon" className="md:w-auto md:px-4">
+          <span className="sr-only md:not-sr-only">Refresh</span>
+          <span className="md:hidden">↻</span>
+        </Button>
+        <Button onClick={openAddDialog} className="bg-blue-600 hover:bg-blue-700" size="icon" className="md:w-auto md:px-4">
+          <Plus className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">Add Product</span>
+        </Button>
+      </div>
+
 
       {/* Product Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
@@ -1265,7 +1286,7 @@ export default function AdminProductsPage() {
       </Dialog>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className={`grid gap-4 md:gap-6 ${mobileColumns === 1 ? 'grid-cols-1' : 'grid-cols-2'} md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`}>
         {filteredProducts.map((product: any) => {
           const discount = Number(product.discount_percent || 0);
           const original = Number(product.original_price ?? product.price);
@@ -1298,8 +1319,8 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-lg mb-1 line-clamp-2">{product.name}</h3>
+              <CardContent className={`p-3 md:p-4 ${mobileColumns === 2 ? 'text-sm' : ''}`}>
+                <h3 className={`font-semibold mb-1 line-clamp-2 ${mobileColumns === 2 ? 'text-sm leading-tight' : 'text-lg'}`}>{product.name}</h3>
                 {(product as any).modelNo && (
                   <p className="text-sm text-muted-foreground mb-2">Model: {(product as any).modelNo}</p>
                 )}
@@ -1345,11 +1366,12 @@ export default function AdminProductsPage() {
                   </div>
                 )}
 
-                <div className="flex justify-end space-x-2">
+                <div className={`flex justify-end space-x-2 ${mobileColumns === 2 ? 'mt-2' : ''}`}>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleEdit(product)}
+                    className={mobileColumns === 2 ? "h-8 w-8 p-0" : ""}
                   >
                     <Edit className="h-3 w-3" />
                   </Button>
@@ -1357,7 +1379,7 @@ export default function AdminProductsPage() {
                     size="sm"
                     variant="outline"
                     onClick={() => handleDelete(product.id)}
-                    className="text-red-600 hover:text-red-700"
+                    className={`text-red-600 hover:text-red-700 ${mobileColumns === 2 ? "h-8 w-8 p-0" : ""}`}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -1368,17 +1390,19 @@ export default function AdminProductsPage() {
         })}
       </div>
 
-      {filteredProducts.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">
-            {searchTerm ? `No products found matching "${searchTerm}"` : "No products available"}
-          </p>
-          <Button onClick={openAddDialog} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Your First Product
-          </Button>
-        </div>
-      )}
+      {
+        filteredProducts.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground mb-4">
+              {searchTerm ? `No products found matching "${searchTerm}"` : "No products available"}
+            </p>
+            <Button onClick={openAddDialog} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Your First Product
+            </Button>
+          </div>
+        )
+      }
 
       {/* Existing Image Cropping - Nested Dialog */}
       <Dialog open={!!cropExistingImage} onOpenChange={() => setCropExistingImage(null)}>
@@ -1392,6 +1416,6 @@ export default function AdminProductsPage() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 }

@@ -266,7 +266,7 @@ export default function AdminSpacesPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold">Spaces & Categories</h1>
           <p className="text-muted-foreground mt-2">

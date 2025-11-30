@@ -12,6 +12,7 @@ import {
   Instagram,
   Linkedin,
   Twitter,
+  Heart,
 } from "lucide-react";
 import {
   SofaIcon,
@@ -51,6 +52,7 @@ import {
 import { EnquiryCartModal } from "@/components/products/EnquiryCartModal";
 import { SearchModal } from "@/components/ui/SearchModal";
 import { useAuth } from "@/hooks/use-auth";
+import { useWishlist } from "@/hooks/use-wishlist";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { getSpacesForNavigation } from "@/lib/categories";
 import { Space } from "@/types";
@@ -72,9 +74,10 @@ export function CrazyNavbar() {
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
   const [showTopHeader, setShowTopHeader] = useState(true);
   const [showNavbar, setShowNavbar] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollY = useRef(0);
   const logoRef = useRef<HTMLAnchorElement>(null);
   const { isAuthenticated, signOut } = useAuth();
+  const { wishlistCount } = useWishlist();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -95,7 +98,7 @@ export function CrazyNavbar() {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          const scrollDiff = currentScrollY - lastScrollY;
+          const scrollDiff = currentScrollY - lastScrollY.current;
 
           // Top header: hide on first scroll down
           if (currentScrollY > 10) {
@@ -118,7 +121,7 @@ export function CrazyNavbar() {
             setShowNavbar(true);
           }
 
-          setLastScrollY(currentScrollY);
+          lastScrollY.current = currentScrollY;
           ticking = false;
         });
         ticking = true;
@@ -127,7 +130,7 @@ export function CrazyNavbar() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
   useEffect(() => {
     const loadSpaces = async () => {
@@ -244,10 +247,10 @@ export function CrazyNavbar() {
   if (isAdminArea) {
     return (
       <header className="fixed top-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm border-b">
-        <div className="px-4 sm:px-6 py-3">
+        <div className="px-4 pl-14 sm:px-6 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" ref={logoRef} className="flex items-center">
-              <h1 className="text-lg sm:text-xl font-bold tracking-tighter font-heading">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tighter font-heading whitespace-nowrap">
                 Authentic <span className="text-blue-800">Furniture</span>
               </h1>
             </Link>
@@ -272,7 +275,7 @@ export function CrazyNavbar() {
         initial={{ y: 0 }}
         animate={{ y: showTopHeader ? 0 : -40 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="fixed top-0 w-full z-50 bg-slate-900 text-white"
+        className="fixed top-0 w-full z-50 bg-slate-900 text-white h-10"
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-2 text-white/90">
@@ -354,7 +357,7 @@ export function CrazyNavbar() {
                     <div className="h-full flex flex-col">
                       <div className="flex items-center justify-between px-4 py-3 border-b">
                         <Link href="/">
-                          <h1 className="text-lg font-bold font-heading">
+                          <h1 className="text-lg font-bold font-heading whitespace-nowrap">
                             Authentic{" "}
                             <span className="text-blue-800">Furniture</span>
                           </h1>
@@ -396,6 +399,20 @@ export function CrazyNavbar() {
                           className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
                         >
                           About Us
+                        </Link>
+                        <Link
+                          href="/wishlist"
+                          className="flex items-center justify-between py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
+                        >
+                          <span className="flex items-center gap-2">
+                            <Heart className="h-4 w-4" />
+                            Wishlist
+                          </span>
+                          {wishlistCount > 0 && (
+                            <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5">
+                              {wishlistCount > 99 ? '99+' : wishlistCount}
+                            </span>
+                          )}
                         </Link>
                       </nav>
                       <div className="px-2 py-3">
@@ -449,7 +466,7 @@ export function CrazyNavbar() {
               <Link href="/" ref={logoRef}>
                 <motion.h1
                   whileHover={{ scale: 1.02 }}
-                  className="text-lg sm:text-xl font-bold tracking-tighter font-heading"
+                  className="text-lg sm:text-xl font-bold tracking-tighter font-heading whitespace-nowrap"
                 >
                   Authentic <span className="text-blue-800">Furniture</span>
                 </motion.h1>
@@ -700,9 +717,7 @@ export function CrazyNavbar() {
                 </Button>
               </motion.div>
 
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <WishlistIndicator />
-              </motion.div>
+              {/* Wishlist moved to sidebar */}
             </div>
           </div>
         </div>

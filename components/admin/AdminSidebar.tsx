@@ -266,7 +266,7 @@ export function AdminSidebar() {
         variant="ghost"
         size="sm"
         onClick={() => setIsMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-white dark:bg-slate-900 shadow-md"
+        className="fixed top-3 left-4 z-50 lg:hidden bg-white dark:bg-slate-900 shadow-md"
       >
         <Menu className="h-4 w-4" />
       </Button>

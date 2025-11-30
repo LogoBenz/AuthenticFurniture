@@ -193,8 +193,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView, variant
           </div>
 
           {/* Price and Add to Cart */}
-          <div className="flex items-center justify-between mt-1">
+          <div className="flex items-end justify-between mt-1">
             <div>
+              {/* Savings Text - Visible for all variants now */}
+              {discountPercent > 0 && (
+                <p className="text-[10px] text-green-600 font-medium mb-0.5">
+                  You save {formatPrice(savingsAmount)}
+                </p>
+              )}
               <div className="flex items-baseline gap-2">
                 <span className="text-base font-bold text-slate-900 dark:text-slate-100">
                   {formatPrice(currentPrice)}
@@ -205,12 +211,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView, variant
                   </span>
                 )}
               </div>
-              {/* Savings Text - Visible for all variants now */}
-              {discountPercent > 0 && (
-                <p className="text-[10px] text-green-600 font-medium">
-                  You save {formatPrice(savingsAmount)}
-                </p>
-              )}
             </div>
 
             {variant === 'detailed' ? (

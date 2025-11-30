@@ -9,6 +9,7 @@ import { EnquiryCartProvider } from '@/hooks/use-enquiry-cart';
 import { NewsletterPopup } from '@/components/ui/NewsletterPopup';
 import { CompareBar } from '@/components/products/CompareBar';
 import { QueryProvider } from '@/components/providers/QueryProvider';
+import { MainLayoutWrapper } from '@/components/layout/MainLayoutWrapper';
 
 // Professional font pairing - DM Sans for headings, Inter for body
 const dmSans = DM_Sans({
@@ -48,7 +49,7 @@ export default function RootLayout({
             <EnquiryCartProvider>
               <div className="flex flex-col min-h-screen">
                 <CrazyNavbar />
-                <main className="flex-grow pt-[90px] md:pt-[95px]">{children}</main>
+                <MainLayoutWrapper>{children}</MainLayoutWrapper>
                 <Footer />
                 <FloatingWhatsAppButton />
                 <NewsletterPopup />

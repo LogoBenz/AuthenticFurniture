@@ -41,7 +41,7 @@ function CategoriesContent() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isSupabaseConfigured, setIsSupabaseConfigured] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: "",
     image_url: "",
@@ -59,7 +59,7 @@ function CategoriesContent() {
       }
       return false;
     };
-    
+
     setIsSupabaseConfigured(checkSupabaseConfig());
     loadCategories();
   }, []);
@@ -91,7 +91,7 @@ function CategoriesContent() {
       "Office Furniture": "https://images.pexels.com/photos/1170412/pexels-photo-1170412.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       "Game Furniture": "https://images.pexels.com/photos/60912/pexels-photo-60912.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
     };
-    
+
     return categoryImages[categoryName] || "https://images.pexels.com/photos/276651/pexels-photo-276651.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2";
   };
 
@@ -110,7 +110,7 @@ function CategoriesContent() {
       alert("Supabase is not configured. Please set up your database to edit categories.");
       return;
     }
-    
+
     setEditingCategory(category);
     setFormData({
       name: category.name,
@@ -138,7 +138,7 @@ function CategoriesContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isSupabaseConfigured) {
       alert("Supabase is not configured. Please set up your database to manage categories.");
       return;
@@ -185,7 +185,7 @@ function CategoriesContent() {
       alert("Supabase is not configured. Please set up your database to delete categories.");
       return;
     }
-    
+
     if (confirm(`Are you sure you want to delete the "${name}" category? This action cannot be undone.`)) {
       try {
         await deleteCategory(id);
@@ -203,7 +203,7 @@ function CategoriesContent() {
       alert("Supabase is not configured. Please set up your database to add categories.");
       return;
     }
-    
+
     resetForm();
     setIsDialogOpen(true);
   };
@@ -244,8 +244,8 @@ function CategoriesContent() {
           </AlertDescription>
         </Alert>
       )}
-      
-      <div className="flex justify-between items-center">
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Category Management
@@ -254,7 +254,7 @@ function CategoriesContent() {
             {isSupabaseConfigured ? "Manage product categories and their cover photos" : "Viewing sample data - Database setup required for full functionality"}
           </p>
         </div>
-        
+
         <Button onClick={openAddDialog} className="bg-blue-600 hover:bg-blue-700" disabled={!isSupabaseConfigured}>
           <Plus className="h-4 w-4 mr-2" />
           Add Category
@@ -269,7 +269,7 @@ function CategoriesContent() {
               {editingCategory ? "Edit Category" : "Add New Category"}
             </DialogTitle>
           </DialogHeader>
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Left Column - Category Details */}
@@ -279,28 +279,28 @@ function CategoriesContent() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g., Office Chairs, Living Room"
                     required
                   />
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="is_popular"
                     checked={formData.is_popular}
-                    onCheckedChange={(checked) => setFormData({...formData, is_popular: checked})}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_popular: checked })}
                   />
                   <Label htmlFor="is_popular" className="flex items-center space-x-2">
                     <Star className="h-4 w-4 text-yellow-500" />
                     <span>Mark as Popular Category</span>
                   </Label>
                 </div>
-                
+
                 <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
                   <h3 className="font-medium mb-2">Category Information</h3>
                   <p className="text-sm text-muted-foreground">
-                    Categories help organize your products and make them easier for customers to find. 
+                    Categories help organize your products and make them easier for customers to find.
                     Popular categories will be displayed on the homepage.
                   </p>
                 </div>
@@ -319,17 +319,17 @@ function CategoriesContent() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex justify-end space-x-2 pt-4 border-t">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => handleDialogClose(false)}
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="bg-blue-600 hover:bg-blue-700"
                 disabled={categoryImages.length === 0}
               >
@@ -358,7 +358,7 @@ function CategoriesContent() {
                 </div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-              
+
               {/* Popular Badge */}
               {category.is_popular && (
                 <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded flex items-center space-x-1">
@@ -366,7 +366,7 @@ function CategoriesContent() {
                   <span>Popular</span>
                 </div>
               )}
-              
+
               <div className="absolute bottom-4 left-4 right-4">
                 <h3 className="text-white font-semibold text-lg drop-shadow-lg">
                   {category.name}
@@ -376,7 +376,7 @@ function CategoriesContent() {
                 </p>
               </div>
             </div>
-            
+
             <CardContent className="p-4">
               <div className="flex justify-between items-center">
                 <div>
@@ -384,7 +384,7 @@ function CategoriesContent() {
                     Created: {category.createdAt}
                   </p>
                 </div>
-                
+
                 <div className="flex space-x-2">
                   {/* Popular Toggle */}
                   <Button
@@ -396,7 +396,7 @@ function CategoriesContent() {
                   >
                     <Star className="h-3 w-3" />
                   </Button>
-                  
+
                   <Button
                     size="sm"
                     variant="outline"
@@ -420,7 +420,7 @@ function CategoriesContent() {
           </Card>
         ))}
       </div>
-      
+
       {categories.length === 0 && (
         <div className="text-center py-12">
           <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
