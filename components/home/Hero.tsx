@@ -72,11 +72,10 @@ export function Hero() {
                     setDirection(index > mainCurrentImageIndex ? 1 : -1);
                     setMainCurrentImageIndex(index);
                   }}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer hover:scale-125 ${
-                    index === mainCurrentImageIndex
-                      ? 'bg-white shadow-lg w-6'
-                      : 'bg-white/40 hover:bg-white/60'
-                  }`}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer hover:scale-125 ${index === mainCurrentImageIndex
+                    ? 'bg-white shadow-lg w-6'
+                    : 'bg-white/40 hover:bg-white/60'
+                    }`}
                   aria-label={`Go to slide ${index + 1}`}
                 />
               ))}
@@ -113,10 +112,10 @@ export function Hero() {
                 alt="Student Furniture"
                 className="w-full h-full object-cover object-center"
               />
-            </motion.div>
-          </div>
-        </div>
-      </div>
-    </section>
+            </motion.div >
+          </div >
+        </div >
+      </div >
+    </section >
   );
 }

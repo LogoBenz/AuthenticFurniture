@@ -6,6 +6,7 @@ import { EnhancedProductInfo } from "@/components/products/EnhancedProductInfo";
 import { EnhancedProductTabs } from "@/components/products/EnhancedProductTabs";
 import { RelatedProducts } from "@/components/products/RelatedProducts";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { AdminEditButton } from "@/components/products/AdminEditButton";
 
 interface ProductPageProps {
   params: Promise<{
@@ -64,13 +65,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <main className="pt-6 pb-16">
       <div className="container mx-auto px-4 max-w-[1450px]">
         {/* Breadcrumbs */}
-        <Breadcrumb
-          items={[
-            { label: "Home", href: "/" },
-            { label: "Products", href: "/products" },
-            { label: product.name }
-          ]}
-        />
+        <div className="flex items-center justify-between mb-6">
+          <Breadcrumb
+            items={[
+              { label: "Home", href: "/" },
+              { label: "Products", href: "/products" },
+              { label: product.name }
+            ]}
+          />
+          <AdminEditButton slug={product.slug} />
+        </div>
 
         {/* Main Product Section */}
         <article className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6 lg:gap-10 mb-12">

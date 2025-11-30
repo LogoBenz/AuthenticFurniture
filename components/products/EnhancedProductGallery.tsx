@@ -176,17 +176,18 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           onClick={() => setIsZoomed(false)}
         >
-          <div className="relative max-w-4xl max-h-full">
+          <div className="relative w-full h-full max-w-7xl max-h-[90vh]">
             <Image
               src={images[currentImageIndex]}
               alt={`${productName} - Zoomed view`}
-              width={800}
-              height={800}
-              className="object-contain max-w-full max-h-full"
+              fill
+              className="object-contain"
+              sizes="90vw"
+              priority
             />
             <button
               onClick={() => setIsZoomed(false)}
-              className="absolute top-4 right-4 bg-white/95 rounded-full p-2 hover:bg-white transition-colors"
+              className="absolute top-4 right-4 bg-white/95 rounded-full p-2 hover:bg-white transition-colors z-10"
               aria-label="Close zoom"
             >
               <ChevronLeft className="w-6 h-6 text-gray-600 rotate-45" />

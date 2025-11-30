@@ -166,7 +166,7 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
   if (isLarge) {
     // BIG CARD - 656x299px desktop, responsive mobile
     return (
-      <div 
+      <div
         onClick={handleClick}
         className="relative bg-white border-2 border-slate-700 shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 group cursor-pointer overflow-hidden h-auto lg:h-[299px]"
       >
@@ -244,7 +244,7 @@ function FeaturedDealCard({ product, size, onQuickView }: FeaturedDealCardProps)
 
   // SMALL CARD - Compact 316x381px desktop, responsive mobile
   return (
-    <div 
+    <div
       onClick={handleClick}
       className="bg-white border border-slate-300 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group cursor-pointer overflow-hidden flex flex-col w-full lg:w-[316px] h-auto lg:h-[381px]"
     >

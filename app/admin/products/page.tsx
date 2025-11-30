@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getAllProducts, updateProduct, getProductBySlug, createProduct, deleteProduct, getProductCategories, uploadProductImage } from "@/lib/products";
 import { getAllSpaces } from "@/lib/categories";
@@ -147,6 +148,22 @@ export default function AdminProductsPage() {
 
     setFilteredProducts(sorted);
   }, [searchTerm, products, sortBy]);
+
+  // Handle edit query param
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const editSlug = searchParams.get('edit');
+
+  useEffect(() => {
+    if (editSlug && products.length > 0 && !isDialogOpen) {
+      const productToEdit = products.find(p => p.slug === editSlug);
+      if (productToEdit) {
+        handleEdit(productToEdit);
+        // Optional: clear the query param so it doesn't reopen on refresh
+        // router.replace('/admin/products', { scroll: false });
+      }
+    }
+  }, [editSlug, products, isDialogOpen]);
 
   const resetForm = () => {
     setFormData({

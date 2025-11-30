@@ -56,7 +56,7 @@ export function NewsletterSignup() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full px-8 py-3 bg-[#FF4D30] hover:bg-[#E03E25] text-white font-bold tracking-wide rounded-lg transition-colors shadow-md hover:shadow-lg uppercase text-sm"
+                    className="w-full px-8 py-3 bg-accent hover:bg-accent/90 text-white font-bold tracking-wide rounded-lg transition-colors shadow-md hover:shadow-lg uppercase text-sm"
                   >
                     Get Updates
                   </button>
