@@ -1,3 +1,5 @@
+// @ts-ignore
+// Force rebuild
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { supabase } from '@/lib/supabase';
@@ -5,29 +7,24 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { Product } from "@/types";
 
 // Convert Supabase row to Product type
+// Convert Supabase row to Product type
 function mapSupabaseRowToProduct(row: any): Product {
-  console.log('🔄 Mapping database row:', row);
-
   // Handle images - could be stored as JSON array, comma-separated string, or single URL
   let images: string[] = [];
 
   if (row.images) {
-    console.log('📝 Found images field:', row.images, 'Type:', typeof row.images);
     // If images is already an array
     if (Array.isArray(row.images)) {
       images = row.images;
-      console.log('✅ Images is already an array:', images);
     }
     // If images is a JSON string
     else if (typeof row.images === 'string') {
       try {
         const parsed = JSON.parse(row.images);
         images = Array.isArray(parsed) ? parsed : [row.images];
-        console.log('✅ Parsed JSON images:', images);
       } catch {
         // If JSON parsing fails, treat as comma-separated string
         images = row.images.split(',').map((url: string) => url.trim()).filter(Boolean);
-        console.log('✅ Treated as comma-separated string:', images);
       }
     }
   }
@@ -35,35 +32,29 @@ function mapSupabaseRowToProduct(row: any): Product {
   // Fallback to single image_url if no images array
   if (images.length === 0 && row.image_url) {
     images = [row.image_url];
-    console.log('🔄 Fallback to image_url:', images);
   }
 
   // Ensure we have at least one image
   if (images.length === 0) {
     images = ['/placeholder-product.jpg']; // Fallback placeholder
-    console.log('🔄 Using placeholder image');
   }
 
   // Handle videos - similar to images
   let videos: string[] = [];
 
   if (row.videos) {
-    console.log('📝 Found videos field:', row.videos, 'Type:', typeof row.videos);
     // If videos is already an array
     if (Array.isArray(row.videos)) {
       videos = row.videos;
-      console.log('✅ Videos is already an array:', videos);
     }
     // If videos is a JSON string
     else if (typeof row.videos === 'string') {
       try {
         const parsed = JSON.parse(row.videos);
         videos = Array.isArray(parsed) ? parsed : [row.videos];
-        console.log('✅ Parsed JSON videos:', videos);
       } catch {
         // If JSON parsing fails, treat as comma-separated string
         videos = row.videos.split(',').map((url: string) => url.trim()).filter(Boolean);
-        console.log('✅ Treated as comma-separated string:', videos);
       }
     }
   }
@@ -93,6 +84,12 @@ function mapSupabaseRowToProduct(row: any): Product {
     // Space and subcategory data from joins
     space_id: row.space_id || undefined,
     subcategory_id: row.subcategory_id || undefined,
+    // Multi-select support
+    space_ids: row.product_spaces?.map((ps: any) => ps.space_id) || [],
+    subcategory_ids: row.product_subcategories?.map((ps: any) => ps.subcategory_id) || [],
+    spaces: row.product_spaces?.map((ps: any) => ps.space) || [],
+    subcategories: row.product_subcategories?.map((ps: any) => ps.subcategory) || [],
+
     product_type: row.product_type || undefined,
     space: row.space || undefined,
     subcategory: row.subcategory || undefined,
@@ -114,7 +111,6 @@ function mapSupabaseRowToProduct(row: any): Product {
     deal_priority: row.deal_priority ? Number(row.deal_priority) : undefined,
   };
 
-  console.log('✅ Mapped product:', product);
   return product;
 }
 
@@ -180,8 +176,8 @@ export const getProducts = cache(async (filters: ProductFilters = {}): Promise<P
         is_best_seller,
         is_featured,
         is_promo,
-        space:spaces(id, name, slug),
-        subcategory:subcategories(id, name, slug)
+        product_spaces(space_id, space:spaces(id, name, slug)),
+        product_subcategories(subcategory_id, subcategory:subcategories(id, name, slug))
       `, { count: 'exact' });
 
     // Apply filters
@@ -318,8 +314,8 @@ export async function getAllProducts(): Promise<Product[]> {
       .from('products')
       .select(`
         *,
-        space:spaces(*),
-        subcategory:subcategories(*)
+        product_spaces(space_id, space:spaces(*)),
+        product_subcategories(subcategory_id, subcategory:subcategories(*))
       `)
       .order('created_at', { ascending: false });
 
@@ -335,6 +331,89 @@ export async function getAllProducts(): Promise<Product[]> {
     return products;
   } catch (error) {
     console.error('❌ getAllProducts: Error:', error);
+    throw error;
+  }
+}
+
+export async function deleteProduct(id: string | number): Promise<boolean> {
+  console.log('🗑️ deleteProduct called with ID:', id, 'Type:', typeof id);
+
+  // Validate ID
+  if (
+    id === null || id === undefined ||
+    (typeof id === 'string' && id.trim() === '') ||
+    (typeof id === 'number' && !Number.isFinite(id))
+  ) {
+    const error = new Error('Invalid product ID provided.');
+    console.error('❌', error.message);
+    throw error;
+  }
+
+  try {
+    console.log('🔄 Step 1: Deleting inventory records for product:', id);
+
+    // Step 1: Delete related inventory records first (cascade delete)
+    const { data: deletedInventory, error: inventoryError } = await supabase
+      .from('warehouse_products')
+      .delete()
+      .eq('product_id', id)
+      .select();
+
+    if (inventoryError) {
+      console.warn('⚠️ Warning: Could not delete inventory records:', inventoryError);
+      console.warn('   Error code:', inventoryError.code);
+      console.warn('   Error details:', inventoryError.details);
+      console.warn('   Error hint:', inventoryError.hint);
+      // Continue with product deletion even if inventory deletion fails
+      // (table might not exist or no inventory records)
+    } else {
+      console.log('✅ Deleted', deletedInventory?.length || 0, 'inventory records');
+    }
+
+    // Step 2: Delete the product
+    console.log('🔄 Step 2: Deleting product from products table:', id);
+    const { data: deletedProduct, error, status, statusText } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id)
+      .select();
+
+    console.log('📊 Delete response:', {
+      data: deletedProduct,
+      error,
+      status,
+      statusText,
+      deletedCount: deletedProduct?.length || 0
+    });
+
+    if (error) {
+      console.error('❌ Supabase delete error:', error);
+      console.error('   Error code:', error.code);
+      console.error('   Error message:', error.message);
+      console.error('   Error details:', error.details);
+      console.error('   Error hint:', error.hint);
+
+      // Check for specific error codes
+      if (error.code === '42501') {
+        throw new Error('Permission denied: Row Level Security (RLS) is blocking the delete. Check your Supabase policies.');
+      }
+
+      if (error.code === '23503') {
+        throw new Error('Cannot delete: Product is referenced by other records (foreign key constraint).');
+      }
+
+      throw new Error(`Database delete failed: ${error.message} (Code: ${error.code})`);
+    }
+
+    if (!deletedProduct || deletedProduct.length === 0) {
+      console.warn('⚠️ No product was deleted. Product might not exist or RLS is blocking the operation.');
+      throw new Error('Product not found or permission denied. The product may have already been deleted or you lack permission to delete it.');
+    }
+
+    console.log('✅ Product deleted successfully:', deletedProduct[0]);
+    return true;
+  } catch (error) {
+    console.error('❌ Delete product error:', error);
     throw error;
   }
 }
@@ -358,8 +437,8 @@ export const getProductBySlug = unstable_cache(
         .from('products')
         .select(`
           *,
-          space:spaces(*),
-          subcategory:subcategories(*)
+          product_spaces(space_id, space:spaces(*)),
+          product_subcategories(subcategory_id, subcategory:subcategories(*))
         `)
         .eq('slug', slug)
         .single();
@@ -378,8 +457,11 @@ export const getProductBySlug = unstable_cache(
             .from('products')
             .select(`
               *,
+              *,
               space:spaces(*),
-              subcategory:subcategories(*)
+              subcategory:subcategories(*),
+              product_spaces(space_id, space:spaces(*)),
+              product_subcategories(subcategory_id, subcategory:subcategories(*))
             `)
             .eq('id', slug)
             .single();
@@ -656,10 +738,14 @@ export async function getProductsBySubcategory(subcategorySlug: string): Promise
       .from('products')
       .select(`
         *,
-        space:spaces(*),
-        subcategory:subcategories(*)
+        product_spaces(
+          space:spaces(*)
+        ),
+        product_subcategories!inner(
+          subcategory:subcategories!inner(*)
+        )
       `)
-      .eq('subcategory.slug', subcategorySlug)
+      .eq('product_subcategories.subcategory.slug', subcategorySlug)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -684,10 +770,14 @@ export async function getProductsByType(subcategorySlug: string, productType: st
       .from('products')
       .select(`
         *,
-        space:spaces(*),
-        subcategory:subcategories(*)
+        product_spaces(
+          space:spaces(*)
+        ),
+        product_subcategories!inner(
+          subcategory:subcategories!inner(*)
+        )
       `)
-      .eq('subcategory.slug', subcategorySlug)
+      .eq('product_subcategories.subcategory.slug', subcategorySlug)
       .eq('product_type', productType)
       .order('created_at', { ascending: false });
 
@@ -819,6 +909,11 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
       delivery_timeframe: product.delivery_timeframe || null,
       stock_count: product.stock_count || null,
       limited_time_deal: product.limited_time_deal ? JSON.stringify(product.limited_time_deal) : null,
+      // Featured deals fields
+      is_featured_deal: product.isFeatured || false,
+      deal_priority: 1,
+      // New product type
+      product_type: product.product_type || null,
     };
 
     console.log('🔄 Creating product with data:', productData);
@@ -834,13 +929,36 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
       throw new Error(`Database create failed: ${error.message}`);
     }
 
-    if (!data) {
-      throw new Error('No data returned from create operation.');
+    // Handle multi-select spaces
+    if (product.space_ids && product.space_ids.length > 0) {
+      const spaceInserts = product.space_ids.map(spaceId => ({
+        product_id: data.id,
+        space_id: spaceId
+      }));
+
+      const { error: spaceError } = await supabase
+        .from('product_spaces')
+        .insert(spaceInserts);
+
+      if (spaceError) console.error('Error inserting product spaces:', spaceError);
+    }
+
+    // Handle multi-select subcategories
+    if (product.subcategory_ids && product.subcategory_ids.length > 0) {
+      const subInserts = product.subcategory_ids.map(subId => ({
+        product_id: data.id,
+        subcategory_id: subId
+      }));
+
+      const { error: subError } = await supabase
+        .from('product_subcategories')
+        .insert(subInserts);
+
+      if (subError) console.error('Error inserting product subcategories:', subError);
     }
 
     console.log('✅ Product created successfully:', data);
-    const mapped = mapSupabaseRowToProduct(data);
-    return mapped;
+    return mapSupabaseRowToProduct(data);
   } catch (error) {
     console.error('❌ Create product error:', error);
     throw error;
@@ -889,22 +1007,23 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
     if (updates.modelNo !== undefined) updateData.model_no = updates.modelNo;
     if (updates.warehouseLocation !== undefined) updateData.warehouse_location = updates.warehouseLocation;
     if (updates.dimensions !== undefined) updateData.dimensions = updates.dimensions;
+
     // Space and subcategory fields - handle UUID validation
     if (updates.space_id !== undefined) {
-      // Only set if it's a valid UUID or null
       if (updates.space_id === null || updates.space_id === '' ||
         (typeof updates.space_id === 'string' && updates.space_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))) {
         updateData.space_id = updates.space_id || null;
       }
     }
     if (updates.subcategory_id !== undefined) {
-      // Only set if it's a valid UUID or null
       if (updates.subcategory_id === null || updates.subcategory_id === '' ||
         (typeof updates.subcategory_id === 'string' && updates.subcategory_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))) {
         updateData.subcategory_id = updates.subcategory_id || null;
       }
     }
+
     if (updates.product_type !== undefined) updateData.product_type = updates.product_type || null;
+
     // Enhanced product view page fields
     if (updates.discount_enabled !== undefined) updateData.discount_enabled = updates.discount_enabled;
     if (updates.bulk_pricing_enabled !== undefined) updateData.bulk_pricing_enabled = updates.bulk_pricing_enabled;
@@ -954,6 +1073,46 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
       throw new Error('No data returned from update operation. The product might not exist or you may lack permissions.');
     }
 
+    // Handle multi-select spaces
+    if (updates.space_ids) {
+      // First delete existing
+      await supabase.from('product_spaces').delete().eq('product_id', id);
+
+      // Then insert new
+      if (updates.space_ids.length > 0) {
+        const spaceInserts = updates.space_ids.map(spaceId => ({
+          product_id: id,
+          space_id: spaceId
+        }));
+
+        const { error: spaceError } = await supabase
+          .from('product_spaces')
+          .insert(spaceInserts);
+
+        if (spaceError) console.error('Error updating product spaces:', spaceError);
+      }
+    }
+
+    // Handle multi-select subcategories
+    if (updates.subcategory_ids) {
+      // First delete existing
+      await supabase.from('product_subcategories').delete().eq('product_id', id);
+
+      // Then insert new
+      if (updates.subcategory_ids.length > 0) {
+        const subInserts = updates.subcategory_ids.map(subId => ({
+          product_id: id,
+          subcategory_id: subId
+        }));
+
+        const { error: subError } = await supabase
+          .from('product_subcategories')
+          .insert(subInserts);
+
+        if (subError) console.error('Error updating product subcategories:', subError);
+      }
+    }
+
     console.log('✅ Product updated successfully:', data[0]);
     return mapSupabaseRowToProduct(data[0]);
   } catch (error) {
@@ -962,88 +1121,10 @@ export async function updateProduct(id: string | number, updates: Partial<Produc
   }
 }
 
-export async function deleteProduct(id: string | number): Promise<boolean> {
-  console.log('🗑️ deleteProduct called with ID:', id, 'Type:', typeof id);
 
-  // Validate ID
-  if (
-    id === null || id === undefined ||
-    (typeof id === 'string' && id.trim() === '') ||
-    (typeof id === 'number' && !Number.isFinite(id))
-  ) {
-    const error = new Error('Invalid product ID provided.');
-    console.error('❌', error.message);
-    throw error;
-  }
 
-  try {
-    console.log('🔄 Step 1: Deleting inventory records for product:', id);
 
-    // Step 1: Delete related inventory records first (cascade delete)
-    const { data: deletedInventory, error: inventoryError } = await supabase
-      .from('warehouse_products')
-      .delete()
-      .eq('product_id', id)
-      .select();
 
-    if (inventoryError) {
-      console.warn('⚠️ Warning: Could not delete inventory records:', inventoryError);
-      console.warn('   Error code:', inventoryError.code);
-      console.warn('   Error details:', inventoryError.details);
-      console.warn('   Error hint:', inventoryError.hint);
-      // Continue with product deletion even if inventory deletion fails
-      // (table might not exist or no inventory records)
-    } else {
-      console.log('✅ Deleted', deletedInventory?.length || 0, 'inventory records');
-    }
-
-    // Step 2: Delete the product
-    console.log('🔄 Step 2: Deleting product from products table:', id);
-    const { data: deletedProduct, error, status, statusText } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', id)
-      .select();
-
-    console.log('📊 Delete response:', {
-      data: deletedProduct,
-      error,
-      status,
-      statusText,
-      deletedCount: deletedProduct?.length || 0
-    });
-
-    if (error) {
-      console.error('❌ Supabase delete error:', error);
-      console.error('   Error code:', error.code);
-      console.error('   Error message:', error.message);
-      console.error('   Error details:', error.details);
-      console.error('   Error hint:', error.hint);
-
-      // Check for specific error codes
-      if (error.code === '42501') {
-        throw new Error('Permission denied: Row Level Security (RLS) is blocking the delete. Check your Supabase policies.');
-      }
-
-      if (error.code === '23503') {
-        throw new Error('Cannot delete: Product is referenced by other records (foreign key constraint).');
-      }
-
-      throw new Error(`Database delete failed: ${error.message} (Code: ${error.code})`);
-    }
-
-    if (!deletedProduct || deletedProduct.length === 0) {
-      console.warn('⚠️ No product was deleted. Product might not exist or RLS is blocking the operation.');
-      throw new Error('Product not found or permission denied. The product may have already been deleted or you lack permission to delete it.');
-    }
-
-    console.log('✅ Product deleted successfully:', deletedProduct[0]);
-    return true;
-  } catch (error) {
-    console.error('❌ Delete product error:', error);
-    throw error;
-  }
-}
 
 // Import upload functions from uploadMedia module
 export { uploadProductImage, uploadProductVideo } from './uploadMedia';
@@ -1057,8 +1138,12 @@ export async function getFilteredProducts(searchParams?: URLSearchParams): Promi
       .from('products')
       .select(`
         *,
-        space:spaces(*),
-        subcategory:subcategories(*)
+        product_spaces(
+          space:spaces(*)
+        ),
+        product_subcategories(
+          subcategory:subcategories(*)
+        )
       `)
       .eq('is_active', true);
 

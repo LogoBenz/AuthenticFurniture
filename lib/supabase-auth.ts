@@ -32,13 +32,13 @@ export function createServerAuthClient() {
 export async function isUserAdmin(userId: string) {
   const supabase = createServerAuthClient();
 
-  const { data: user, error } = await supabase.auth.admin.getUserById(userId);
+  const { data, error } = await supabase.auth.admin.getUserById(userId);
 
-  if (error || !user) {
+  if (error || !data?.user) {
     return false;
   }
 
-  const role = user.user_metadata?.role || user.app_metadata?.role;
+  const role = data.user.user_metadata?.role || data.user.app_metadata?.role;
   return role === 'admin';
 }
 

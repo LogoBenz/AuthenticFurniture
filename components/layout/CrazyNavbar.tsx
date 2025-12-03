@@ -13,6 +13,16 @@ import {
   Linkedin,
   Twitter,
   Heart,
+  LogOut,
+  Package,
+  BookOpen,
+  Book,
+  Info,
+  HelpCircle,
+  FileText,
+  Shield,
+  Briefcase,
+  Store,
 } from "lucide-react";
 import {
   SofaIcon,
@@ -72,6 +82,8 @@ export function CrazyNavbar() {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [activeSpace, setActiveSpace] = useState<string | null>(null);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showTopHeader, setShowTopHeader] = useState(true);
   const [showNavbar, setShowNavbar] = useState(true);
   const lastScrollY = useRef(0);
@@ -235,6 +247,14 @@ export function CrazyNavbar() {
     return iconMap[iconName] || TableIcon;
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setIsMenuOpen(false);
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -249,15 +269,22 @@ export function CrazyNavbar() {
       <header className="fixed top-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm border-b">
         <div className="px-4 pl-14 sm:px-6 py-3">
           <div className="flex items-center justify-between">
-            <Link href="/" ref={logoRef} className="flex items-center">
+            <Link href="/" ref={logoRef} className="flex items-center ml-2 sm:ml-0">
               <h1 className="text-lg sm:text-xl font-bold tracking-tighter font-heading whitespace-nowrap">
                 Authentic <span className="text-blue-800">Furniture</span>
               </h1>
             </Link>
             <div className="flex items-center space-x-2 sm:space-x-4">
               {isAuthenticated && (
-                <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                  Sign Out
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="group relative overflow-hidden bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95"
+                >
+                  <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></span>
+                  <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 group-hover:rotate-12 transition-transform duration-300 relative z-10" />
+                  <span className="hidden sm:inline relative z-10">Sign Out</span>
                 </Button>
               )}
               <ModeToggle />
@@ -343,7 +370,7 @@ export function CrazyNavbar() {
             {/* Mobile Menu + Logo */}
             <div className="flex items-center gap-3">
               <div className="md:hidden">
-                <Sheet>
+                <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                   <SheetTrigger asChild>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
@@ -363,100 +390,175 @@ export function CrazyNavbar() {
                           </h1>
                         </Link>
                       </div>
-                      <div className="p-4">
-                        <Input
-                          placeholder="Search products..."
-                          className="w-full"
-                        />
-                      </div>
-                      <nav className="px-2 space-y-1">
-                        <Link
-                          href="/products"
-                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
-                        >
-                          Products
-                        </Link>
-                        <Link
-                          href="/blog"
-                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
-                        >
-                          Blog
-                        </Link>
-                        <Link
-                          href="/e-catalogue"
-                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
-                        >
-                          E-Catalogue
-                        </Link>
-                        <Link
-                          href="/showroom"
-                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
-                        >
-                          Showroom
-                        </Link>
-                        <Link
-                          href="/about"
-                          className="block py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
-                        >
-                          About Us
-                        </Link>
-                        <Link
-                          href="/wishlist"
-                          className="flex items-center justify-between py-2 px-2 text-sm font-medium rounded-md hover:bg-muted font-heading"
-                        >
-                          <span className="flex items-center gap-2">
-                            <Heart className="h-4 w-4" />
-                            Wishlist
-                          </span>
-                          {wishlistCount > 0 && (
-                            <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5">
-                              {wishlistCount > 99 ? '99+' : wishlistCount}
-                            </span>
-                          )}
-                        </Link>
-                      </nav>
-                      <div className="px-2 py-3">
-                        <Accordion type="single" collapsible>
-                          <AccordionItem value="spaces">
-                            <AccordionTrigger className="px-2 font-heading">
-                              Shop by Space
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="space-y-2 px-2">
-                                {spaces.map((space) => (
-                                  <Link
-                                    key={space.id}
-                                    href={`/products?space=${space.slug}`}
-                                    className="block py-2 text-sm hover:bg-muted rounded-md font-medium"
-                                  >
-                                    {space.name}
-                                  </Link>
-                                ))}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
-                      </div>
-                      <div className="mt-auto p-4 border-t">
-                        <div className="mb-3 flex items-center justify-between">
-                          <span className="text-sm font-medium">Theme</span>
-                          <ModeToggle />
+                      <div className="flex-1 overflow-y-auto">
+                        <div className="p-4">
+                          <form onSubmit={handleSearch} className="relative">
+                            <Input
+                              placeholder="Search products..."
+                              className="w-full pr-10"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            <button
+                              type="submit"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                              <Search className="h-4 w-4" />
+                            </button>
+                          </form>
                         </div>
-                        {!isAuthenticated ? (
+
+                        <div className="px-2 pb-2">
+                          <Accordion type="single" collapsible className="border-none">
+                            <AccordionItem value="spaces" className="border-none">
+                              <AccordionTrigger className="px-2 py-2 text-sm font-medium hover:no-underline hover:bg-muted rounded-md data-[state=open]:bg-muted group">
+                                <span className="flex items-center gap-3">
+                                  <Briefcase className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                  Shop by Space
+                                </span>
+                              </AccordionTrigger>
+                              <AccordionContent>
+                                <div className="space-y-1 px-2 pt-1 ml-2 border-l border-slate-200 dark:border-slate-700">
+                                  {spaces.map((space) => {
+                                    const hasSubcategories = space.subcategories && space.subcategories.length > 0;
+
+                                    if (hasSubcategories) {
+                                      return (
+                                        <Accordion type="single" collapsible key={space.id} className="border-none">
+                                          <AccordionItem value={space.id} className="border-none">
+                                            <AccordionTrigger className="py-2 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors font-normal [&[data-state=open]]:text-foreground [&[data-state=open]]:bg-muted/50">
+                                              {space.name}
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                              <div className="pl-3 space-y-1 mt-1 ml-3 border-l border-slate-200 dark:border-slate-700">
+                                                <Link
+                                                  href={`/products?space=${space.slug}`}
+                                                  className="block py-2 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors font-medium"
+                                                >
+                                                  View All {space.name}
+                                                </Link>
+                                                {space.subcategories?.map((sub) => (
+                                                  <Link
+                                                    key={sub.id}
+                                                    href={`/products?space=${space.slug}&category=${sub.slug}`}
+                                                    className="block py-2 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+                                                  >
+                                                    {sub.name}
+                                                  </Link>
+                                                ))}
+                                              </div>
+                                            </AccordionContent>
+                                          </AccordionItem>
+                                        </Accordion>
+                                      );
+                                    }
+
+                                    return (
+                                      <Link
+                                        key={space.id}
+                                        href={`/products?space=${space.slug}`}
+                                        className="block py-2 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+                                      >
+                                        {space.name}
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          </Accordion>
+                        </div>
+
+                        <nav className="px-2 space-y-1">
                           <Link
-                            href="/auth/login"
-                            className="block w-full text-center bg-blue-800 hover:bg-blue-700 text-white py-2 rounded-md font-heading"
+                            href="/products"
+                            className="flex items-center gap-3 py-2 px-2 text-sm font-medium rounded-md hover:bg-muted transition-colors group"
                           >
-                            Login
+                            <Package className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            Products
                           </Link>
-                        ) : (
-                          <button
-                            onClick={handleSignOut}
-                            className="w-full text-center border border-red-600 text-red-600 py-2 rounded-md font-heading"
+                          <Link
+                            href="/blog"
+                            className="flex items-center gap-3 py-2 px-2 text-sm font-medium rounded-md hover:bg-muted transition-colors group"
                           >
-                            Log out
-                          </button>
-                        )}
+                            <BookOpen className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            Blog
+                          </Link>
+                          <Link
+                            href="/e-catalogue"
+                            className="flex items-center gap-3 py-2 px-2 text-sm font-medium rounded-md hover:bg-muted transition-colors group"
+                          >
+                            <Book className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            E-Catalogue
+                          </Link>
+                          <Link
+                            href="/showroom"
+                            className="flex items-center gap-3 py-2 px-2 text-sm font-medium rounded-md hover:bg-muted transition-colors group"
+                          >
+                            <Store className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            Showroom
+                          </Link>
+                          <Link
+                            href="/about"
+                            className="flex items-center gap-3 py-2 px-2 text-sm font-medium rounded-md hover:bg-muted transition-colors group"
+                          >
+                            <Info className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            About Us
+                          </Link>
+                          <Link
+                            href="/wishlist"
+                            className="flex items-center justify-between py-2 px-2 text-sm font-medium rounded-md hover:bg-muted transition-colors group"
+                          >
+                            <span className="flex items-center gap-3">
+                              <Heart className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                              Wishlist
+                            </span>
+                            {wishlistCount > 0 && (
+                              <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5">
+                                {wishlistCount > 99 ? '99+' : wishlistCount}
+                              </span>
+                            )}
+                          </Link>
+                        </nav>
+
+                        <div className="mt-6 px-4">
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Support</h4>
+                          <div className="space-y-1">
+                            <Link href="/faq" className="flex items-center gap-2 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                              <HelpCircle className="h-3.5 w-3.5" />
+                              FAQ
+                            </Link>
+                            <Link href="/privacy-policy" className="flex items-center gap-2 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                              <Shield className="h-3.5 w-3.5" />
+                              Privacy Policy
+                            </Link>
+                            <Link href="/terms" className="flex items-center gap-2 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                              <FileText className="h-3.5 w-3.5" />
+                              Terms & Conditions
+                            </Link>
+                          </div>
+                        </div>
+                        <div className="mt-auto p-4 border-t">
+                          <div className="mb-3 flex items-center justify-between">
+                            <span className="text-sm font-medium">Theme</span>
+                            <ModeToggle />
+                          </div>
+                          {!isAuthenticated ? (
+                            <Link
+                              href="/auth/login"
+                              className="block w-full text-center bg-blue-800 hover:bg-blue-700 text-white py-2 rounded-md font-heading"
+                            >
+                              Login
+                            </Link>
+                          ) : (
+                            <button
+                              onClick={handleSignOut}
+                              className="w-full text-center border border-red-600 text-red-600 py-2 rounded-md font-heading"
+                            >
+                              Log out
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </SheetContent>
@@ -471,12 +573,12 @@ export function CrazyNavbar() {
                   Authentic <span className="text-blue-800">Furniture</span>
                 </motion.h1>
               </Link>
-            </div>
+            </div >
 
             {/* Desktop Navigation with Crazy Animations */}
-            <nav className="hidden md:flex items-center space-x-1">
+            < nav className="hidden md:flex items-center space-x-1" >
               {/* Shop by Space with Mega Menu */}
-              <div
+              < div
                 className="relative group"
                 onMouseEnter={() => {
                   setActiveSpace("spaces");
@@ -484,7 +586,8 @@ export function CrazyNavbar() {
                   if (!selectedSpaceId && spaces.length > 0) {
                     setSelectedSpaceId(spaces[0].id);
                   }
-                }}
+                }
+                }
                 onMouseLeave={() => setActiveSpace(null)}
               >
                 <motion.button
@@ -648,35 +751,37 @@ export function CrazyNavbar() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </div >
 
-              {[
-                { href: "/blog", label: "Blog" },
-                { href: "/e-catalogue", label: "E-Catalogue" },
-                { href: "/showroom", label: "Showroom" },
-                { href: "/about", label: "About Us" },
-                { href: "/careers", label: "Careers" },
-              ].map((link) => (
-                <motion.div
-                  key={link.href}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative group"
-                >
-                  <Link
-                    href={link.href}
-                    className="px-3 py-1.5 block text-sm font-medium transition-colors"
+              {
+                [
+                  { href: "/blog", label: "Blog" },
+                  { href: "/e-catalogue", label: "E-Catalogue" },
+                  { href: "/showroom", label: "Showroom" },
+                  { href: "/about", label: "About Us" },
+                  { href: "/careers", label: "Careers" },
+                ].map((link) => (
+                  <motion.div
+                    key={link.href}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="relative group"
                   >
-                    {link.label}
-                  </Link>
-                  {/* Animated underline */}
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-800 transition-all duration-300 group-hover:w-full"></span>
-                </motion.div>
-              ))}
-            </nav>
+                    <Link
+                      href={link.href}
+                      className="px-3 py-1.5 block text-sm font-medium transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                    {/* Animated underline */}
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-800 transition-all duration-300 group-hover:w-full"></span>
+                  </motion.div>
+                ))
+              }
+            </nav >
 
             {/* Right Actions */}
-            <div className="flex items-center gap-2">
+            < div className="flex items-center gap-2" >
               <motion.div
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -718,10 +823,10 @@ export function CrazyNavbar() {
               </motion.div>
 
               {/* Wishlist moved to sidebar */}
-            </div>
-          </div>
-        </div>
-      </motion.header>
+            </div >
+          </div >
+        </div >
+      </motion.header >
 
       <EnquiryCartModal
         isOpen={isCartModalOpen}

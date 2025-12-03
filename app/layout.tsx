@@ -1,4 +1,5 @@
 import './globals.css';
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { Inter, DM_Sans } from 'next/font/google';
 import { CrazyNavbar } from '@/components/layout/CrazyNavbar';
@@ -48,7 +49,9 @@ export default function RootLayout({
           <QueryProvider>
             <EnquiryCartProvider>
               <div className="flex flex-col min-h-screen">
-                <CrazyNavbar />
+                <Suspense fallback={null}>
+                  <CrazyNavbar />
+                </Suspense>
                 <MainLayoutWrapper>{children}</MainLayoutWrapper>
                 <Footer />
                 <FloatingWhatsAppButton />

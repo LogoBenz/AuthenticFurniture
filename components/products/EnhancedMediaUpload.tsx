@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, memo } from "react";
 import { Upload, X, Plus, Image as ImageIcon, Video, Crop, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -31,7 +31,7 @@ interface EnhancedMediaUploadProps {
   onCropExisting?: (imageIndex: number) => Promise<void>;
 }
 
-export function EnhancedMediaUpload({
+export const EnhancedMediaUpload = memo(function EnhancedMediaUpload({
   images,
   onImagesChange,
   videos = [],
@@ -302,7 +302,7 @@ export function EnhancedMediaUpload({
                   <span>{progress}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   ></div>
@@ -405,7 +405,7 @@ export function EnhancedMediaUpload({
             ))}
           </div>
         ) : (
-          <div 
+          <div
             className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center cursor-pointer hover:border-slate-400 dark:hover:border-slate-500 transition-colors"
             onClick={() => fileInputRef.current?.click()}
           >
@@ -499,7 +499,7 @@ export function EnhancedMediaUpload({
               ))}
             </div>
           ) : (
-            <div 
+            <div
               className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center cursor-pointer hover:border-slate-400 dark:hover:border-slate-500 transition-colors"
               onClick={() => videoInputRef.current?.click()}
             >
@@ -551,6 +551,4 @@ export function EnhancedMediaUpload({
       </p>
     </div>
   );
-}
-
-
+});

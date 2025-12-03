@@ -1,4 +1,5 @@
 import 'server-only'
+// @ts-ignore
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import { createAdminClient } from './supabase-admin'
@@ -374,7 +375,7 @@ export const getFeaturedDeals = cache(async (): Promise<Product[]> => {
       return await getPromoProducts()
     }
 
-    let products = (data || []).map((row: any, index: number) => {
+    let products: Product[] = (data || []).map((row: any, index: number) => {
       const product = mapSupabaseRowToProduct(row)
       return {
         ...product,

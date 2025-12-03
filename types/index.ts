@@ -25,6 +25,12 @@ export interface Product {
   // New category system
   space_id?: string;
   subcategory_id?: string;
+  // Multi-select support
+  space_ids?: string[];
+  subcategory_ids?: string[];
+  spaces?: Space[];
+  subcategories?: Subcategory[];
+
   product_type?: string; // e.g., "Executive Tables", "Electric Desks", etc.
   space?: Space;
   subcategory?: Subcategory;

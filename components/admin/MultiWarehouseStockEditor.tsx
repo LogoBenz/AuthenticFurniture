@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,7 +32,7 @@ interface MultiWarehouseStockEditorProps {
   onStockUpdate?: (updates: WarehouseStock[]) => void;
 }
 
-export default function MultiWarehouseStockEditor({
+const MultiWarehouseStockEditor = memo(function MultiWarehouseStockEditor({
   productId,
   productName,
   onStockUpdate
@@ -48,7 +48,7 @@ export default function MultiWarehouseStockEditor({
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch warehouses
         const warehousesResponse = await fetch('/api/inventory/warehouses');
         if (warehousesResponse.ok) {
@@ -143,7 +143,7 @@ export default function MultiWarehouseStockEditor({
   const handleSave = async () => {
     try {
       setSaving(true);
-      
+
       const response = await fetch('/api/inventory/stock', {
         method: 'POST',
         headers: {
@@ -155,7 +155,7 @@ export default function MultiWarehouseStockEditor({
             productId: item.productId,
             stockQuantity: item.stockQuantity,
             reservedQuantity: item.reservedQuantity || 0,
-            reorderLevel: item.reorderLevel || 0,
+            reorderLevel: item.reorder_level || 0,
           }))
         }),
       });
@@ -314,4 +314,6 @@ export default function MultiWarehouseStockEditor({
       </CardContent>
     </Card>
   );
-}
+});
+
+export default MultiWarehouseStockEditor;
