@@ -21,10 +21,23 @@ export function EnhancedProductTabs({ product }: EnhancedProductTabsProps) {
   const [activeTab, setActiveTab] = useState("specifications");
 
   const tabs = [
-    { id: "specifications", label: "Specifications", icon: FileText },
-    { id: "delivery", label: "Delivery & Shipping", icon: Truck },
-    { id: "reviews", label: "Reviews", icon: Star },
+    { id: "specifications", label: "Specifications", shortLabel: "Specs", icon: FileText },
+    { id: "delivery", label: "Delivery Info", shortLabel: "Delivery", icon: Truck },
+    { id: "reviews", label: "Reviews", shortLabel: "Reviews", icon: Star },
   ];
+
+  const handleTabChange = (tabId: string) => {
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!prefersReducedMotion && (document as any).startViewTransition) {
+      (document as any).startViewTransition(() => {
+        setActiveTab(tabId);
+      });
+    } else {
+      setActiveTab(tabId);
+    }
+  };
 
   const getDeliveryEstimate = () => {
     if (product.ships_from === 'Lagos') {
@@ -47,7 +60,7 @@ export function EnhancedProductTabs({ product }: EnhancedProductTabsProps) {
     <div className="mt-12">
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">
-        <nav className="flex space-x-8" role="tablist" aria-label="Product Information">
+        <nav className="grid grid-cols-3 gap-2 sm:gap-4" role="tablist" aria-label="Product Information">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isSelected = activeTab === tab.id;
@@ -59,14 +72,16 @@ export function EnhancedProductTabs({ product }: EnhancedProductTabsProps) {
                 aria-controls={`panel-${tab.id}`}
                 id={`tab-${tab.id}`}
                 tabIndex={isSelected ? 0 : -1}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${isSelected
-                    ? "border-blue-800 text-blue-800"
-                    : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+                onClick={() => handleTabChange(tab.id)}
+                className={`flex items-center justify-center space-x-1.5 sm:space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${isSelected
+                  ? "border-blue-800 text-blue-800 bg-blue-50/50"
+                  : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 hover:bg-gray-50"
                   }`}
               >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">
+                  {isSelected ? tab.label : tab.shortLabel}
+                </span>
               </button>
             );
           })}
@@ -171,10 +186,10 @@ export function EnhancedProductTabs({ product }: EnhancedProductTabsProps) {
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Stock Status:</span>
                       <span className={`text-sm font-medium ${product.stock_count > 10
-                          ? 'text-green-600'
-                          : product.stock_count > 0
-                            ? 'text-orange-600'
-                            : 'text-red-600'
+                        ? 'text-green-600'
+                        : product.stock_count > 0
+                          ? 'text-orange-600'
+                          : 'text-red-600'
                         }`}>
                         {product.stock_count > 10
                           ? 'In Stock'
@@ -206,123 +221,94 @@ export function EnhancedProductTabs({ product }: EnhancedProductTabsProps) {
             id="panel-delivery"
             aria-labelledby="tab-delivery"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Delivery Options */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Truck className="w-5 h-5 mr-2" />
+            <div className="space-y-8">
+              {/* Delivery Options - Redesigned */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Delivery Options
                 </h3>
-                <div className="space-y-4">
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Clock className="w-5 h-5 text-green-600" />
-                      <span className="font-semibold text-gray-900">Same-Day Delivery</span>
-                    </div>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {deliveryInfo.sameDay}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Additional ₦2,000 fee applies
-                    </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
+
+                    <h4 className="font-semibold text-gray-900 mb-1">Same-Day Delivery</h4>
+                    <p className="text-sm text-gray-600 mb-2">{deliveryInfo.sameDay}</p>
+                    <span className="inline-block bg-green-50 text-green-700 text-xs px-2 py-1 rounded-md font-medium">
+                      +₦2,000
+                    </span>
                   </div>
 
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Truck className="w-5 h-5 text-blue-600" />
-                      <span className="font-semibold text-gray-900">Standard Delivery</span>
-                    </div>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {deliveryInfo.standard}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Free on orders over ₦10,000
-                    </p>
+                  <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
+
+                    <h4 className="font-semibold text-gray-900 mb-1">Standard Delivery</h4>
+                    <p className="text-sm text-gray-600 mb-2">{deliveryInfo.standard}</p>
+                    <span className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-md font-medium">
+                      Free over ₦10,000
+                    </span>
                   </div>
 
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <MapPin className="w-5 h-5 text-purple-600" />
-                      <span className="font-semibold text-gray-900">Nationwide Delivery</span>
-                    </div>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {deliveryInfo.nationwide}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Delivery fee varies by location
-                    </p>
+                  <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
+
+                    <h4 className="font-semibold text-gray-900 mb-1">Nationwide</h4>
+                    <p className="text-sm text-gray-600 mb-2">{deliveryInfo.nationwide}</p>
+                    <span className="inline-block bg-purple-50 text-purple-700 text-xs px-2 py-1 rounded-md font-medium">
+                      Calculated at checkout
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Shipping Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Shield className="w-5 h-5 mr-2" />
-                  Shipping Information
+              {/* Shipping Information - Redesigned */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Shipping Guarantee
                 </h3>
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-3">
-                    <Check className="w-4 h-4 text-gray-700 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-gray-900">Free Shipping</p>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        On orders over ₦10,000 to Lagos and Abuja
-                      </p>
+                <div className="bg-gray-50 rounded-xl p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Check className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Free Shipping</p>
+                        <p className="text-sm text-gray-600 mt-0.5">
+                          On orders over ₦10,000 to Lagos and Abuja
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Check className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Secure Packaging</p>
+                        <p className="text-sm text-gray-600 mt-0.5">
+                          Protective packaging to prevent damage
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Check className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Real-time Tracking</p>
+                        <p className="text-sm text-gray-600 mt-0.5">
+                          SMS & Email updates on your order status
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Check className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Expert Installation</p>
+                        <p className="text-sm text-gray-600 mt-0.5">
+                          Available for large furniture items
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-start space-x-3">
-                    <Check className="w-4 h-4 text-gray-700 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-gray-900">Secure Packaging</p>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        All items are carefully packaged to prevent damage during transit
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <Check className="w-4 h-4 text-gray-700 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-gray-900">Tracking</p>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        You'll receive tracking information once your order ships
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <Check className="w-4 h-4 text-gray-700 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-gray-900">Installation</p>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        Professional installation available for large items (additional fee)
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Delivery Zones */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Delivery Zones & Fees</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-green-800 mb-2">Zone 1 (Free)</h4>
-                  <p className="text-sm text-green-700">
-                    Lagos, Abuja - Free delivery on orders over ₦10,000
-                  </p>
-                </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-800 mb-2">Zone 2 (₦3,000)</h4>
-                  <p className="text-sm text-blue-700">
-                    Port Harcourt, Kano, Ibadan - 3-4 business days
-                  </p>
-                </div>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-purple-800 mb-2">Zone 3 (₦5,000)</h4>
-                  <p className="text-sm text-purple-700">
-                    Other states - 4-5 business days
-                  </p>
                 </div>
               </div>
             </div>

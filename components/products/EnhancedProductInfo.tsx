@@ -17,7 +17,7 @@ import {
   Facebook,
   Instagram,
   Twitter,
-  Star,
+  TrendingUp,
   Code
 } from "lucide-react";
 import { formatPrice } from "@/lib/products";
@@ -186,20 +186,21 @@ Can you provide more details and availability?`;
   );
 
   return (
-    <div className="flex flex-col h-full space-y-6">
+    <div className="flex flex-col h-full space-y-4">
       {/* Product Title */}
-      <div className="space-y-3">
-        <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
+      <div className="space-y-2">
+        <h1 className="text-2xl lg:text-4xl font-bold text-gray-900">
           {product.name}
         </h1>
 
         {/* Badges Section */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Popular Badge with gradient */}
+          {/* Popular Badge - Professional Look */}
           {product.popular_with && product.popular_with.length > 0 && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm">
-              <Star className="w-3.5 h-3.5 fill-current" />
-              <span className="text-xs font-semibold">Popular with {product.popular_with[0]}</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0F172A] text-white shadow-sm border border-gray-800">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium tracking-wide">Popular with {product.popular_with[0]}</span>
             </div>
           )}
 
@@ -226,7 +227,7 @@ Can you provide more details and availability?`;
       <div className="border-b border-gray-200"></div>
 
       {/* Pricing Section */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center space-x-4">
           <span className="text-[26px] font-semibold text-gray-900">
             {formatPrice(bulkPrice)}
@@ -254,14 +255,17 @@ Can you provide more details and availability?`;
         )}
 
         {/* Stock Counter */}
+        {/* Stock Counter - Clean Status Pill */}
+        {/* Stock Counter - Minimal & Clean */}
         {product.stock_count !== undefined && (
-          <div className="flex items-center space-x-2">
-            <Package className="w-4 h-4 text-gray-600" />
-            <span className="text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
+            <div className={`w-2 h-2 rounded-full ${product.stock_count > 10 ? 'bg-green-500' : product.stock_count > 0 ? 'bg-amber-500' : 'bg-red-500'
+              }`} />
+            <span>
               {product.stock_count > 10
                 ? `${product.stock_count} in stock`
                 : product.stock_count > 0
-                  ? `Only ${product.stock_count} left in stock!`
+                  ? `Low Stock: Only ${product.stock_count} left`
                   : 'Out of stock'
               }
             </span>
@@ -308,33 +312,35 @@ Can you provide more details and availability?`;
       }
 
       {/* Quantity & Actions - Compact Inline Layout */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <label className="text-sm font-medium text-gray-700">
           Quantity
         </label>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           {/* Quantity selector */}
-          <div className="flex items-center space-x-2">
+          {/* Quantity selector - Premium Pill Design */}
+          {/* Quantity selector - Premium Squarish Design */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1 shadow-inner">
             <button
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
               disabled={quantity <= 1}
               aria-label="Decrease quantity"
-              className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:scale-95"
+              className="w-8 h-8 flex items-center justify-center rounded-md bg-white text-gray-900 shadow-sm hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 transition-all duration-200"
             >
               -
             </button>
-            <span className="w-12 text-center font-medium text-gray-900 leading-none">{quantity}</span>
+            <span className="w-10 text-center font-semibold text-gray-900 text-sm">{quantity}</span>
             <button
               onClick={() => setQuantity(quantity + 1)}
               aria-label="Increase quantity"
-              className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors active:scale-95"
+              className="w-8 h-8 flex items-center justify-center rounded-md bg-white text-gray-900 shadow-sm hover:scale-105 active:scale-95 transition-all duration-200"
             >
               +
             </button>
           </div>
 
           {/* Action buttons */}
-          <div className="flex flex-col sm:flex-row gap-2 flex-1 w-full sm:w-auto">
+          <div className="grid grid-cols-2 gap-3 flex-1 w-full">
             <Button
               onClick={handleAddToCart}
               className="h-12 flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-sm rounded-lg font-semibold text-sm uppercase tracking-wide transition-all duration-200 hover:scale-[1.02]"

@@ -113,9 +113,10 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div className="flex flex-row items-center gap-2 overflow-x-auto sm:overflow-visible pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide w-[calc(100%+2rem)] sm:w-full">
+
         {/* Filter Group */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-row items-center gap-2 flex-shrink-0 order-2 sm:order-1">
           {/* Space Filter */}
           <Popover>
             <PopoverTrigger asChild>
@@ -123,7 +124,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-9 rounded-lg px-4 text-sm font-medium transition-colors border",
+                  "h-9 rounded-lg px-4 text-sm font-medium transition-colors border whitespace-nowrap",
                   currentSpace
                     ? "bg-slate-900 text-white border-slate-900 hover:bg-slate-800 hover:text-white"
                     : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
@@ -170,7 +171,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-9 rounded-lg px-4 text-sm font-medium transition-colors border",
+                    "h-9 rounded-lg px-4 text-sm font-medium transition-colors border whitespace-nowrap",
                     currentSubcategory
                       ? "bg-slate-900 text-white border-slate-900 hover:bg-slate-800 hover:text-white"
                       : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
@@ -219,7 +220,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-9 rounded-lg px-4 text-sm font-medium transition-colors border",
+                  "h-9 rounded-lg px-4 text-sm font-medium transition-colors border whitespace-nowrap",
                   (currentMinPrice > 0 || currentMaxPrice < 1000000)
                     ? "bg-slate-900 text-white border-slate-900 hover:bg-slate-800 hover:text-white"
                     : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
@@ -267,7 +268,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-9 rounded-lg px-4 text-sm font-medium transition-colors border",
+                  "h-9 rounded-lg px-4 text-sm font-medium transition-colors border whitespace-nowrap",
                   currentAvailability.length > 0
                     ? "bg-slate-900 text-white border-slate-900 hover:bg-slate-800 hover:text-white"
                     : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
@@ -317,7 +318,7 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
               variant="link"
               size="sm"
               onClick={clearAllFilters}
-              className="h-9 px-3 text-slate-500 hover:text-slate-900"
+              className="h-9 px-3 text-slate-500 hover:text-slate-900 whitespace-nowrap"
             >
               Reset
             </Button>
@@ -325,10 +326,10 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
         </div>
 
         {/* Sort By */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Sort:</span>
+        <div className="flex items-center gap-2 flex-shrink-0 order-1 sm:order-2 sm:ml-auto">
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 hidden sm:inline">Sort:</span>
           <Select value={currentSort} onValueChange={handleSortChange}>
-            <SelectTrigger className="h-9 w-full sm:w-[180px] rounded-lg border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
+            <SelectTrigger className="h-9 w-[140px] sm:w-[180px] rounded-lg border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -340,6 +341,9 @@ export function ProductFilters({ spaces = [], totalProducts = 0, isAdmin = false
               <SelectItem value="name_desc">Name: Z to A</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Vertical Divider for Mobile */}
+          <div className="h-6 w-px bg-slate-200 mx-1 sm:hidden" />
         </div>
       </div>
     </div>

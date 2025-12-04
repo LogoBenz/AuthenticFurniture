@@ -32,6 +32,7 @@ export interface Product {
   subcategories?: Subcategory[];
 
   product_type?: string; // e.g., "Executive Tables", "Electric Desks", etc.
+  product_types?: string[]; // Multi-select support for types
   space?: Space;
   subcategory?: Subcategory;
   // Enhanced product view page fields

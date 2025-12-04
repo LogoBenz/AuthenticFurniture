@@ -114,9 +114,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   });
 
   return (
-    <div className="pt-14 sm:pt-16 pb-12 sm:pb-16">
+    <div className="pt-4 sm:pt-16 pb-12 sm:pb-16">
       <div className="w-full max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-4 sm:mb-8">
           {activeSpace || activeSubcategory ? (
             <div className="text-sm text-slate-600 dark:text-slate-300 mb-2">
               <a href="/products" className="hover:underline cursor-pointer">All</a>

@@ -16,6 +16,7 @@ import {
   Instagram,
   Twitter,
   ChevronUp,
+  ChevronDown,
   Info,
   HelpCircle,
   FileText,
@@ -24,6 +25,25 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+
+function FooterSection({ title, children }: { title: string, children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="border-b border-slate-800 md:border-none pb-4 md:pb-0">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full text-lg font-bold text-white font-heading tracking-wide md:cursor-default md:mb-6"
+      >
+        {title}
+        <ChevronDown className={`w-5 h-5 md:hidden transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      <div className={`space-y-4 mt-4 md:mt-0 overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'}`}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -49,76 +69,67 @@ export function Footer() {
     <footer className="bg-slate-950 text-slate-300 border-t border-slate-900 font-body">
       <div className="container mx-auto px-4 py-16">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16">
 
           {/* Customer Service Links */}
-          <div>
-            <h3 className="text-lg font-bold mb-6 text-white font-heading tracking-wide">Customer Service</h3>
-            <div className="space-y-4">
-              <Link href="/contact" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
-                <MessageCircle className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                Contact Us
-              </Link>
-              <Link href="/profile/orders" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
-                <ShoppingCart className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                Order Tracking
-              </Link>
-              <Link href="/contact#store" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
-                <Store className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                Buy in Store
-              </Link>
-            </div>
-          </div>
+          <FooterSection title="Customer Service">
+            <Link href="/contact" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
+              <MessageCircle className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
+              Contact Us
+            </Link>
+            <Link href="/profile/orders" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
+              <ShoppingCart className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
+              Order Tracking
+            </Link>
+            <Link href="/contact#store" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
+              <Store className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
+              Buy in Store
+            </Link>
+          </FooterSection>
 
           {/* Delivery & Payment */}
-          <div>
-            <h3 className="text-lg font-bold mb-6 text-white font-heading tracking-wide">Delivery & Payment</h3>
-            <div className="space-y-4">
-              <Link href="/shipping" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
-                <Truck className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                Shipping & Delivery
-              </Link>
-              <Link href="/payment-options" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
-                <CreditCard className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                Payment Options
-              </Link>
-              <Link href="/brands" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
-                <Shield className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                Our Brands
-              </Link>
-            </div>
-          </div>
+          <FooterSection title="Delivery & Payment">
+            <Link href="/shipping" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
+              <Truck className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
+              Shipping & Delivery
+            </Link>
+            <Link href="/payment-options" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
+              <CreditCard className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
+              Payment Options
+            </Link>
+            <Link href="/brands" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
+              <Shield className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
+              Our Brands
+            </Link>
+          </FooterSection>
 
           {/* Company Info */}
-          <div>
-            <h3 className="text-lg font-bold mb-6 text-white font-heading tracking-wide">Company</h3>
-            <div className="space-y-4">
-              <Link href="/about" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
-                <Info className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                About Us
-              </Link>
-              <Link href="/careers" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
-                <FileText className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                Careers
-              </Link>
-              <Link href="/faq" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
-                <HelpCircle className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                FAQ
-              </Link>
-              <Link href="/privacy-policy" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
-                <FileText className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                Privacy Policy
-              </Link>
-              <Link href="/terms" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
-                <Landmark className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                Terms of Service
-              </Link>
-            </div>
-          </div>
+          <FooterSection title="Company">
+            <Link href="/about" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
+              <Info className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
+              About Us
+            </Link>
+            <Link href="/careers" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
+              <FileText className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
+              Careers
+            </Link>
+            <Link href="/faq" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
+              <HelpCircle className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
+              FAQ
+            </Link>
+            <Link href="/privacy-policy" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
+              <FileText className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="flex items-center text-sm hover:text-blue-400 transition-colors group">
+              <Landmark className="w-4 h-4 mr-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
+              Terms of Service
+            </Link>
+          </FooterSection>
 
           {/* Contact & Social */}
-          <div>
-            <h3 className="text-lg font-bold mb-6 text-white font-heading tracking-wide">Get in Touch</h3>
+          <FooterSection title="Get in Touch">
             <div className="space-y-5">
               <div className="flex items-start text-sm group">
                 <MapPin className="w-4 h-4 mr-3 text-slate-500 flex-shrink-0 mt-0.5 group-hover:text-blue-400 transition-colors" />
@@ -152,7 +163,7 @@ export function Footer() {
                 </div>
               </div>
             </div>
-          </div>
+          </FooterSection>
         </div>
 
         <div className="h-px bg-slate-800 my-10"></div>

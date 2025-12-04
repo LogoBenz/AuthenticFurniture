@@ -105,18 +105,7 @@ export function Testimonials() {
 
                     {/* Content Card */}
                     <div className="absolute bottom-6 left-6 right-6">
-                      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 pt-12 relative shadow-xl">
-                        {/* Avatar - Floating above card */}
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2">
-                          <div className="relative w-16 h-16 rounded-full border-4 border-white dark:border-slate-900 overflow-hidden shadow-md">
-                            <Image
-                              src={testimonial.avatar}
-                              alt={testimonial.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        </div>
+                      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 relative shadow-xl">
 
                         <div className="text-center">
                           <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">

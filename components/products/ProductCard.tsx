@@ -21,7 +21,6 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView, variant = 'simple' }) => {
   const { addToCart, removeFromCart, isInCart } = useEnquiryCart();
   const { isInCompare, toggleCompare } = useCompare();
-  const [isHovered, setIsHovered] = useState(false);
 
   const isCompared = isInCompare(product.id.toString());
 
@@ -102,9 +101,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView, variant
     <NextUICard
       variant="flat"
       radius="sm"
-      className="group cursor-pointer flex flex-col h-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-blue-800 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-xl"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="group cursor-pointer flex flex-col h-full w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-blue-800 dark:hover:border-blue-500 transition-all duration-300 hover:shadow-xl"
     >
       <Link href={`/products/${product.slug}`} className="block h-full flex flex-col">
         {/* Image Container - Taller and Centered */}
@@ -113,7 +110,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView, variant
             src={imageUrl}
             alt={product.name}
             fill
-            className={`${product.category.toLowerCase().includes('chair') || product.category.toLowerCase().includes('seating') ? 'object-contain' : 'object-cover'} group-hover:scale-105 transition-transform duration-500 ease-out`}
+            className={`${product.category.toLowerCase().includes('chair') || product.category.toLowerCase().includes('seating') ? 'object-contain' : 'object-cover'} group-hover:scale-105 transition-all duration-300 ease-out`}
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwABmX/9k="
@@ -125,8 +122,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView, variant
               src={secondImageUrl}
               alt={`${product.name} - view 2`}
               fill
-              className={`absolute inset-0 z-10 ${product.category.toLowerCase().includes('chair') || product.category.toLowerCase().includes('seating') ? 'object-contain' : 'object-cover'} opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out`}
+              className={`absolute inset-0 z-10 ${product.category.toLowerCase().includes('chair') || product.category.toLowerCase().includes('seating') ? 'object-contain' : 'object-cover'} opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300 ease-out`}
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              loading="eager"
             />
           )}
 
@@ -145,7 +143,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView, variant
           )}
 
           {/* Action Icons - Top Right (Visible on Hover) */}
-          <div className={`absolute top-4 right-4 flex flex-col gap-2 transition-all duration-300 z-20 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
+          {/* Action Icons - Top Right (Visible on Hover) */}
+          <div className="absolute top-4 right-4 flex flex-col gap-2 transition-all duration-300 z-20 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0">
             <button
               onClick={(e) => {
                 e.preventDefault();

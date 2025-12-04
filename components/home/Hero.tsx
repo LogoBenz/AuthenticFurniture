@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 // Main hero carousel images with specific alignment
 const mainHeroImages = [
@@ -17,17 +18,20 @@ const bottomRightImage = "promoHero/sideStudentC.png";
 export function Hero() {
   // State for main hero slideshow
   const [mainCurrentImageIndex, setMainCurrentImageIndex] = useState(0);
-  const [direction, setDirection] = useState(1); // 1 for forward, -1 for backward
+
+  const changeSlide = (newIndex: number, direction: 'next' | 'prev') => {
+    setMainCurrentImageIndex(newIndex);
+  };
 
   // Auto-rotate main hero images with smooth sliding
   useEffect(() => {
     const interval = setInterval(() => {
-      setDirection(1);
-      setMainCurrentImageIndex((prev) => (prev + 1) % mainHeroImages.length);
-    }, 5000); // Changed to 5 seconds for better viewing
+      const nextIndex = (mainCurrentImageIndex + 1) % mainHeroImages.length;
+      changeSlide(nextIndex, 'next');
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [mainCurrentImageIndex]);
 
   return (
     <section className="relative pt-4 pb-4 sm:pb-6 bg-white dark:bg-slate-900">
@@ -43,22 +47,26 @@ export function Hero() {
             transition={{ duration: 0.8 }}
             className="relative overflow-hidden rounded-xl transition-all duration-300 flex-shrink-0 w-full lg:w-[883px] aspect-[4/3] sm:aspect-[16/9] lg:aspect-[883/500]"
           >
-            {/* Background Image Carousel with Smooth Sliding - No Fade */}
+            {/* Background Image Carousel with Framer Motion */}
             <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-              <AnimatePresence initial={false} mode="popLayout">
-                <motion.img
+              <AnimatePresence mode="wait">
+                <motion.div
                   key={mainCurrentImageIndex}
-                  src={mainHeroImages[mainCurrentImageIndex].src}
-                  alt="Modern Nigerian Furniture Collection"
-                  className={`absolute w-full h-full object-cover ${mainHeroImages[mainCurrentImageIndex].align}`}
-                  initial={{ x: '100%' }}
-                  animate={{ x: 0 }}
-                  exit={{ x: '-100%' }}
-                  transition={{
-                    duration: 0.8,
-                    ease: [0.25, 0.1, 0.25, 1]
-                  }}
-                />
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="absolute inset-0"
+                >
+                  <Image
+                    src={`/${mainHeroImages[mainCurrentImageIndex].src}`}
+                    alt="Modern Nigerian Furniture Collection"
+                    fill
+                    className={`object-cover ${mainHeroImages[mainCurrentImageIndex].align}`}
+                    priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 883px, 883px"
+                  />
+                </motion.div>
               </AnimatePresence>
             </div>
 
@@ -68,8 +76,8 @@ export function Hero() {
                 <button
                   key={index}
                   onClick={() => {
-                    setDirection(index > mainCurrentImageIndex ? 1 : -1);
-                    setMainCurrentImageIndex(index);
+                    const direction = index > mainCurrentImageIndex ? 'next' : 'prev';
+                    changeSlide(index, direction);
                   }}
                   className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer hover:scale-125 ${index === mainCurrentImageIndex
                     ? 'bg-white shadow-lg w-6'
@@ -90,10 +98,12 @@ export function Hero() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="relative overflow-hidden rounded-xl transition-all duration-300 w-full aspect-[3/2] sm:aspect-[16/9] lg:aspect-[429/240]"
             >
-              <img
-                src={topRightImage}
+              <Image
+                src={`/${topRightImage}`}
                 alt="Office Furniture"
-                className="w-full h-full object-cover object-center"
+                fill
+                className="object-cover object-center"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 429px, 429px"
               />
             </motion.div>
 
@@ -104,12 +114,14 @@ export function Hero() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="relative overflow-hidden rounded-xl transition-all duration-300 w-full aspect-[3/2] sm:aspect-[16/9] lg:aspect-[429/240]"
             >
-              <img
-                src={bottomRightImage}
+              <Image
+                src={`/${bottomRightImage}`}
                 alt="Student Furniture"
-                className="w-full h-full object-cover object-center"
+                fill
+                className="object-cover object-center"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 429px, 429px"
               />
-            </motion.div >
+            </motion.div>
           </div >
         </div >
       </div >

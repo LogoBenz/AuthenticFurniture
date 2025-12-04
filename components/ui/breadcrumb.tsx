@@ -12,16 +12,16 @@ interface BreadcrumbProps {
 
 export function Breadcrumb({ items }: BreadcrumbProps) {
   return (
-    <nav aria-label="Breadcrumb" className="mb-4">
-      <ol className="flex items-center space-x-2 text-sm">
+    <nav aria-label="Breadcrumb" className="overflow-hidden">
+      <ol className="flex items-center space-x-2 text-sm overflow-x-auto whitespace-nowrap scrollbar-hide py-1">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
 
           return (
-            <li key={index} className="flex items-center">
+            <li key={index} className="flex items-center flex-shrink-0">
               {index > 0 && (
                 <ChevronRight
-                  className="w-4 h-4 text-gray-400 mx-2"
+                  className="w-4 h-4 text-gray-400 mx-2 flex-shrink-0"
                   aria-hidden="true"
                 />
               )}
@@ -36,8 +36,8 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
               ) : (
                 <span
                   className={`${isLast
-                      ? "text-gray-900 font-medium truncate max-w-[200px] sm:max-w-none"
-                      : "text-gray-500"
+                    ? "text-gray-900 font-medium"
+                    : "text-gray-500"
                     }`}
                   aria-current={isLast ? "page" : undefined}
                 >

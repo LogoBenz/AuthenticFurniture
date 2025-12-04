@@ -17,24 +17,62 @@ export function ModernProductInfo({ product }: ModernProductInfoProps) {
   const { addToCart, removeFromCart, isInCart, isLoaded } = useEnquiryCart();
   const [quantity, setQuantity] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   const isProductInCart = isLoaded ? isInCart(product.id) : false;
 
   // Calculate pricing
   const originalPrice = (product as any).original_price || product.price;
   const discountPercent = (product as any).discount_percent || 0;
   const hasDiscount = discountPercent > 0;
-  const currentPrice = hasDiscount 
+  const currentPrice = hasDiscount
     ? originalPrice * (1 - discountPercent / 100)
     : originalPrice;
 
-  const handleAddToCart = useCallback(async () => {
+  const handleAddToCart = useCallback(async (e?: React.MouseEvent<HTMLButtonElement>) => {
     if (!isLoaded || !product.inStock || isProcessing) {
       return;
     }
 
+    // Flying Animation Logic
+    if (e) {
+      const button = e.currentTarget;
+      const cartIcon = document.querySelector('[aria-label="Cart"]'); // Ensure your cart icon has this aria-label
+
+      if (cartIcon) {
+        const buttonRect = button.getBoundingClientRect();
+        const cartRect = cartIcon.getBoundingClientRect();
+
+        const flyingItem = document.createElement('div');
+        flyingItem.style.position = 'fixed';
+        flyingItem.style.left = `${buttonRect.left + buttonRect.width / 2}px`;
+        flyingItem.style.top = `${buttonRect.top + buttonRect.height / 2}px`;
+        flyingItem.style.width = '20px';
+        flyingItem.style.height = '20px';
+        flyingItem.style.backgroundColor = '#2563eb'; // Blue-600
+        flyingItem.style.borderRadius = '50%';
+        flyingItem.style.zIndex = '9999';
+        flyingItem.style.pointerEvents = 'none';
+        flyingItem.style.transition = 'all 0.8s cubic-bezier(0.2, 1, 0.3, 1)';
+
+        document.body.appendChild(flyingItem);
+
+        // Force reflow
+        flyingItem.getBoundingClientRect();
+
+        // Animate to cart
+        flyingItem.style.left = `${cartRect.left + cartRect.width / 2}px`;
+        flyingItem.style.top = `${cartRect.top + cartRect.height / 2}px`;
+        flyingItem.style.opacity = '0';
+        flyingItem.style.transform = 'scale(0.5)';
+
+        setTimeout(() => {
+          document.body.removeChild(flyingItem);
+        }, 800);
+      }
+    }
+
     setIsProcessing(true);
-    
+
     try {
       if (isProductInCart) {
         removeFromCart(product.id);
@@ -44,7 +82,7 @@ export function ModernProductInfo({ product }: ModernProductInfoProps) {
           addToCart(product);
         }
       }
-      
+
       setTimeout(() => {
         setIsProcessing(false);
       }, 300);
@@ -64,7 +102,7 @@ export function ModernProductInfo({ product }: ModernProductInfoProps) {
 
   const handleWhatsApp = () => {
     const message = `Hi! I'm interested in the ${product.name} from your website.\n\nProduct: ${product.name}\nCategory: ${product.category}\nPrice: ${formatPrice(currentPrice)}\nQuantity: ${quantity}\nLink: ${window.location.href}\n\nPlease provide more details about availability, pricing, and delivery options.`;
-    
+
     const phoneNumber = "2348012345678";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
@@ -157,7 +195,7 @@ export function ModernProductInfo({ product }: ModernProductInfoProps) {
                 </>
               )}
             </Button>
-            
+
             <Button
               onClick={handleBuyNow}
               disabled={!isLoaded || isProcessing}
@@ -191,7 +229,7 @@ export function ModernProductInfo({ product }: ModernProductInfoProps) {
             <p className="text-xs text-muted-foreground">On orders over ₦10,000</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
             <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -201,7 +239,7 @@ export function ModernProductInfo({ product }: ModernProductInfoProps) {
             <p className="text-xs text-muted-foreground">In 3–5 working days</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
             <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400" />

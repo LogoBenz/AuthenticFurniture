@@ -71,14 +71,29 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   return (
-    <main className="pt-6 pb-16">
+    <main className="pt-2 pb-16">
       <div className="container mx-auto px-4 max-w-[1450px]">
         {/* Breadcrumbs */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-2">
           <Breadcrumb
             items={[
               { label: "Home", href: "/" },
-              { label: "Products", href: "/products" },
+              // Add Space if available
+              ...(product.spaces && product.spaces.length > 0 ? [{
+                label: product.spaces[0].name,
+                href: `/products?space=${product.spaces[0].slug}`
+              }] : product.space ? [{
+                label: product.space.name,
+                href: `/products?space=${product.space.slug}`
+              }] : []),
+              // Add Subcategory if available
+              ...(product.subcategories && product.subcategories.length > 0 ? [{
+                label: product.subcategories[0].name,
+                href: `/products?subcategory=${product.subcategories[0].slug}`
+              }] : product.subcategory ? [{
+                label: product.subcategory.name,
+                href: `/products?subcategory=${product.subcategory.slug}`
+              }] : []),
               { label: product.name }
             ]}
           />

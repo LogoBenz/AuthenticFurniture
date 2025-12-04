@@ -52,15 +52,15 @@ export function ProductCarousel({ title, subtitle, products }: ProductCarouselPr
     if (products.length === 0) return null;
 
     return (
-        <div className="py-12 border-t border-gray-100">
-            <div className="w-full max-w-[1450px] mx-auto px-4">
+        <div className="py-8 border-t border-gray-100">
+            <div className="w-full">
                 {/* Header with Navigation */}
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-6">
                     <div>
                         <motion.h2
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="text-2xl font-semibold text-gray-900"
+                            className="text-xl md:text-2xl font-semibold text-gray-900"
                         >
                             {title}
                         </motion.h2>
@@ -99,10 +99,10 @@ export function ProductCarousel({ title, subtitle, products }: ProductCarouselPr
                 <div className="relative">
                     <div
                         ref={scrollContainerRef}
-                        className="overflow-x-auto scrollbar-hide scroll-smooth"
+                        className="overflow-x-auto scrollbar-hide scroll-smooth -mx-4 px-4 md:mx-0 md:px-0"
                         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
-                        <div className="flex gap-8">
+                        <div className="flex gap-4 md:gap-6">
                             {products.map((product, index) => (
                                 <motion.div
                                     key={product.id}
@@ -113,7 +113,7 @@ export function ProductCarousel({ title, subtitle, products }: ProductCarouselPr
                                         duration: 0.5,
                                         ease: "easeOut"
                                     }}
-                                    className="flex-shrink-0 w-[300px] sm:w-[350px] product-card"
+                                    className="flex-shrink-0 w-[260px] sm:w-[300px] product-card"
                                 >
                                     <ProductCard
                                         product={product}
@@ -128,7 +128,7 @@ export function ProductCarousel({ title, subtitle, products }: ProductCarouselPr
                     </div>
 
                     {/* Minimal Scrollbar */}
-                    <div className="mt-8">
+                    <div className="mt-6 md:mt-8">
                         <div
                             className="relative h-1 bg-gray-200 rounded-full overflow-hidden cursor-pointer max-w-xs mx-auto"
                             onClick={(e) => {

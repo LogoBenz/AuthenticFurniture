@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, ZoomIn, Play } from "lucide-react";
 import { useImageWithFallback } from "@/hooks/use-image-with-fallback";
 import { ImageFallback } from "./ImageFallback";
 
+
 interface EnhancedProductGalleryProps {
   images: string[];
   videos?: string[];
@@ -35,16 +36,20 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
     console.warn(`Thumbnail load failed for index ${index}:`, allMedia[index]);
   };
 
+  const changeMedia = (newIndex: number) => {
+    setCurrentImageIndex(newIndex);
+  };
+
   const nextMedia = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % allMedia.length);
+    changeMedia((currentImageIndex + 1) % allMedia.length);
   };
 
   const prevMedia = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + allMedia.length) % allMedia.length);
+    changeMedia((currentImageIndex - 1 + allMedia.length) % allMedia.length);
   };
 
   const goToMedia = (index: number) => {
-    setCurrentImageIndex(index);
+    changeMedia(index);
   };
 
   if (!allMedia || allMedia.length === 0) {
@@ -66,6 +71,7 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
             className="w-full h-full object-cover"
             onLoadedData={() => console.log('Video loaded:', allMedia[currentImageIndex])}
             onError={(e) => console.error('Video error:', e)}
+            style={{}}
           >
             Your browser does not support the video tag.
           </video>
@@ -78,10 +84,11 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
           />
         ) : (
           <Image
+            key={currentImageIndex}
             src={imgSrc}
             alt={`${productName} - Media ${currentImageIndex + 1}`}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.02] animate-in fade-in duration-300"
             priority
             onError={handleError}
           />
@@ -137,7 +144,7 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
               <button
                 key={index}
                 onClick={() => goToMedia(index)}
-                className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${index === currentImageIndex
+                className={`relative flex-shrink-0 w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${index === currentImageIndex
                   ? "border-blue-800"
                   : "border-gray-200 hover:border-gray-300"
                   }`}

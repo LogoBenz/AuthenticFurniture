@@ -64,6 +64,7 @@ export const ProductFormDialog = memo(function ProductFormDialog({
         space_ids: [] as string[],
         subcategory_ids: [] as string[],
         product_type: "" as string | undefined,
+        product_types: [] as string[],
         is_featured_deal: false,
         deal_position: "",
         deal_priority: "1",
@@ -107,6 +108,7 @@ export const ProductFormDialog = memo(function ProductFormDialog({
                     space_ids: (product as any).space_ids || ((product as any).space_id ? [(product as any).space_id] : []),
                     subcategory_ids: (product as any).subcategory_ids || ((product as any).subcategory_id ? [(product as any).subcategory_id] : []),
                     product_type: String((product as any).product_type ?? ""),
+                    product_types: (product as any).product_types || ((product as any).product_type ? [(product as any).product_type] : []),
                     is_featured_deal: Boolean((product as any).is_featured_deal),
                     deal_position: String((product as any).deal_position ?? ""),
                     deal_priority: String((product as any).deal_priority ?? "1"),
@@ -152,6 +154,7 @@ export const ProductFormDialog = memo(function ProductFormDialog({
                     space_ids: [],
                     subcategory_ids: [],
                     product_type: "",
+                    product_types: [],
                     is_featured_deal: false,
                     deal_position: "",
                     deal_priority: "1",
@@ -264,7 +267,8 @@ export const ProductFormDialog = memo(function ProductFormDialog({
                 subcategory_id: formData.subcategory_ids[0], // Keep primary for backward compatibility
                 space_ids: formData.space_ids,
                 subcategory_ids: formData.subcategory_ids,
-                product_type: formData.product_type,
+                product_type: formData.product_types[0] || formData.product_type, // Keep primary for backward compatibility
+                product_types: formData.product_types,
                 is_featured_deal: formData.is_featured_deal,
                 deal_position: formData.deal_position ? parseInt(formData.deal_position) : null,
                 deal_priority: parseInt(formData.deal_priority) || 1,
@@ -480,38 +484,30 @@ export const ProductFormDialog = memo(function ProductFormDialog({
 
                                 return (
                                     <div>
-                                        <Label htmlFor="product_type">
+                                        <Label htmlFor="product_types">
                                             {isOfficeTables ? "Table Type" : "Chair Type"} (Optional)
                                         </Label>
-                                        <Select
-                                            value={formData.product_type || "none"}
-                                            onValueChange={(value) => setFormData({ ...formData, product_type: value === "none" ? undefined : value })}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={`Select ${isOfficeTables ? "table" : "chair"} type`} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none">None</SelectItem>
-                                                {isOfficeTables && (
-                                                    <>
-                                                        <SelectItem value="Executive Tables">Executive Tables</SelectItem>
-                                                        <SelectItem value="Electric Desks">Electric Desks</SelectItem>
-                                                        <SelectItem value="Reception Tables">Reception Tables</SelectItem>
-                                                        <SelectItem value="Conference Tables">Conference Tables</SelectItem>
-                                                        <SelectItem value="Standard Tables">Standard Tables</SelectItem>
-                                                    </>
-                                                )}
-                                                {isOfficeChairs && (
-                                                    <>
-                                                        <SelectItem value="Ergonomic Chairs">Ergonomic Chairs</SelectItem>
-                                                        <SelectItem value="Mesh Chairs">Mesh Chairs</SelectItem>
-                                                        <SelectItem value="Swivel Chairs">Swivel Chairs</SelectItem>
-                                                        <SelectItem value="Guest Chairs">Guest Chairs</SelectItem>
-                                                        <SelectItem value="Task Chairs">Task Chairs</SelectItem>
-                                                    </>
-                                                )}
-                                            </SelectContent>
-                                        </Select>
+                                        <MultiSelect
+                                            options={[
+                                                ...(isOfficeTables ? [
+                                                    { label: "Executive Tables", value: "Executive Tables" },
+                                                    { label: "Electric Desks", value: "Electric Desks" },
+                                                    { label: "Reception Tables", value: "Reception Tables" },
+                                                    { label: "Conference Tables", value: "Conference Tables" },
+                                                    { label: "Standard Tables", value: "Standard Tables" }
+                                                ] : []),
+                                                ...(isOfficeChairs ? [
+                                                    { label: "Ergonomic Chairs", value: "Ergonomic Chairs" },
+                                                    { label: "Mesh Chairs", value: "Mesh Chairs" },
+                                                    { label: "Swivel Chairs", value: "Swivel Chairs" },
+                                                    { label: "Guest Chairs", value: "Guest Chairs" },
+                                                    { label: "Task Chairs", value: "Task Chairs" }
+                                                ] : [])
+                                            ]}
+                                            selected={formData.product_types}
+                                            onChange={(selected) => setFormData({ ...formData, product_types: selected })}
+                                            placeholder={`Select ${isOfficeTables ? "table" : "chair"} types...`}
+                                        />
                                         <p className="text-xs text-gray-500 mt-1">
                                             Used for filtering in the {isOfficeTables ? "Office Tables" : "Office Chairs"} section
                                         </p>

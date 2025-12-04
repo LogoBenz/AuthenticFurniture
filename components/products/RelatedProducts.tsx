@@ -88,7 +88,7 @@ export function RelatedProducts({ currentProduct, limit = 8 }: RelatedProductsPr
   }
 
   return (
-    <div className="space-y-8">
+    <div>
       <ProductCarousel
         title="Related Products"
         products={relatedProducts}

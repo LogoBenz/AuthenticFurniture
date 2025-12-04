@@ -41,7 +41,7 @@ export function CTASection() {
               <Button
                 asChild
                 size="lg"
-                className="bg-white text-slate-900 hover:bg-blue-50 hover:scale-105 transition-all duration-300 rounded-full px-12 py-8 text-lg font-bold shadow-[0_0_20px_rgba(255,255,255,0.3)] border border-white/50"
+                className="bg-white text-slate-900 hover:bg-blue-50 hover:scale-105 transition-all duration-300 rounded-xl px-12 py-8 text-lg font-bold shadow-[0_0_20px_rgba(255,255,255,0.3)] border border-white/50"
               >
                 <Link href="/products">Browse Products</Link>
               </Button>
@@ -49,7 +49,7 @@ export function CTASection() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="bg-black/20 border-white/30 text-white hover:bg-white/10 hover:border-white/60 rounded-full px-12 py-8 text-lg font-medium backdrop-blur-sm transition-all duration-300"
+                className="bg-black/20 border-white/30 text-white hover:bg-white/10 hover:border-white/60 rounded-xl px-12 py-8 text-lg font-medium backdrop-blur-sm transition-all duration-300"
               >
                 <Link href="/contact">Contact Us</Link>
               </Button>
