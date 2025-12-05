@@ -2,7 +2,7 @@ import './globals.css';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { Inter, DM_Sans } from 'next/font/google';
-import { CrazyNavbar } from '@/components/layout/CrazyNavbar';
+import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ThemeProvider } from '@/components/layout/ThemeProvider';
 import { FloatingWhatsAppButton } from '@/components/ui/whatsapp-button';
@@ -11,6 +11,7 @@ import { NewsletterPopup } from '@/components/ui/NewsletterPopup';
 import { CompareBar } from '@/components/products/CompareBar';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import { MainLayoutWrapper } from '@/components/layout/MainLayoutWrapper';
+import { Toaster } from '@/components/ui/sonner';
 
 // Professional font pairing - DM Sans for headings, Inter for body
 const dmSans = DM_Sans({
@@ -50,13 +51,14 @@ export default function RootLayout({
             <EnquiryCartProvider>
               <div className="flex flex-col min-h-screen">
                 <Suspense fallback={null}>
-                  <CrazyNavbar />
+                  <Header />
                 </Suspense>
                 <MainLayoutWrapper>{children}</MainLayoutWrapper>
                 <Footer />
                 <FloatingWhatsAppButton />
                 <NewsletterPopup />
                 <CompareBar />
+                <Toaster />
               </div>
             </EnquiryCartProvider>
           </QueryProvider>

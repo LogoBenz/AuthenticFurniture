@@ -24,25 +24,25 @@ const iconSizes = {
   lg: 'w-6 h-6'
 };
 
-export function WishlistButton({ 
-  productId, 
-  size = 'md', 
-  className 
+export function WishlistButton({
+  productId,
+  size = 'md',
+  className
 }: WishlistButtonProps) {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [isLoading, setIsLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
-  
+
   const inWishlist = isInWishlist(productId);
-  
+
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     console.log('🔘 Wishlist button clicked for product:', productId);
-    
+
     if (isLoading) return;
-    
+
     setIsLoading(true);
     try {
       console.log('📝 Toggling wishlist...');
@@ -54,9 +54,9 @@ export function WishlistButton({
       setIsLoading(false);
     }
   };
-  
+
   const tooltipText = inWishlist ? 'Remove from wishlist' : 'Add to wishlist';
-  
+
   return (
     <div className="relative">
       <AnimatePresence>
@@ -75,7 +75,7 @@ export function WishlistButton({
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       <motion.button
         onClick={handleClick}
         onMouseEnter={() => setShowTooltip(true)}
@@ -94,6 +94,7 @@ export function WishlistButton({
           className
         )}
         aria-label={tooltipText}
+        aria-pressed={inWishlist}
       >
         {isLoading ? (
           <motion.div
@@ -110,24 +111,24 @@ export function WishlistButton({
             key={inWishlist ? 'filled' : 'outlined'}
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            transition={{ 
-              type: 'spring', 
-              stiffness: 500, 
-              damping: 30 
+            transition={{
+              type: 'spring',
+              stiffness: 500,
+              damping: 30
             }}
           >
             <Heart
               className={cn(
                 'transition-colors duration-200',
                 iconSizes[size],
-                inWishlist 
-                  ? 'fill-red-500 text-red-500' 
+                inWishlist
+                  ? 'fill-red-500 text-red-500'
                   : 'text-slate-600 hover:text-red-400'
               )}
             />
           </motion.div>
         )}
-        
+
         <AnimatePresence>
           {inWishlist && (
             <motion.div

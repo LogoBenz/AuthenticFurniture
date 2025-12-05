@@ -1,9 +1,16 @@
 "use client";
 
-import { ShoppingCart } from "lucide-react";
 import { useEnquiryCart } from "@/hooks/use-enquiry-cart";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+function CustomCartIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M0 1h4.764l.545 2h18.078l-3.666 11H7.78l-.5 2H22v2H4.72l1.246-4.989L3.236 3H0V1Zm7.764 11h10.515l2.334-7H5.855l1.909 7ZM4 21a2 2 0 1 1 4 0a2 2 0 0 1-4 0Zm14 0a2 2 0 1 1 4 0a2 2 0 0 1-4 0Z" />
+    </svg>
+  );
+}
 
 export function CartIndicator() {
   const { getCartCount, isLoaded } = useEnquiryCart();
@@ -18,7 +25,7 @@ export function CartIndicator() {
   if (!mounted || !isLoaded) {
     return (
       <div className="flex items-center">
-        <ShoppingCart className="h-5 w-5" />
+        <CustomCartIcon className="h-5 w-5" />
       </div>
     );
   }
@@ -27,7 +34,7 @@ export function CartIndicator() {
 
   return (
     <>
-      <ShoppingCart className="h-5 w-5" />
+      <CustomCartIcon className="h-5 w-5" />
       <AnimatePresence>
         {cartCount > 0 && (
           <motion.div

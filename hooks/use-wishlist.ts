@@ -1,9 +1,8 @@
-"use client";
-
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { supabase as createClient } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 // Types
 interface UseWishlistReturn {
@@ -24,6 +23,7 @@ interface GuestWishlistData {
 
 // Constants
 const GUEST_WISHLIST_KEY = 'guest_wishlist';
+const GUEST_INFO_SHOWN_KEY = 'wishlist_guest_info_shown';
 const MAX_WISHLIST_ITEMS = 100;
 const QUERY_KEY = ['wishlist'];
 
@@ -87,20 +87,7 @@ export function useWishlist(): UseWishlistReturn {
 
         if (error) throw error;
 
-        // Check if we need to sync guest items
-        const guestItems = getGuestWishlist();
-        if (guestItems.length > 0) {
-          // We have guest items to sync. 
-          // NOTE: Ideally this should be a separate mutation or handled once on login,
-          // but for simplicity we'll just return the merged list here and let the user interactions sync it later
-          // or we could trigger a sync.
-          // For now, let's just return DB items. 
-          // A proper sync strategy would be to run a mutation on mount if guest items exist.
-          // To keep this refactor focused, we will assume sync happens or user re-adds.
-          // Actually, let's just clear guest storage to avoid confusion if they are logged in.
-          localStorage.removeItem(GUEST_WISHLIST_KEY);
-        }
-
+        // Note: active sync is handled in useEffect below
         return data?.map((item: any) => item.product_id) || [];
       }
 
@@ -147,6 +134,25 @@ export function useWishlist(): UseWishlistReturn {
       // Rollback
       queryClient.setQueryData(QUERY_KEY, context?.previousWishlist);
       console.error(ERROR_MESSAGES.ADD_FAILED, err);
+      toast.error(ERROR_MESSAGES.ADD_FAILED);
+    },
+    onSuccess: () => {
+      toast.success('Added to wishlist');
+
+      // Show info tip for guests on first add
+      if (!isAuthenticated && typeof window !== 'undefined') {
+        const hasShownInfo = localStorage.getItem(GUEST_INFO_SHOWN_KEY);
+        if (!hasShownInfo) {
+          toast.info('Sign in to save your wishlist across devices', {
+            duration: 6000,
+            cancel: {
+              label: 'Dismiss',
+              onClick: () => { },
+            },
+          });
+          localStorage.setItem(GUEST_INFO_SHOWN_KEY, 'true');
+        }
+      }
     },
     onSettled: () => {
       // Invalidate to refetch true state
@@ -182,6 +188,10 @@ export function useWishlist(): UseWishlistReturn {
     onError: (err, productId, context) => {
       queryClient.setQueryData(QUERY_KEY, context?.previousWishlist);
       console.error(ERROR_MESSAGES.REMOVE_FAILED, err);
+      toast.error(ERROR_MESSAGES.REMOVE_FAILED);
+    },
+    onSuccess: () => {
+      toast.success('Removed from wishlist');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -205,6 +215,82 @@ export function useWishlist(): UseWishlistReturn {
     }
   });
 
+  // --- Realtime Subscription ---
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    console.log('🔌 Subscribing to wishlist changes');
+    const channel = supabase
+      .channel('wishlist_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'wishlists',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('🔄 Realtime wishlist change:', payload);
+          queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔌 Unsubscribing from wishlist changes');
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthenticated, user, queryClient, supabase]);
+
+  // --- Sync Logic: Guest -> Auth ---
+
+  useEffect(() => {
+    const syncGuestWishlist = async () => {
+      if (!isAuthenticated || !user) return;
+
+      const guestItems = getGuestWishlist();
+      if (guestItems.length === 0) return;
+
+      try {
+        // Create insert payload
+        const inserts = guestItems.map(productId => ({
+          user_id: user.id,
+          product_id: productId
+        }));
+
+        // Upsert to DB (ignore duplicates handled by ON CONFLICT or separate check, 
+        // but here we rely on Supabase ignoring if we used insert with onConflict if setup, 
+        // or we just try insert and ignore errors for simplicity as duplicates will fail gracefully usually 
+        // OR better: use upsert with ignoreDuplicates: true if policy allows)
+
+        // Simple approach: insert loop or bulk insert. 
+        // Supabase `upsert` with `ignoreDuplicates` is best.
+        const { error } = await supabase
+          .from('wishlists')
+          .upsert(inserts, { onConflict: 'user_id,product_id', ignoreDuplicates: true });
+
+        if (error) {
+          console.error("Sync error:", error);
+          // Don't clear local storage if sync fails so we can try again later? 
+          // For now, we log it.
+        } else {
+          // Success: Clear guest wishlist and refetch
+          localStorage.removeItem(GUEST_WISHLIST_KEY);
+          toast.success("Wishlist synced with your account");
+          queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        }
+      } catch (err) {
+        console.error("Sync exception:", err);
+      }
+    };
+
+    if (isAuthenticated) {
+      syncGuestWishlist();
+    }
+  }, [isAuthenticated, user, getGuestWishlist, queryClient, supabase]);
+
   // --- Public API ---
 
   const isInWishlist = useCallback((productId: string): boolean => {
@@ -214,6 +300,7 @@ export function useWishlist(): UseWishlistReturn {
   const addToWishlist = useCallback((productId: string) => {
     if (wishlist.length >= MAX_WISHLIST_ITEMS) {
       console.warn(ERROR_MESSAGES.STORAGE_FULL);
+      toast.error(ERROR_MESSAGES.STORAGE_FULL);
       return;
     }
     addMutation.mutate(productId);

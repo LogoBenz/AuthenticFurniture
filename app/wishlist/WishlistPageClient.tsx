@@ -37,25 +37,25 @@ function EmptyWishlistState() {
       <motion.div
         initial={{ scale: 0.8 }}
         animate={{ scale: 1 }}
-        transition={{ 
-          delay: 0.2, 
-          type: 'spring', 
-          stiffness: 200, 
-          damping: 20 
+        transition={{
+          delay: 0.2,
+          type: 'spring',
+          stiffness: 200,
+          damping: 20
         }}
         className="mb-6"
       >
         <Heart className="w-24 h-24 text-slate-300 dark:text-slate-600" />
       </motion.div>
-      
+
       <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-3">
         Your Wishlist is Empty
       </h2>
-      
+
       <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md">
         Save products you love to view them later. Start building your dream furniture collection!
       </p>
-      
+
       <Link href="/products">
         <Button size="lg" className="gap-2">
           <ShoppingBag className="w-5 h-5" />
@@ -66,12 +66,12 @@ function EmptyWishlistState() {
   );
 }
 
-function WishlistHeader({ 
-  count, 
-  onClearAll 
-}: { 
-  count: number; 
-  onClearAll: () => void; 
+function WishlistHeader({
+  count,
+  onClearAll
+}: {
+  count: number;
+  onClearAll: () => void;
 }) {
   return (
     <div className="flex items-center justify-between mb-8">
@@ -83,7 +83,7 @@ function WishlistHeader({
           {count} {count === 1 ? 'item' : 'items'} saved
         </p>
       </div>
-      
+
       {count > 0 && (
         <Button
           variant="outline"
@@ -99,50 +99,50 @@ function WishlistHeader({
   );
 }
 
+// Transform database row to Product type
+const transformProduct = (row: any): Product => {
+  // Handle images - could be stored as JSON array, comma-separated string, or single URL
+  let images: string[] = [];
+
+  if (row.images) {
+    if (Array.isArray(row.images)) {
+      images = row.images;
+    } else if (typeof row.images === 'string') {
+      try {
+        const parsed = JSON.parse(row.images);
+        images = Array.isArray(parsed) ? parsed : [row.images];
+      } catch {
+        images = row.images.split(',').map((url: string) => url.trim()).filter(Boolean);
+      }
+    }
+  }
+
+  // Fallback to single image_url if no images array
+  if (images.length === 0 && row.image_url) {
+    images = [row.image_url];
+  }
+
+  // Ensure we have at least one image
+  if (images.length === 0) {
+    images = ['/placeholder-product.jpg'];
+  }
+
+  return {
+    ...row,
+    id: String(row.id || ''),
+    images: images,
+    imageUrl: images[0], // Backward compatibility - use first image
+    image_url: row.image_url || images[0],
+    inStock: Boolean(row.in_stock),
+    isFeatured: Boolean(row.is_featured),
+  } as Product;
+};
+
 export function WishlistPageClient() {
   const { wishlist, loading, clearWishlist } = useWishlist();
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const supabase = createClient;
-  
-  // Transform database row to Product type
-  const transformProduct = (row: any): Product => {
-    // Handle images - could be stored as JSON array, comma-separated string, or single URL
-    let images: string[] = [];
-    
-    if (row.images) {
-      if (Array.isArray(row.images)) {
-        images = row.images;
-      } else if (typeof row.images === 'string') {
-        try {
-          const parsed = JSON.parse(row.images);
-          images = Array.isArray(parsed) ? parsed : [row.images];
-        } catch {
-          images = row.images.split(',').map((url: string) => url.trim()).filter(Boolean);
-        }
-      }
-    }
-    
-    // Fallback to single image_url if no images array
-    if (images.length === 0 && row.image_url) {
-      images = [row.image_url];
-    }
-    
-    // Ensure we have at least one image
-    if (images.length === 0) {
-      images = ['/placeholder-product.jpg'];
-    }
-
-    return {
-      ...row,
-      id: String(row.id || ''),
-      images: images,
-      imageUrl: images[0], // Backward compatibility - use first image
-      image_url: row.image_url || images[0],
-      inStock: Boolean(row.in_stock),
-      isFeatured: Boolean(row.is_featured),
-    } as Product;
-  };
 
   // Load product details for wishlist items
   useEffect(() => {
@@ -151,42 +151,70 @@ export function WishlistPageClient() {
         setProducts([]);
         return;
       }
-      
+
       setLoadingProducts(true);
       try {
         const { data, error } = await supabase
           .from('products')
           .select('*')
           .in('id', wishlist);
-        
+
         if (error) {
           console.error('Error loading wishlist products:', error);
           return;
         }
-        
+
         // Transform and sort products to match wishlist order
         const sortedProducts = wishlist
           .map(id => data?.find((p: any) => p.id.toString() === id))
           .filter(Boolean)
           .map(transformProduct);
-        
+
         setProducts(sortedProducts);
+
+        // Handle orphaned products (Requirement 9.3)
+        // If we have fewer products than wishlist items, some items are missing/deleted from DB
+        if (sortedProducts.length < wishlist.length) {
+          const foundIds = new Set(sortedProducts.map(p => p.id));
+          const orphanedIds = wishlist.filter(id => !foundIds.has(id));
+
+          if (orphanedIds.length > 0) {
+            console.warn('Found orphaned wishlist items:', orphanedIds);
+
+            // If we really want to clean up:
+            const cleanup = async () => {
+              const { data: { user } } = await createClient.auth.getUser();
+              if (!user) return; // Only cleanup for auth users, guest logic is harder to reach here without context
+
+              await Promise.all(
+                orphanedIds.map(id =>
+                  createClient
+                    .from('wishlists')
+                    .delete()
+                    .match({ user_id: user.id, product_id: id })
+                )
+              );
+            };
+
+            cleanup().catch(console.error);
+          }
+        }
       } catch (error) {
         console.error('Error loading wishlist products:', error);
       } finally {
         setLoadingProducts(false);
       }
     };
-    
+
     loadProducts();
   }, [wishlist, supabase]);
-  
+
   const handleClearAll = async () => {
     if (window.confirm('Are you sure you want to clear your entire wishlist?')) {
       await clearWishlist();
     }
   };
-  
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -200,15 +228,15 @@ export function WishlistPageClient() {
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-32">
       <div className="container mx-auto px-4 py-8">
-        <WishlistHeader 
-          count={wishlist.length} 
-          onClearAll={handleClearAll} 
+        <WishlistHeader
+          count={wishlist.length}
+          onClearAll={handleClearAll}
         />
-        
+
         {wishlist.length === 0 ? (
           <EmptyWishlistState />
         ) : (
@@ -229,9 +257,9 @@ export function WishlistPageClient() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ 
-                        duration: 0.3, 
-                        delay: index * 0.05 
+                      transition={{
+                        duration: 0.3,
+                        delay: index * 0.05
                       }}
                       layout
                     >

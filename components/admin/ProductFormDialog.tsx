@@ -245,10 +245,15 @@ export const ProductFormDialog = memo(function ProductFormDialog({
                 ? customCategory.trim()
                 : formData.category;
 
+            const originalPrice = parseFloat(formData.price);
+            const discountPercent = parseFloat(formData.discount_percent) || 0;
+            const effectivePrice = discountPercent > 0 ? originalPrice * (1 - discountPercent / 100) : originalPrice;
+
             const productData: any = {
                 name: formData.name,
                 category: finalCategory,
-                price: parseFloat(formData.price),
+                price: effectivePrice,
+                original_price: originalPrice,
                 description: formData.description,
                 features: formData.features.split("\n").filter(f => f.trim() !== ""),
                 inStock: formData.inStock,

@@ -17,6 +17,7 @@ import {
   Facebook,
   Instagram,
   Twitter,
+  Linkedin,
   TrendingUp,
   Code
 } from "lucide-react";
@@ -99,6 +100,9 @@ Can you provide more details and availability?`;
         navigator.clipboard.writeText(shareUrl);
         alert('Link copied to clipboard! You can now share it on Instagram.');
         return;
+      case 'linkedin':
+        shareUrl_platform = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+        break;
     }
 
     if (shareUrl_platform) {
@@ -466,35 +470,30 @@ Can you provide more details and availability?`;
         </div>
       </div>
 
-      {/* Social Sharing */}
-      <div className="space-y-3">
-        <div className="flex items-center space-x-2">
-          <Share2 className="w-4 h-4 text-gray-600" />
-          <span className="text-sm font-medium text-gray-700">Share this product:</span>
-        </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => handleSocialShare('facebook')}
-            className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg text-gray-600 hover:text-[#1877F2] hover:border-[#1877F2] hover:bg-[#1877F2]/10 transition-all duration-200 hover:scale-110"
-            aria-label="Share on Facebook"
-          >
-            <Facebook className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => handleSocialShare('twitter')}
-            className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg text-gray-600 hover:text-[#1DA1F2] hover:border-[#1DA1F2] hover:bg-[#1DA1F2]/10 transition-all duration-200 hover:scale-110"
-            aria-label="Share on Twitter"
-          >
-            <Twitter className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => handleSocialShare('instagram')}
-            className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg text-gray-600 hover:text-[#E4405F] hover:border-[#E4405F] hover:bg-[#E4405F]/10 transition-all duration-200 hover:scale-110"
-            aria-label="Share on Instagram"
-          >
-            <Instagram className="w-5 h-5" />
-          </button>
-        </div>
+      {/* Social Sharing - Fill Up Design */}
+      <div className="flex justify-center items-center pt-4">
+        <ul className="flex justify-center items-center list-none m-0">
+          {[
+            { icon: Facebook, label: "Facebook", color: "bg-[#3b5998]", onClick: () => handleSocialShare('facebook') },
+            { icon: Twitter, label: "Twitter", color: "bg-[#1da1f2]", onClick: () => handleSocialShare('twitter') },
+            { icon: Instagram, label: "Instagram", color: "bg-[#e1306c]", onClick: () => handleSocialShare('instagram') },
+            { icon: Linkedin, label: "LinkedIn", color: "bg-[#0077b5]", onClick: () => handleSocialShare('linkedin') }
+          ].map((social) => (
+            <li key={social.label} className="relative group mx-2.5">
+              <button
+                onClick={social.onClick}
+                aria-label={`Share on ${social.label}`}
+                className="relative overflow-hidden flex justify-center items-center w-[50px] h-[50px] rounded-[20%] text-[#4d4d4d] bg-white transition-all duration-300 shadow-sm group-hover:shadow-[3px_2px_45px_0px_rgba(0,0,0,0.5)] group-hover:text-white"
+              >
+                <div className={`absolute bottom-0 left-0 w-full h-0 ${social.color} transition-all duration-300 ease-in-out group-hover:h-full`} />
+                <social.icon className="relative z-10 w-[30px] h-[30px]" strokeWidth={1.5} />
+              </button>
+              <div className={`absolute -top-[30px] left-1/2 -translate-x-1/2 text-white px-[10px] py-[6px] rounded-[15px] opacity-0 invisible text-sm transition-all duration-300 group-hover:opacity-100 group-hover:visible group-hover:-top-[50px] z-20 whitespace-nowrap ${social.color}`}>
+                {social.label}
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* Payment Methods - Premium Card Style */}

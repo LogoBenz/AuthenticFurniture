@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight, ZoomIn, Play } from "lucide-react";
 import { useImageWithFallback } from "@/hooks/use-image-with-fallback";
 import { ImageFallback } from "./ImageFallback";
+import { cn } from "@/lib/utils";
 
 
 interface EnhancedProductGalleryProps {
@@ -88,7 +89,10 @@ export function EnhancedProductGallery({ images, videos = [], productName, categ
             src={imgSrc}
             alt={`${productName} - Media ${currentImageIndex + 1}`}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.02] animate-in fade-in duration-300"
+            className={cn(
+              "object-cover transition-transform duration-300 group-hover:scale-[1.02] animate-in fade-in duration-300",
+              category?.toLowerCase().includes('chair') && "object-contain"
+            )}
             priority
             onError={handleError}
           />

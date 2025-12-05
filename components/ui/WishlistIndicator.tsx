@@ -14,11 +14,11 @@ interface WishlistIndicatorProps {
 export function WishlistIndicator({ className }: WishlistIndicatorProps) {
   const { wishlistCount } = useWishlist();
   const router = useRouter();
-  
+
   const handleClick = () => {
     router.push('/wishlist');
   };
-  
+
   return (
     <Button
       variant="ghost"
@@ -30,8 +30,15 @@ export function WishlistIndicator({ className }: WishlistIndicatorProps) {
       )}
       aria-label={`View wishlist (${wishlistCount} items)`}
     >
-      <Heart className="h-5 w-5" />
-      
+      <motion.div
+        key={wishlistCount}
+        initial={{ scale: 1 }}
+        animate={{ scale: [1, 1.2, 1] }}
+        transition={{ duration: 0.3 }}
+      >
+        <Heart className="h-5 w-5" />
+      </motion.div>
+
       {/* Count Badge */}
       <AnimatePresence>
         {wishlistCount > 0 && (
@@ -39,10 +46,10 @@ export function WishlistIndicator({ className }: WishlistIndicatorProps) {
             initial={{ scale: 0, x: 5 }}
             animate={{ scale: 1, x: 0 }}
             exit={{ scale: 0, x: 5 }}
-            transition={{ 
-              type: 'spring', 
-              stiffness: 500, 
-              damping: 30 
+            transition={{
+              type: 'spring',
+              stiffness: 500,
+              damping: 30
             }}
             className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center px-1"
           >
@@ -50,7 +57,7 @@ export function WishlistIndicator({ className }: WishlistIndicatorProps) {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       <span className="sr-only">View wishlist</span>
     </Button>
   );
