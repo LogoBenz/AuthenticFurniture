@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Heart, ArrowLeftRight, Eye, MessageCircle, Plus } from 'lucide-react';
+import { ShoppingCart, ArrowLeftRight, Eye, Plus } from 'lucide-react';
 import { Product } from '@/types';
 import { useEnquiryCart } from '@/hooks/use-enquiry-cart';
 import { WishlistButton } from '@/components/ui/WishlistButton';
@@ -186,7 +186,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView, variant
             </p>
 
             {/* Product Name */}
-            <h3 className="font-medium text-slate-900 dark:text-slate-100 text-sm leading-tight mb-1 group-hover:text-blue-800 dark:group-hover:text-blue-300 transition-colors line-clamp-1">
+            <h3 className="font-medium text-slate-900 dark:text-slate-100 text-base leading-tight mb-1 group-hover:text-blue-800 dark:group-hover:text-blue-300 transition-colors line-clamp-1">
               {product.name}
             </h3>
           </div>

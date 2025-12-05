@@ -408,7 +408,7 @@ export function Header() {
                 </button>
 
                 {/* shadcn-style Professional Mega Menu */}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[580px] bg-popover dark:bg-slate-950 rounded-lg shadow-lg border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[580px] bg-popover dark:bg-slate-950 rounded-lg shadow-lg border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none group-hover:pointer-events-auto">
                   <div className="p-4">
                     <div className="grid grid-cols-2 gap-4">
                       {spaces.map((space) => {

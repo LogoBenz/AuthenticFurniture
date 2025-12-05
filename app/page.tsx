@@ -1,5 +1,6 @@
 import { NewArrivals } from '@/components/home/FeaturedProducts';
 import { Hero } from '@/components/home/Hero';
+import { StatsSection } from '@/components/home/StatsSection';
 import { Categories } from '@/components/home/Categories';
 import WhyChooseUs from '@/components/home/WhyChooseUs';
 import { Testimonials } from '@/components/home/Testimonials';
@@ -19,6 +20,7 @@ export default async function Home() {
   return (
     <>
       <Hero />
+      <StatsSection />
       <Categories />
       <NewArrivals />
       <BestSellers products={bestSellersProducts} />

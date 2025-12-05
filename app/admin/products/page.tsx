@@ -4,18 +4,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { getAllProducts, deleteProduct, getProductCategories } from "@/lib/products";
 import { getAllSpaces } from "@/lib/categories";
-import { Product, Space } from "@/types";
+import { Product, Space, Warehouse } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Edit, Trash2, Eye, EyeOff, LayoutGrid, LayoutList } from "lucide-react";
+import { Search, Plus, Eye, EyeOff, LayoutGrid, LayoutList, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { formatPrice } from "@/lib/products";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Badge } from "@/components/ui/badge";
 import { getAllWarehouses } from "@/lib/warehouses";
-import { Warehouse } from "@/types";
 import { triggerProductRevalidation } from "@/app/actions/revalidate";
 import { ProductFormDialog } from "@/components/admin/ProductFormDialog";
 
@@ -25,7 +24,6 @@ function AdminProductsContent() {
   const [categories, setCategories] = useState<string[]>([]);
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [sortBy, setSortBy] = useState<string>('name-asc');
@@ -346,22 +344,24 @@ function AdminProductsContent() {
                   </div>
                 )}
 
-                <div className={`flex justify-end space-x-2 ${mobileColumns === 2 ? 'mt-2' : ''}`}>
+                <div className={`flex justify-end gap-2 ${mobileColumns === 2 ? 'mt-2' : ''}`}>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleEdit(product)}
-                    className={mobileColumns === 2 ? "h-8 w-8 p-0" : ""}
+                    className="h-8 px-2 lg:px-3"
                   >
-                    <Edit className="h-3 w-3" />
+                    <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                    <span className="text-xs">Edit</span>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleDelete(product.id)}
-                    className={`text-red-600 hover:text-red-700 ${mobileColumns === 2 ? "h-8 w-8 p-0" : ""}`}
+                    className="h-8 px-2 lg:px-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50 border-red-200 dark:border-red-900/50"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                    <span className="text-xs">Delete</span>
                   </Button>
                 </div>
               </CardContent>
@@ -383,8 +383,6 @@ function AdminProductsContent() {
           </div>
         )
       }
-
-      {/* Existing Image Cropping - Nested Dialog */}
 
     </div >
   );
