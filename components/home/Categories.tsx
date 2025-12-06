@@ -13,8 +13,11 @@ import {
   Briefcase,
   Monitor,
   Users,
-  Plus
+  Plus,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
+import { useRef } from "react";
 import { FeaturedDealsGrid } from "@/components/products/FeaturedDealsGrid";
 import { getFeaturedDeals } from "@/lib/products";
 import { getAllSpaces } from "@/lib/categories";
@@ -24,6 +27,17 @@ export function Categories() {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (direction: "left" | "right") => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 300; // Adjust scroll amount as needed
+      scrollContainerRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -126,16 +140,39 @@ export function Categories() {
     <section className="pt-4 pb-8 sm:pt-6 sm:pb-10 bg-white">
       <div className="max-w-[85rem] mx-auto px-4">
         {/* Title */}
-        <div className="text-center mb-10">
-          <h2 className="text-[28px] font-heading font-semibold text-slate-900 tracking-tight">
+        {/* Title and Navigation */}
+        <div className="flex items-center justify-between mb-10">
+          <h2 className="text-[28px] font-heading font-semibold text-slate-900 tracking-tight text-left">
             Popular Categories
           </h2>
+
+          {/* Navigation Buttons */}
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={() => handleScroll("left")}
+              className="bg-white p-2.5 rounded-lg border border-slate-300 hover:bg-slate-100 transition-all"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-5 h-5 text-slate-900" />
+            </button>
+
+            <button
+              onClick={() => handleScroll("right")}
+              className="bg-white p-2.5 rounded-lg border border-slate-300 hover:bg-slate-100 transition-all"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-5 h-5 text-slate-900" />
+            </button>
+          </div>
         </div>
 
         {/* Horizontal Sliding Carousel - One Row */}
         <div className="relative max-w-7xl mx-auto">
           {/* Scrollable Container */}
-          <div className="overflow-x-auto scrollbar-hide pb-4">
+          <div
+            ref={scrollContainerRef}
+            className="overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
+          >
             <div className="flex gap-6 px-2">
               {orderedSubcategories.map((subcategory) => {
                 // Categories that need zoom out (padding)

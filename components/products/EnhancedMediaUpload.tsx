@@ -229,7 +229,11 @@ export const EnhancedMediaUpload = memo(function EnhancedMediaUpload({
     }
   };
 
-  const handleCropComplete = async (croppedFile: File) => {
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    // Convert Blob to File
+    const originalName = cropImage?.file.name || "cropped-image.jpg";
+    const croppedFile = new File([croppedBlob], originalName, { type: "image/jpeg" });
+
     await uploadImageFile(croppedFile);
     setCropImage(null);
   };
@@ -520,7 +524,7 @@ export const EnhancedMediaUpload = memo(function EnhancedMediaUpload({
         <DialogContent className="!w-[95vw] !h-[95vh] !max-w-[95vw] !max-h-[95vh] p-0">
           {cropImage && (
             <ImageCropper
-              imageUrl={cropImage.url}
+              image={cropImage.url}
               onCropComplete={handleCropComplete}
               onCancel={() => setCropImage(null)}
             />

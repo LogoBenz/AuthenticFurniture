@@ -53,7 +53,7 @@ export function FeaturedDealsGrid({ title = "Deals of the Week", fetcher }: Feat
   return (
     <section className="pt-5 pb-16 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
       <div className="max-w-[85rem] mx-auto px-4">
-        <h2 className="text-[28px] font-heading font-semibold tracking-tight mb-10 text-center">
+        <h2 className="text-[28px] font-heading font-semibold tracking-tight mb-10 text-left">
           {title}
         </h2>
 

@@ -15,6 +15,8 @@ import MultiWarehouseStockEditor from "@/components/admin/MultiWarehouseStockEdi
 import { MultiSelect } from "@/components/ui/multi-select";
 import { createProduct, updateProduct, uploadProductImage } from "@/lib/products";
 import { triggerProductRevalidation } from "@/app/actions/revalidate";
+import { ImageCropper } from "@/components/ui/image-cropper";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductFormDialogProps {
     isOpen: boolean;
@@ -35,6 +37,7 @@ export const ProductFormDialog = memo(function ProductFormDialog({
     warehouses,
     onSuccess
 }: ProductFormDialogProps) {
+    const { toast } = useToast();
     const [savingId, setSavingId] = useState<string | null>(null);
     const [customCategory, setCustomCategory] = useState("");
     const [productImages, setProductImages] = useState<string[]>([]);
@@ -207,21 +210,37 @@ export const ProductFormDialog = memo(function ProductFormDialog({
 
         const priceValue = parseFloat(formData.price);
         if (isNaN(priceValue) || priceValue < 0) {
-            alert("Please enter a valid price (must be a positive number).");
+            toast({
+                title: "Validation Error",
+                description: "Please enter a valid price (must be a positive number).",
+                variant: "destructive",
+            });
             return;
         }
 
         if (productImages.length === 0) {
-            alert("Please add at least one product image.");
+            toast({
+                title: "Validation Error",
+                description: "Please add at least one product image.",
+                variant: "destructive",
+            });
             return;
         }
 
         if (formData.space_ids.length === 0) {
-            alert("Please select at least one Space.");
+            toast({
+                title: "Validation Error",
+                description: "Please select at least one Space.",
+                variant: "destructive",
+            });
             return;
         }
         if (formData.subcategory_ids.length === 0) {
-            alert("Please select at least one Subcategory.");
+            toast({
+                title: "Validation Error",
+                description: "Please select at least one Subcategory.",
+                variant: "destructive",
+            });
             return;
         }
 
@@ -229,12 +248,20 @@ export const ProductFormDialog = memo(function ProductFormDialog({
         if (initialStock) {
             qty = parseInt(initialStock);
             if (isNaN(qty) || qty < 0) {
-                alert("Please enter a valid initial stock quantity.");
+                toast({
+                    title: "Validation Error",
+                    description: "Please enter a valid initial stock quantity.",
+                    variant: "destructive",
+                });
                 return;
             }
         }
         if (initialStock && !selectedWarehouseId && !product) {
-            alert("Please select a warehouse for the initial stock.");
+            toast({
+                title: "Validation Error",
+                description: "Please select a warehouse for the initial stock.",
+                variant: "destructive",
+            });
             return;
         }
 
@@ -299,29 +326,76 @@ export const ProductFormDialog = memo(function ProductFormDialog({
                 const updatedProduct = await updateProduct(product.id, productData);
                 if (updatedProduct) {
                     await triggerProductRevalidation('UPDATE', updatedProduct, product);
+                    toast({
+                        title: "Success",
+                        description: "Product updated successfully.",
+                    });
+                    onSuccess();
+                    onOpenChange(false);
+                } else {
+                    throw new Error("Failed to update product. No data returned.");
                 }
             } else {
                 const newProduct = await createProduct(productData);
 
                 if (newProduct) {
                     await triggerProductRevalidation('INSERT', newProduct);
-                }
+                    toast({
+                        title: "Success",
+                        description: "Product created successfully.",
+                    });
 
-                // Handle initial stock for new products
-                if (initialStock && selectedWarehouseId) {
-                    // Note: Stock handling logic should ideally be in createProduct or a separate API call
-                    // For now we assume createProduct handles it or we need to add it here
-                    // But since we don't have the stock API imported here, we'll skip it or assume it's handled
+                    // Handle initial stock for new products
+                    if (initialStock && selectedWarehouseId) {
+                        // Stock logic placeholder
+                    }
+                    onSuccess();
+                    onOpenChange(false);
+                } else {
+                    throw new Error("Failed to create product. No data returned.");
                 }
             }
-
-            onSuccess();
-            onOpenChange(false);
         } catch (error: any) {
             console.error("Error saving product:", error);
-            alert("Error saving product: " + (error.message || "Unknown error"));
+            toast({
+                title: "Error",
+                description: error.message || "Failed to save product",
+                variant: "destructive",
+            });
         } finally {
             setSavingId(null);
+        }
+    };
+
+    const handleSaveCroppedImage = async (croppedBlob: Blob) => {
+        if (!cropExistingImage) return;
+
+        try {
+            // Create a file from the blob
+            const fileName = `cropped-${Date.now()}.jpg`;
+            const file = new File([croppedBlob], fileName, { type: "image/jpeg" });
+
+            // Upload the new image
+            const newImageUrl = await uploadProductImage(file);
+
+            // Update the images list
+            const newImages = [...productImages];
+            newImages[cropExistingImage.index] = newImageUrl;
+
+            setProductImages(newImages);
+            setCropExistingImage(null);
+
+            toast({
+                title: "Success",
+                description: "Image cropped and saved successfully.",
+            });
+        } catch (error) {
+            console.error("Error uploading cropped image:", error);
+            toast({
+                title: "Error",
+                description: "Failed to save cropped image",
+                variant: "destructive",
+            });
         }
     };
 
@@ -341,6 +415,19 @@ export const ProductFormDialog = memo(function ProductFormDialog({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* Left Column - Product Details */}
                         <div className="space-y-6">
+                            {/* ... (existing fields) ... */}
+                            {/* Cropper Dialog */}
+                            {cropExistingImage && (
+                                <div className="fixed inset-0 z-[60]">
+                                    <ImageCropper
+                                        image={cropExistingImage.url}
+                                        onCropComplete={handleSaveCroppedImage}
+                                        onCancel={() => setCropExistingImage(null)}
+                                    />
+                                </div>
+                            )}
+
+
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <Label htmlFor="name">Product Name</Label>

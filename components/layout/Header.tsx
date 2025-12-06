@@ -7,15 +7,16 @@ import {
   X,
   Search,
   User,
-  ChevronDown,
   Facebook,
+  Twitter,
   Instagram,
   Linkedin,
-  Twitter,
   Heart,
   LogOut,
-  Briefcase,
+  ChevronDown,
+  ArrowRight,
   Home,
+  Briefcase,
   Building2,
   TreePine,
   Hotel,
@@ -45,6 +46,7 @@ import { EnquiryCartModal } from "@/components/products/EnquiryCartModal";
 import { SearchModal } from "@/components/ui/SearchModal";
 import { useAuth } from "@/hooks/use-auth";
 import { useWishlist } from "@/hooks/use-wishlist";
+import { WishlistIndicator } from "@/components/ui/WishlistIndicator";
 import { useRouter, usePathname } from "next/navigation";
 import { getSpacesForNavigation } from "@/lib/categories";
 import { Space } from "@/types";
@@ -59,13 +61,7 @@ function TikTokIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function CustomSearchIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26" fill="currentColor" {...props}>
-      <path d="M10 .188A9.812 9.812 0 0 0 .187 10A9.812 9.812 0 0 0 10 19.813c2.29 0 4.393-.811 6.063-2.125l.875.875a1.845 1.845 0 0 0 .343 2.156l4.594 4.625c.713.714 1.88.714 2.594 0l.875-.875a1.84 1.84 0 0 0 0-2.594l-4.625-4.594a1.824 1.824 0 0 0-2.157-.312l-.875-.875A9.812 9.812 0 0 0 10 .188zM10 2a8 8 0 1 1 0 16a8 8 0 0 1 0-16zM4.937 7.469a5.446 5.446 0 0 0-.812 2.875a5.46 5.46 0 0 0 5.469 5.469a5.516 5.516 0 0 0 3.156-1a7.166 7.166 0 0 1-.75.03a7.045 7.045 0 0 1-7.063-7.062c0-.104-.005-.208 0-.312z" />
-    </svg>
-  );
-}
+
 
 const getIconComponent = (iconName: string) => {
   const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = {
@@ -115,16 +111,32 @@ export const useNavigation = () => useContext(NavigationContext);
 function useHideOnScroll() {
   const [isHidden, setIsHidden] = useState(false);
   const lastScrollY = useRef(0);
+  const ticking = useRef(false);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
-        setIsHidden(true);
-      } else {
-        setIsHidden(false);
+
+      if (!ticking.current) {
+        window.requestAnimationFrame(() => {
+          const diff = currentScrollY - lastScrollY.current;
+
+          // Only update if difference is significant (hysteresis) to prevent jitter
+          if (Math.abs(diff) > 10) {
+            // Hide if scrolling down and past 100px
+            // Show if scrolling up
+            if (diff > 0 && currentScrollY > 100) {
+              setIsHidden(true);
+            } else if (diff < 0) {
+              setIsHidden(false);
+            }
+          }
+          lastScrollY.current = currentScrollY;
+          ticking.current = false;
+        });
+
+        ticking.current = true;
       }
-      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -242,46 +254,81 @@ export function Header() {
 
       {/* Main Header */}
       <header
-        className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? "bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm top-0" : "bg-transparent top-10"
-          } ${isHidden && isScrolled ? '-translate-y-full' : 'translate-y-0'}`}
-        style={{ top: isHidden ? '0' : (isScrolled ? '0' : '40px') }}
+        className={`fixed w-full z-50 transition-all duration-300 ease-in-out border-b border-transparent
+          ${isScrolled ? "bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm border-slate-200 dark:border-slate-800" : "bg-white border-slate-100 dark:bg-slate-900 dark:border-slate-800"}
+          ${isHidden ? '-translate-y-full' : 'translate-y-0'}
+        `}
+        style={{
+          top: isScrolled ? '0' : '40px'
+        }}
       >
-        <div className={`container mx-auto px-4 ${isScrolled ? 'py-2' : 'py-4'}`}>
-          <div className="flex items-center justify-between">
-            {/* Logo & Mobile Menu */}
+        <div className={`w-full px-4 sm:px-6 lg:px-12 mx-auto ${isScrolled ? 'py-3' : 'py-5'}`}>
+          <div className="flex items-center justify-between h-14">
+
+            {/* 1. Logo Section */}
             <div className="flex items-center gap-4">
               <MobileMenu spaces={spaces} wishlistCount={wishlistCount} isAuthenticated={isAuthenticated} onSignOut={handleSignOut} />
-
-              <Link href="/" ref={logoRef} className="flex items-center">
+              <Link href="/" ref={logoRef} className="flex items-center mr-8">
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tighter whitespace-nowrap">
-                  Authentic <span className="text-blue-800 dark:text-blue-500">Furniture</span>
+                  Authentic <span className="text-blue-600 dark:text-blue-500">Furniture</span>
                 </h1>
               </Link>
             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-6">
+            {/* 2. Central Pill Navigation (Desktop Only) */}
+            <nav className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1.5 mx-4">
               <ShopBySpaceMenu spaces={spaces} />
-              <NavLink href="/products">Products</NavLink>
-              <NavLink href="/blog">Blog</NavLink>
-              <NavLink href="/e-catalogue">E-Catalogue</NavLink>
-              <NavLink href="/showroom">Showroom</NavLink>
-              <NavLink href="/about">About Us</NavLink>
+              <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1"></div>
+              <Link
+                href="/showroom"
+                className="px-4 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors rounded-md hover:bg-white dark:hover:bg-slate-700 shadow-sm hover:shadow-sm"
+              >
+                Showroom
+              </Link>
+              <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1"></div>
+              <CompanyMenu />
             </nav>
 
-            {/* Icons */}
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="icon" onClick={() => setIsSearchModalOpen(true)}>
-                <CustomSearchIcon className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => router.push(isAuthenticated ? '/profile' : '/auth/login')}>
-                <User className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => setIsCartModalOpen(true)} className="relative">
-                <CartIndicator />
-              </Button>
-              <ModeToggle />
+            {/* 3. Search & Icons Section */}
+            <div className="flex items-center gap-3 ml-auto">
+
+              {/* Visible Search Bar (Desktop) */}
+              <div className="hidden lg:block relative w-[280px]">
+                <SearchInput />
+              </div>
+
+              {/* Mobile Search Icon */}
+              <div className="lg:hidden">
+                <Button variant="ghost" size="icon" onClick={() => setIsSearchModalOpen(true)}>
+                  <Search className="h-5 w-5" strokeWidth={1.5} />
+                </Button>
+              </div>
+
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => router.push(isAuthenticated ? '/profile' : '/auth/login')}
+                  className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800"
+                >
+                  <User className="h-5 w-5" strokeWidth={1.5} />
+                </Button>
+
+                <WishlistIndicator />
+
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsCartModalOpen(true)}
+                    className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800"
+                  >
+                    <CartIndicator />
+                  </Button>
+                </div>
+              </div>
             </div>
+
           </div>
         </div>
       </header>
@@ -310,14 +357,73 @@ function NavLink({ href, children }: { href: string, children: React.ReactNode }
   );
 }
 
+const MOCK_TYPES: Record<string, string[]> = {
+  // Office Chairs (from assign_office_chair_types.sql)
+  'Office Chairs': ['Ergonomic Chairs', 'Mesh Chairs', 'Swivel Chairs', 'Guest Chairs', 'Task Chairs'],
+  'Chairs': ['Ergonomic Chairs', 'Mesh Chairs', 'Swivel Chairs', 'Guest Chairs', 'Task Chairs'],
+  'office-chairs': ['Ergonomic Chairs', 'Mesh Chairs', 'Swivel Chairs', 'Guest Chairs', 'Task Chairs'],
+
+  // Office Tables (from add_product_type.sql)
+  'Office Tables': ['Executive Tables', 'Electric Desks', 'Reception Tables', 'Conference Tables', 'Standard Tables'],
+  'Tables': ['Executive Tables', 'Electric Desks', 'Reception Tables', 'Conference Tables', 'Standard Tables'],
+  'Desks & Tables': ['Executive Tables', 'Electric Desks', 'Reception Tables', 'Conference Tables', 'Standard Tables'],
+  'office-tables': ['Executive Tables', 'Electric Desks', 'Reception Tables', 'Conference Tables', 'Standard Tables'],
+  'desks-tables': ['Executive Tables', 'Electric Desks', 'Reception Tables', 'Conference Tables', 'Standard Tables'],
+
+  // Other Fallbacks (Maintained)
+  'Sofa Sets': ['L-Shaped Sofas', 'Sectional Sofas', 'Recliner Sofas', 'Chesterfield Sofas', 'Sofa Beds'],
+  'Sofas': ['L-Shaped Sofas', 'Sectional Sofas', 'Recliner Sofas', 'Chesterfield Sofas', 'Sofa Beds'],
+  'sofa-sets': ['L-Shaped Sofas', 'Sectional Sofas', 'Recliner Sofas', 'Chesterfield Sofas', 'Sofa Beds'],
+
+  'Beds': ['King Size Beds', 'Queen Size Beds', 'Bunk Beds', 'Storage Beds', 'Upholstered Beds'],
+  'beds': ['King Size Beds', 'Queen Size Beds', 'Bunk Beds', 'Storage Beds', 'Upholstered Beds'],
+
+  'Cabinets': ['Wardrobes', 'Shoe Racks', 'Display Cabinets', 'Filing Cabinets', 'Sideboards'],
+  'cabinets': ['Wardrobes', 'Shoe Racks', 'Display Cabinets', 'Filing Cabinets', 'Sideboards'],
+
+  'Dining Sets': ['4-Seater Sets', '6-Seater Sets', '8-Seater Sets', 'Glass Top Tables', 'Marble Top Tables'],
+  'dining-sets': ['4-Seater Sets', '6-Seater Sets', '8-Seater Sets', 'Glass Top Tables', 'Marble Top Tables'],
+
+  'Auditorium Chairs': ['Lecture Hall Seating', 'Cinema Chairs', 'Church Seating', 'VIP Auditorium Seats'],
+  'auditorium-chairs': ['Lecture Hall Seating', 'Cinema Chairs', 'Church Seating', 'VIP Auditorium Seats'],
+
+  'Student Chairs': ['Training Chairs', 'Tablet Chairs', 'Classroom Desks', 'Library Seating'],
+  'student-chairs': ['Training Chairs', 'Tablet Chairs', 'Classroom Desks', 'Library Seating'],
+
+  'Canopy': ['Gazebos', 'Outdoor Umbrellas', 'Marquees', 'Carports'],
+  'canopy': ['Gazebos', 'Outdoor Umbrellas', 'Marquees', 'Carports'],
+
+  'Patio Sets': ['Rattan Sets', 'Garden Swings', 'Outdoor Dining', 'Sun Loungers'],
+  'patio-sets': ['Rattan Sets', 'Garden Swings', 'Outdoor Dining', 'Sun Loungers'],
+
+  'Lounges & Bars': ['Bar Stools', 'Lounge Chairs', 'Coffee Tables', 'Bar Cabinets'],
+  'lounges-bars': ['Bar Stools', 'Lounge Chairs', 'Coffee Tables', 'Bar Cabinets']
+};
+
 function ShopBySpaceMenu({ spaces }: { spaces: Space[] }) {
   const [open, setOpen] = useState(false);
+  const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
+  const [activeSubcategorySlug, setActiveSubcategorySlug] = useState<string | null>(null);
+
+  // Set default active space when menu opens or spaces load
+  useEffect(() => {
+    if (open && spaces.length > 0 && !activeSpaceId) {
+      setActiveSpaceId(spaces[0].id);
+    }
+  }, [open, spaces, activeSpaceId]);
+
+  const activeSpace = spaces.find(s => s.id === activeSpaceId) || spaces[0];
+  const activeSubcategory = activeSpace?.subcategories?.find(sub => sub.slug === activeSubcategorySlug);
+  // Try to find types by name or slug
+  const activeTypes = activeSubcategory
+    ? (MOCK_TYPES[activeSubcategory.name] || MOCK_TYPES[activeSubcategory.slug] || MOCK_TYPES[activeSubcategory.name.trim()])
+    : null;
 
   return (
-    <HoverCard.Root openDelay={150} closeDelay={200} onOpenChange={setOpen}>
+    <HoverCard.Root openDelay={100} closeDelay={200} onOpenChange={setOpen}>
       <HoverCard.Trigger asChild>
         <button
-          className={`flex items-center space-x-1 text-sm font-medium hover:text-blue-800 dark:hover:text-blue-400 transition-colors outline-none ${open ? 'text-blue-800 dark:text-blue-400' : ''}`}
+          className={`flex items-center space-x-1 px-4 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all rounded-md outline-none ${open ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm'}`}
         >
           <span>Shop by Space</span>
           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
@@ -325,51 +431,151 @@ function ShopBySpaceMenu({ spaces }: { spaces: Space[] }) {
       </HoverCard.Trigger>
       <HoverCard.Portal>
         <HoverCard.Content
-          className="z-50 w-[600px] bg-white dark:bg-slate-950 rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 p-6 animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2"
+          className="z-50 w-[1000px] h-[550px] bg-white dark:bg-slate-950 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 p-0 overflow-hidden animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 flex flex-col"
           sideOffset={10}
           align="center"
         >
-          <div className="grid grid-cols-2 gap-6">
-            {spaces.map(space => {
-              const Icon = getIconComponent(space.icon || 'Table');
-              return (
-                <div key={space.id} className="space-y-3">
-                  <Link href={`/products?space=${space.slug}`} className="flex items-center gap-2 group">
-                    <div className="p-2 bg-slate-100 dark:bg-slate-900 rounded-md group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors">
-                      <Icon className="h-5 w-5 text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
-                    </div>
+          {/* Main Content Area */}
+          <div className="flex flex-1 overflow-hidden">
+
+            {/* 1. Sidebar (Spaces) */}
+            <div className="w-[260px] bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 py-6 overflow-y-auto">
+              <div className="px-6 mb-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Spaces</h3>
+              </div>
+              <div className="space-y-1 px-3">
+                {spaces.map(space => {
+                  const Icon = getIconComponent(space.icon || 'Table') as any;
+                  const isActive = activeSpaceId === space.id;
+                  return (
+                    <button
+                      key={space.id}
+                      onMouseEnter={() => setActiveSpaceId(space.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
+                        ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                    >
+                      <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
+                      {space.name}
+                      {isActive && <ChevronDown className="h-4 w-4 ml-auto -rotate-90 text-blue-600/50" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Subcategories Area */}
+            <div className="flex-1 bg-white dark:bg-slate-950 p-8 overflow-y-auto">
+              {activeSpace && (
+                <div className="h-full flex flex-col">
+                  {/* Header for Active Space */}
+                  <div className="flex justify-between items-end border-b border-slate-100 dark:border-slate-800 pb-6 mb-6">
                     <div>
-                      <div className="font-semibold text-sm group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{space.name}</div>
-                      <div className="text-xs text-slate-500">{space.subcategories?.length || 0} Categories</div>
+                      <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                        {activeSpace.name}
+                        <Link href={`/products?space=${activeSpace.slug}`} className="text-sm font-medium text-blue-600 hover:underline flex items-center gap-1 group/link">
+                          Browse All <ArrowRight className="h-4 w-4 transition-transform group-hover/link:translate-x-0.5" />
+                        </Link>
+                      </h2>
+                      <p className="text-slate-500 text-sm mt-1">{activeSpace.description || `Explore our ${activeSpace.name} collection`}</p>
                     </div>
-                  </Link>
-                  <div className="pl-11 space-y-1">
-                    {space.subcategories?.slice(0, 4).map(sub => (
-                      <Link
-                        key={sub.id}
-                        href={`/products?space=${space.slug}&subcategory=${sub.slug}`}
-                        className="block text-sm text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                      >
-                        {sub.name}
-                      </Link>
-                    ))}
-                    {(space.subcategories?.length || 0) > 4 && (
-                      <Link href={`/products?space=${space.slug}`} className="block text-xs text-blue-600 font-medium hover:underline">
-                        View all
-                      </Link>
-                    )}
+                  </div>
+
+                  {/* Grid Layout */}
+                  <div className="grid grid-cols-12 gap-8 h-full">
+
+                    {/* Subcategories Column */}
+                    <div className="col-span-5 space-y-2">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">Categories</h3>
+                      {activeSpace.subcategories && activeSpace.subcategories.length > 0 ? (
+                        activeSpace.subcategories.map(sub => (
+                          <Link
+                            key={sub.id}
+                            href={`/products?space=${activeSpace.slug}&subcategory=${sub.slug}`}
+                            onMouseEnter={() => setActiveSubcategorySlug(sub.slug)}
+                            className={`group flex items-center justify-between p-3 rounded-lg border transition-all duration-200 ${activeSubcategorySlug === sub.slug
+                              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/30'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700'
+                              }`}
+                          >
+                            <span className={`font-medium ${activeSubcategorySlug === sub.slug ? 'text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300'}`}>
+                              {sub.name}
+                            </span>
+                            <ChevronDown className={`h-4 w-4 transition-all duration-200 ${activeSubcategorySlug === sub.slug ? 'text-blue-600 -rotate-90 opacity-100' : 'text-slate-300 opacity-0 group-hover:opacity-100 -rotate-90'}`} />
+                          </Link>
+                        ))
+                      ) : (
+                        <div className="text-slate-400 text-sm italic py-4">No categories found.</div>
+                      )}
+                    </div>
+
+                    {/* Types Column (Dynamic) */}
+                    <div className="col-span-7 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
+                      {activeSubcategory ? (
+                        <div className="animate-in fade-in slide-in-from-left-2 duration-200">
+                          <h3 className="flex items-center gap-2 font-bold text-slate-900 dark:text-white mb-4">
+                            <span className="text-blue-600">types of</span> {activeSubcategory.name}
+                          </h3>
+                          {activeTypes && activeTypes.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-3">
+                              {activeTypes.map((type, idx) => (
+                                <Link
+                                  key={idx}
+                                  href={`/products?search=${encodeURIComponent(type)}`}
+                                  className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:translate-x-1 transition-all"
+                                >
+                                  <div className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-slate-600 group-hover:bg-blue-500"></div>
+                                  {type}
+                                </Link>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-slate-500">
+                              Browse all {activeSubcategory.name.toLowerCase()}.
+                              <br />
+                              <Link href={`/products?space=${activeSpace.slug}&subcategory=${activeSubcategory.slug}`} className="text-blue-600 hover:underline mt-2 inline-block">
+                                View Collection &rarr;
+                              </Link>
+                            </div>
+                          )}
+
+                          {/* Featured Image Placeholder for Subcategory? */}
+                          {/* Editor's Pick section removed */}
+                        </div>
+                      ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-center text-slate-400">
+                          <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-800 mb-3">
+                            <Briefcase className="h-6 w-6 opacity-50" />
+                          </div>
+                          <p className="text-sm">Hover over a category<br />to see available types.</p>
+                        </div>
+                      )}
+                    </div>
+
                   </div>
                 </div>
-              );
-            })}
-          </div>
-          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 -mx-6 -mb-6 p-4">
-            <div className="text-sm font-medium text-slate-600 dark:text-slate-400">
-              Need help designing your space?
+              )}
             </div>
-            <Link href="/contact" className="text-sm font-semibold text-blue-700 hover:underline">
-              Book a Consultation &rarr;
-            </Link>
+          </div>
+
+          {/* Footer */}
+          <div className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 shrink-0 flex justify-between items-center z-10">
+            <div className="flex items-center gap-4 px-2">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Accepting Bulk Orders</span>
+              </div>
+              <div className="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
+              <span className="text-xs text-slate-500">Fast Delivery Nationwide</span>
+            </div>
+            <div className="flex items-center gap-6">
+              <Link href="/contact" className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-2">
+                Get a Wholesale Quote <ArrowRight className="h-4 w-4" />
+              </Link>
+              <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+              <ModeToggle />
+            </div>
           </div>
         </HoverCard.Content>
       </HoverCard.Portal>
@@ -407,7 +613,7 @@ function MobileMenu({ spaces, wishlistCount, isAuthenticated, onSignOut }: { spa
                   <AccordionContent>
                     <div className="pl-4 pr-2 space-y-1">
                       {spaces.map(space => {
-                        const Icon = getIconComponent(space.icon || 'Table');
+                        const Icon = getIconComponent(space.icon || 'Table') as any;
                         return (
                           <Accordion key={space.id} type="single" collapsible>
                             <AccordionItem value={space.id} className="border-none">
@@ -462,5 +668,71 @@ function MobileMenu({ spaces, wishlistCount, isAuthenticated, onSignOut }: { spa
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function CompanyMenu() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <HoverCard.Root openDelay={150} closeDelay={200} onOpenChange={setOpen}>
+      <HoverCard.Trigger asChild>
+        <button
+          className={`flex items-center space-x-1 px-4 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all rounded-md outline-none ${open ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm'}`}
+        >
+          <span>Company</span>
+          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        </button>
+      </HoverCard.Trigger>
+      <HoverCard.Portal>
+        <HoverCard.Content
+          className="z-50 w-48 bg-white dark:bg-slate-950 rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 p-2 animate-in fade-in-0 zoom-in-95"
+          sideOffset={10}
+          align="start"
+        >
+          <div className="flex flex-col space-y-1">
+            <Link href="/about" className="px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
+              About Us
+            </Link>
+            <Link href="/blog" className="px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
+              Blog
+            </Link>
+            <Link href="/e-catalogue" className="px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
+              E-Catalogue
+            </Link>
+            <Link href="/contact" className="px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
+              Contact
+            </Link>
+          </div>
+        </HoverCard.Content>
+      </HoverCard.Portal>
+    </HoverCard.Root>
+  );
+}
+
+function SearchInput() {
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const query = formData.get("q");
+    if (query) {
+      router.push(`/products?search=${encodeURIComponent(query.toString())}`);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSearch} className="relative group">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <Search className="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+      </div>
+      <input
+        type="text"
+        name="q"
+        placeholder="Search furniture..."
+        className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg leading-5 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all sm:text-sm"
+      />
+    </form>
   );
 }

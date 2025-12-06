@@ -36,7 +36,7 @@ export function WishlistIndicator({ className }: WishlistIndicatorProps) {
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 0.3 }}
       >
-        <Heart className="h-5 w-5" />
+        <Heart className="h-5 w-5" strokeWidth={1.5} />
       </motion.div>
 
       {/* Count Badge */}
@@ -51,7 +51,7 @@ export function WishlistIndicator({ className }: WishlistIndicatorProps) {
               stiffness: 500,
               damping: 30
             }}
-            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center px-1"
+            className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center px-1"
           >
             {wishlistCount > 99 ? '99+' : wishlistCount}
           </motion.div>
