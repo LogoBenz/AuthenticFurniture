@@ -127,6 +127,7 @@ export interface ProductFilters {
   space?: string;
   subcategory?: string;
   collection?: string; // New collection filter
+  search?: string; // Search query
   price_min?: number;
   price_max?: number;
   page?: number;
@@ -152,8 +153,6 @@ export interface PaginatedProducts {
  * @returns Promise<PaginatedProducts> - Paginated product data with total count
  */
 export const getProducts = cache(async (filters: ProductFilters = {}): Promise<PaginatedProducts> => {
-  console.log('🔍 getProducts: Fetching with filters:', filters);
-
   const supabase = createAdminClient(); // Use admin client for server-side
   const page = filters.page || 1;
   const limit = filters.limit || 12;
@@ -192,7 +191,6 @@ export const getProducts = cache(async (filters: ProductFilters = {}): Promise<P
     }
 
     if (filters.collection) {
-      console.log('🔍 Applying collection filter:', filters.collection);
       if (filters.collection === 'best-sellers') {
         query = query.eq('is_best_seller', true);
       } else if (filters.collection === 'featured') {
@@ -202,13 +200,19 @@ export const getProducts = cache(async (filters: ProductFilters = {}): Promise<P
       }
     }
 
+    // Apply search filter
+    if (filters.search) {
+      // Construct a search query that looks at name, description, and keywords
+      // Using ilike for case-insensitive partial matching
+      const searchTerm = `%${filters.search}%`;
+      query = query.or(`name.ilike.${searchTerm},description.ilike.${searchTerm},category.ilike.${searchTerm}`);
+    }
+
     if (filters.price_min !== undefined) {
-      console.log('🔍 Applying price_min filter:', filters.price_min);
       query = query.gte('price', filters.price_min);
     }
 
     if (filters.price_max !== undefined) {
-      console.log('🔍 Applying price_max filter:', filters.price_max);
       query = query.lte('price', filters.price_max);
     }
 
@@ -243,19 +247,16 @@ export const getProducts = cache(async (filters: ProductFilters = {}): Promise<P
       query = query.order('created_at', { ascending: false });
     }
 
-    console.log('🔍 Executing query with offset:', offset, 'limit:', limit);
     const { data, error, count } = await query;
 
     if (error) {
-      console.error('❌ Supabase error fetching products:', error);
+      console.error('Supabase error fetching products:', error);
       throw new Error(`Failed to fetch products: ${error.message}`);
     }
 
     const products = (data || []).map(mapSupabaseRowToProduct);
     const totalCount = count || 0;
     const totalPages = Math.ceil(totalCount / limit);
-
-    console.log('✅ getProducts: Returning', products.length, 'products, total:', totalCount, 'pages:', totalPages);
 
     return {
       products,
@@ -264,7 +265,7 @@ export const getProducts = cache(async (filters: ProductFilters = {}): Promise<P
       totalPages
     };
   } catch (error) {
-    console.error('❌ Error in getProducts:', error);
+    console.error('Error in getProducts:', error);
     throw error;
   }
 });

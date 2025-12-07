@@ -39,8 +39,8 @@ function Counter({
 
 export function StatsSection() {
     return (
-        <section className="py-12 bg-white dark:bg-slate-950">
-            <div className="w-full px-4 sm:px-6 lg:px-12 mx-auto">
+        <section className="py-8 bg-white dark:bg-slate-950">
+            <div className="w-full px-4 mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:divide-x divide-slate-200 dark:divide-slate-800">
                     <motion.div
                         className="p-4 flex flex-col items-center cursor-default"

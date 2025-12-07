@@ -15,6 +15,7 @@ interface ProductsPageProps {
     space?: string;
     subcategory?: string;
     collection?: string;
+    search?: string;
     price_min?: string;
     price_max?: string;
     page?: string;
@@ -71,6 +72,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const spaceSlug = params?.space;
   const subcategorySlug = params?.subcategory;
   const collection = params?.collection;
+  const search = params?.search;
   const price_min = params?.price_min ? parseFloat(params.price_min) : undefined;
   const price_max = params?.price_max ? parseFloat(params.price_max) : undefined;
   const sort = params?.sort;
@@ -106,6 +108,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     space,
     subcategory,
     collection,
+    search,
     price_min,
     price_max,
     sort,

@@ -1,5 +1,7 @@
 "use client";
 
+import { PRODUCT_TYPES } from "@/lib/constants";
+
 import { useState, useEffect, memo, useCallback } from "react";
 import { Product, Space, Warehouse } from "@/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -564,44 +566,35 @@ export const ProductFormDialog = memo(function ProductFormDialog({
                             </div>
 
                             {/* Product Type (conditional based on subcategory) */}
+                            {/* Product Type (conditional based on subcategory) */}
                             {(() => {
                                 const selectedSubcategories = spaces
                                     .flatMap(space => space.subcategories || [])
                                     .filter(sub => formData.subcategory_ids.includes(sub.id));
 
-                                const isOfficeTables = selectedSubcategories.some(sub => sub.name.toLowerCase().includes("office tables"));
-                                const isOfficeChairs = selectedSubcategories.some(sub => sub.name.toLowerCase().includes("office chairs"));
+                                // Get unique available types for selected subcategories
+                                const availableTypes = Array.from(new Set(
+                                    selectedSubcategories.flatMap(sub =>
+                                        PRODUCT_TYPES[sub.name] ||
+                                        PRODUCT_TYPES[sub.slug] ||
+                                        PRODUCT_TYPES[sub.name.trim()] ||
+                                        []
+                                    )
+                                ));
 
-                                if (!isOfficeTables && !isOfficeChairs) return null;
+                                if (availableTypes.length === 0) return null;
 
                                 return (
                                     <div>
-                                        <Label htmlFor="product_types">
-                                            {isOfficeTables ? "Table Type" : "Chair Type"} (Optional)
-                                        </Label>
+                                        <Label htmlFor="product_types">Product Type (Optional)</Label>
                                         <MultiSelect
-                                            options={[
-                                                ...(isOfficeTables ? [
-                                                    { label: "Executive Tables", value: "Executive Tables" },
-                                                    { label: "Electric Desks", value: "Electric Desks" },
-                                                    { label: "Reception Tables", value: "Reception Tables" },
-                                                    { label: "Conference Tables", value: "Conference Tables" },
-                                                    { label: "Standard Tables", value: "Standard Tables" }
-                                                ] : []),
-                                                ...(isOfficeChairs ? [
-                                                    { label: "Ergonomic Chairs", value: "Ergonomic Chairs" },
-                                                    { label: "Mesh Chairs", value: "Mesh Chairs" },
-                                                    { label: "Swivel Chairs", value: "Swivel Chairs" },
-                                                    { label: "Guest Chairs", value: "Guest Chairs" },
-                                                    { label: "Task Chairs", value: "Task Chairs" }
-                                                ] : [])
-                                            ]}
+                                            options={availableTypes.map(type => ({ label: type, value: type }))}
                                             selected={formData.product_types}
                                             onChange={(selected) => setFormData({ ...formData, product_types: selected })}
-                                            placeholder={`Select ${isOfficeTables ? "table" : "chair"} types...`}
+                                            placeholder="Select product types..."
                                         />
                                         <p className="text-xs text-gray-500 mt-1">
-                                            Used for filtering in the {isOfficeTables ? "Office Tables" : "Office Chairs"} section
+                                            Categorizes the product for specific filters (e.g., "Ergonomic Chairs", "Executive Tables")
                                         </p>
                                     </div>
                                 );

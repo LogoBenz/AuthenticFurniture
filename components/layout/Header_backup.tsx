@@ -44,7 +44,6 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Input } from "@/components/ui/input";
 import { EnquiryCartModal } from "@/components/products/EnquiryCartModal";
 import { SearchModal } from "@/components/ui/SearchModal";
-import { SearchBar } from "@/components/layout/SearchBar";
 import { useAuth } from "@/hooks/use-auth";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { WishlistIndicator } from "@/components/ui/WishlistIndicator";
@@ -109,48 +108,55 @@ export const useNavigation = () => useContext(NavigationContext);
 
 // --- Hooks ---
 
-// --- Hooks ---
-
-function useScrollDirection() {
-  const [scrollDirection, setScrollDirection] = useState<"up" | "down">("up");
-  const [isAtTop, setIsAtTop] = useState(true);
+function useHideOnScroll() {
+  const [isHidden, setIsHidden] = useState(false);
   const lastScrollY = useRef(0);
+  const ticking = useRef(false);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 
-      // Update at top status
-      setIsAtTop(currentScrollY < 40);
+      if (!ticking.current) {
+        window.requestAnimationFrame(() => {
+          const diff = currentScrollY - lastScrollY.current;
 
-      // Determine direction with hysteresis
-      const diff = currentScrollY - lastScrollY.current;
-      if (Math.abs(diff) > 5) {
-        setScrollDirection(diff > 0 ? "down" : "up");
+          // Only update if difference is significant (hysteresis) to prevent jitter
+          if (Math.abs(diff) > 10) {
+            // Hide if scrolling down and past 100px
+            // Show if scrolling up
+            if (diff > 0 && currentScrollY > 100) {
+              setIsHidden(true);
+            } else if (diff < 0) {
+              setIsHidden(false);
+            }
+          }
+          lastScrollY.current = currentScrollY;
+          ticking.current = false;
+        });
+
+        ticking.current = true;
       }
-
-      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  return { scrollDirection, isAtTop };
+  return isHidden;
 }
 
 // --- Components ---
 
 export function Header() {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [showPromoHeader, setShowPromoHeader] = useState(false); // Kept for compatibility if needed, though not in request explicitly, good to have.
 
-  // New Scroll Hooks
-  const { scrollDirection, isAtTop } = useScrollDirection();
-
+  const isHidden = useHideOnScroll();
   const { isAuthenticated, signOut } = useAuth();
   const { wishlistCount } = useWishlist();
   const router = useRouter();
@@ -160,12 +166,12 @@ export function Header() {
   // Check if we're in admin area
   const isAdminArea = pathname?.startsWith('/admin');
 
-  // Simple scroll detection for styling (transparency etc)
+  // Scroll detection
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -224,120 +230,108 @@ export function Header() {
     router.push('/');
   };
 
-  if (isAdminArea) return null;
-
-  // Determine transform class based on scroll state
-  let transformClass = "translate-y-0"; // Default (Top)
-
-  if (!isAtTop) {
-    if (scrollDirection === "down") {
-      transformClass = "-translate-y-full"; // Hide all when scrolling down
-    } else {
-      transformClass = "-translate-y-[40px]"; // Hide social (40px) show nav when scrolling up
-    }
-  }
+  if (isAdminArea) return null; // Or return a simplified admin header if preferred, but usually handled by layout
 
   return (
     <NavigationContext.Provider value={{ isScrolled, isMobile, spaces }}>
-
-      {/* Unified Fixed Container */}
+      {/* Top Social Bar */}
       <div
-        className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out ${transformClass}`}
+        className={`bg-slate-900 text-white transition-all duration-300 overflow-hidden ${isHidden ? 'max-h-0 opacity-0' : 'max-h-10 opacity-100'
+          }`}
       >
-
-        {/* Top Social Bar (Height: 40px) */}
-        <div className="bg-slate-900 text-white h-10 overflow-hidden">
-          <div className="container mx-auto px-4 h-full flex items-center justify-between text-xs sm:text-sm">
-            <div className="flex items-center space-x-4">
-              <SocialLink href="#" icon={Facebook} label="Facebook" />
-              <SocialLink href="#" icon={Twitter} label="Twitter" />
-              <SocialLink href="#" icon={Instagram} label="Instagram" />
-              <SocialLink href="#" icon={Linkedin} label="LinkedIn" />
-              <SocialLink href="#" icon={TikTokIcon} label="TikTok" />
-            </div>
-            <div className="hidden md:block">Bulk? Wholesale Quote Available. Contact: 09037725829</div>
-            <div className="md:hidden">Bulk Quote Available</div>
+        <div className="container mx-auto px-4 h-10 flex items-center justify-between text-xs sm:text-sm">
+          <div className="flex items-center space-x-4">
+            <SocialLink href="#" icon={Facebook} label="Facebook" />
+            <SocialLink href="#" icon={Twitter} label="Twitter" />
+            <SocialLink href="#" icon={Instagram} label="Instagram" />
+            <SocialLink href="#" icon={Linkedin} label="LinkedIn" />
+            <SocialLink href="#" icon={TikTokIcon} label="TikTok" />
           </div>
+          <div className="hidden md:block">Bulk? Wholesale Quote Available. Contact: 09037725829</div>
+          <div className="md:hidden">Bulk Quote Available</div>
         </div>
+      </div>
 
-        {/* Main Header */}
-        <header
-          className={`w-full transition-colors duration-300 border-b
-            ${isScrolled ? "bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-sm border-slate-200 dark:border-slate-800" : "bg-white border-slate-100 dark:bg-slate-900 dark:border-slate-800"}
-          `}
-        >
-          <div className={`w-full px-4 sm:px-6 lg:px-12 mx-auto py-2 transition-[padding] duration-300`}>
-            <div className="flex items-center justify-between h-14">
+      {/* Main Header */}
+      <header
+        className={`fixed w-full z-50 transition-all duration-300 ease-in-out border-b border-transparent
+          ${isScrolled ? "bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm border-slate-200 dark:border-slate-800" : "bg-white border-slate-100 dark:bg-slate-900 dark:border-slate-800"}
+          ${isHidden ? '-translate-y-full' : 'translate-y-0'}
+        `}
+        style={{
+          top: isScrolled ? '0' : '40px'
+        }}
+      >
+        <div className={`w-full px-4 sm:px-6 lg:px-12 mx-auto ${isScrolled ? 'py-3' : 'py-5'}`}>
+          <div className="flex items-center justify-between h-14">
 
-              {/* 1. Logo Section */}
-              <div className="flex items-center gap-4">
-                <MobileMenu spaces={spaces} wishlistCount={wishlistCount} isAuthenticated={isAuthenticated} onSignOut={handleSignOut} />
-                <Link href="/" ref={logoRef} className="flex items-center mr-8">
-                  <h1 className="text-xl sm:text-2xl font-bold tracking-tighter whitespace-nowrap">
-                    Authentic <span className="text-blue-600 dark:text-blue-500">Furniture</span>
-                  </h1>
-                </Link>
+            {/* 1. Logo Section */}
+            <div className="flex items-center gap-4">
+              <MobileMenu spaces={spaces} wishlistCount={wishlistCount} isAuthenticated={isAuthenticated} onSignOut={handleSignOut} />
+              <Link href="/" ref={logoRef} className="flex items-center mr-8">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tighter whitespace-nowrap">
+                  Authentic <span className="text-blue-600 dark:text-blue-500">Furniture</span>
+                </h1>
+              </Link>
+            </div>
+
+            {/* 2. Central Pill Navigation (Desktop Only) */}
+            <nav className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1.5 mx-4">
+              <ShopBySpaceMenu spaces={spaces} />
+              <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1"></div>
+              <Link
+                href="/showroom"
+                className="px-4 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors rounded-md hover:bg-white dark:hover:bg-slate-700 shadow-sm hover:shadow-sm"
+              >
+                Showroom
+              </Link>
+              <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1"></div>
+              <CompanyMenu />
+            </nav>
+
+            {/* 3. Search & Icons Section */}
+            <div className="flex items-center gap-3 ml-auto">
+
+              {/* Visible Search Bar (Desktop) */}
+              <div className="hidden lg:block relative w-[280px]">
+                <SearchInput />
               </div>
 
-              {/* 2. Central Pill Navigation (Desktop Only) */}
-              <nav className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1.5 mx-4">
-                <ShopBySpaceMenu spaces={spaces} />
-                <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1"></div>
-                <Link
-                  href="/showroom"
-                  className="px-4 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors rounded-md hover:bg-white dark:hover:bg-slate-700 shadow-sm hover:shadow-sm"
+              {/* Mobile Search Icon */}
+              <div className="lg:hidden">
+                <Button variant="ghost" size="icon" onClick={() => setIsSearchModalOpen(true)}>
+                  <Search className="h-5 w-5" strokeWidth={1.5} />
+                </Button>
+              </div>
+
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => router.push(isAuthenticated ? '/profile' : '/auth/login')}
+                  className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800"
                 >
-                  Showroom
-                </Link>
-                <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1"></div>
-                <CompanyMenu />
-              </nav>
+                  <User className="h-5 w-5" strokeWidth={1.5} />
+                </Button>
 
-              {/* 3. Search & Icons Section */}
-              <div className="flex items-center gap-3 ml-auto">
+                <WishlistIndicator />
 
-                {/* Visible Search Bar (Desktop) */}
-                <div className="hidden lg:block relative w-[280px]">
-                  <SearchBar />
-                </div>
-
-                {/* Mobile Search Icon */}
-                <div className="lg:hidden">
-                  <Button variant="ghost" size="icon" onClick={() => setIsSearchModalOpen(true)}>
-                    <Search className="h-5 w-5" strokeWidth={1.5} />
-                  </Button>
-                </div>
-
-                <div className="flex items-center space-x-1">
+                <div className="relative">
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => router.push(isAuthenticated ? '/profile' : '/auth/login')}
+                    onClick={() => setIsCartModalOpen(true)}
                     className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800"
                   >
-                    <User className="h-5 w-5" strokeWidth={1.5} />
+                    <CartIndicator />
                   </Button>
-
-                  <WishlistIndicator />
-
-                  <div className="relative">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsCartModalOpen(true)}
-                      className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800"
-                    >
-                      <CartIndicator />
-                    </Button>
-                  </div>
                 </div>
               </div>
-
             </div>
-          </div>
-        </header>
 
-      </div>
+          </div>
+        </div>
+      </header>
 
       <EnquiryCartModal isOpen={isCartModalOpen} onClose={() => setIsCartModalOpen(false)} />
       <SearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} />
@@ -363,7 +357,48 @@ function NavLink({ href, children }: { href: string, children: React.ReactNode }
   );
 }
 
-import { PRODUCT_TYPES } from "@/lib/constants";
+const MOCK_TYPES: Record<string, string[]> = {
+  // Office Chairs (from assign_office_chair_types.sql)
+  'Office Chairs': ['Ergonomic Chairs', 'Mesh Chairs', 'Swivel Chairs', 'Guest Chairs', 'Task Chairs'],
+  'Chairs': ['Ergonomic Chairs', 'Mesh Chairs', 'Swivel Chairs', 'Guest Chairs', 'Task Chairs'],
+  'office-chairs': ['Ergonomic Chairs', 'Mesh Chairs', 'Swivel Chairs', 'Guest Chairs', 'Task Chairs'],
+
+  // Office Tables (from add_product_type.sql)
+  'Office Tables': ['Executive Tables', 'Electric Desks', 'Reception Tables', 'Conference Tables', 'Standard Tables'],
+  'Tables': ['Executive Tables', 'Electric Desks', 'Reception Tables', 'Conference Tables', 'Standard Tables'],
+  'Desks & Tables': ['Executive Tables', 'Electric Desks', 'Reception Tables', 'Conference Tables', 'Standard Tables'],
+  'office-tables': ['Executive Tables', 'Electric Desks', 'Reception Tables', 'Conference Tables', 'Standard Tables'],
+  'desks-tables': ['Executive Tables', 'Electric Desks', 'Reception Tables', 'Conference Tables', 'Standard Tables'],
+
+  // Other Fallbacks (Maintained)
+  'Sofa Sets': ['L-Shaped Sofas', 'Sectional Sofas', 'Recliner Sofas', 'Chesterfield Sofas', 'Sofa Beds'],
+  'Sofas': ['L-Shaped Sofas', 'Sectional Sofas', 'Recliner Sofas', 'Chesterfield Sofas', 'Sofa Beds'],
+  'sofa-sets': ['L-Shaped Sofas', 'Sectional Sofas', 'Recliner Sofas', 'Chesterfield Sofas', 'Sofa Beds'],
+
+  'Beds': ['King Size Beds', 'Queen Size Beds', 'Bunk Beds', 'Storage Beds', 'Upholstered Beds'],
+  'beds': ['King Size Beds', 'Queen Size Beds', 'Bunk Beds', 'Storage Beds', 'Upholstered Beds'],
+
+  'Cabinets': ['Wardrobes', 'Shoe Racks', 'Display Cabinets', 'Filing Cabinets', 'Sideboards'],
+  'cabinets': ['Wardrobes', 'Shoe Racks', 'Display Cabinets', 'Filing Cabinets', 'Sideboards'],
+
+  'Dining Sets': ['4-Seater Sets', '6-Seater Sets', '8-Seater Sets', 'Glass Top Tables', 'Marble Top Tables'],
+  'dining-sets': ['4-Seater Sets', '6-Seater Sets', '8-Seater Sets', 'Glass Top Tables', 'Marble Top Tables'],
+
+  'Auditorium Chairs': ['Lecture Hall Seating', 'Cinema Chairs', 'Church Seating', 'VIP Auditorium Seats'],
+  'auditorium-chairs': ['Lecture Hall Seating', 'Cinema Chairs', 'Church Seating', 'VIP Auditorium Seats'],
+
+  'Student Chairs': ['Training Chairs', 'Tablet Chairs', 'Classroom Desks', 'Library Seating'],
+  'student-chairs': ['Training Chairs', 'Tablet Chairs', 'Classroom Desks', 'Library Seating'],
+
+  'Canopy': ['Gazebos', 'Outdoor Umbrellas', 'Marquees', 'Carports'],
+  'canopy': ['Gazebos', 'Outdoor Umbrellas', 'Marquees', 'Carports'],
+
+  'Patio Sets': ['Rattan Sets', 'Garden Swings', 'Outdoor Dining', 'Sun Loungers'],
+  'patio-sets': ['Rattan Sets', 'Garden Swings', 'Outdoor Dining', 'Sun Loungers'],
+
+  'Lounges & Bars': ['Bar Stools', 'Lounge Chairs', 'Coffee Tables', 'Bar Cabinets'],
+  'lounges-bars': ['Bar Stools', 'Lounge Chairs', 'Coffee Tables', 'Bar Cabinets']
+};
 
 function ShopBySpaceMenu({ spaces }: { spaces: Space[] }) {
   const [open, setOpen] = useState(false);
@@ -381,7 +416,7 @@ function ShopBySpaceMenu({ spaces }: { spaces: Space[] }) {
   const activeSubcategory = activeSpace?.subcategories?.find(sub => sub.slug === activeSubcategorySlug);
   // Try to find types by name or slug
   const activeTypes = activeSubcategory
-    ? (PRODUCT_TYPES[activeSubcategory.name] || PRODUCT_TYPES[activeSubcategory.slug] || PRODUCT_TYPES[activeSubcategory.name.trim()])
+    ? (MOCK_TYPES[activeSubcategory.name] || MOCK_TYPES[activeSubcategory.slug] || MOCK_TYPES[activeSubcategory.name.trim()])
     : null;
 
   return (
@@ -396,7 +431,7 @@ function ShopBySpaceMenu({ spaces }: { spaces: Space[] }) {
       </HoverCard.Trigger>
       <HoverCard.Portal>
         <HoverCard.Content
-          className="z-50 w-[1000px] h-[450px] bg-white dark:bg-slate-950 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 p-0 overflow-hidden animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 flex flex-col"
+          className="z-50 w-[1000px] h-[550px] bg-white dark:bg-slate-950 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 p-0 overflow-hidden animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 flex flex-col"
           sideOffset={10}
           align="center"
         >
@@ -675,3 +710,29 @@ function CompanyMenu() {
   );
 }
 
+function SearchInput() {
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const query = formData.get("q");
+    if (query) {
+      router.push(`/products?search=${encodeURIComponent(query.toString())}`);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSearch} className="relative group">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <Search className="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+      </div>
+      <input
+        type="text"
+        name="q"
+        placeholder="Search furniture..."
+        className="block w-full pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg leading-5 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all sm:text-sm"
+      />
+    </form>
+  );
+}

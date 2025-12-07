@@ -15,7 +15,7 @@ export function MainLayoutWrapper({ children }: MainLayoutWrapperProps) {
         <main
             className={cn(
                 "flex-grow",
-                isAdminArea ? "pt-[60px]" : "pt-[90px] md:pt-[95px]"
+                isAdminArea ? "pt-[60px]" : "pt-[115px]"
             )}
         >
             {children}
