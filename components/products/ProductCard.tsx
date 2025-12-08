@@ -122,7 +122,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView, variant
               src={secondImageUrl}
               alt={`${product.name} - view 2`}
               fill
-              className={`absolute inset-0 z-10 ${product.category.toLowerCase().includes('chair') || product.category.toLowerCase().includes('seating') ? 'object-contain' : 'object-cover'} opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300 ease-out`}
+              className={`absolute inset-0 z-10 ${product.category.toLowerCase().includes('chair') || product.category.toLowerCase().includes('seating') ? 'object-contain' : 'object-cover'} bg-white dark:bg-slate-900 opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300 ease-out`}
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               loading="eager"
             />

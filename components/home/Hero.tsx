@@ -12,7 +12,7 @@ const mainHeroImages = [
   { src: "promoHero/officeT.png", align: "object-left" }
 ];
 
-const topRightImage = "promoHero/officeTableHero.png";
+const topRightImage = "promoHero/officeDealsRevamp.png";
 const bottomRightImage = "promoHero/sideStudentC.png";
 
 export function Hero() {
@@ -34,18 +34,18 @@ export function Hero() {
   }, [mainCurrentImageIndex]);
 
   return (
-    <section className="relative pt-4 pb-4 sm:pb-6 bg-white dark:bg-slate-900">
+    <section className="relative pb-4 sm:pb-6 bg-white dark:bg-slate-900">
       {/* Full width - no container */}
       <div className="w-full">
-        {/* Responsive Layout */}
-        <div className="flex flex-col lg:flex-row gap-4 w-full max-w-[1320px] mx-auto px-2 sm:px-4 items-center justify-center">
+        {/* Responsive Layout: Flex Column for Top/Bottom structure */}
+        <div className="flex flex-col gap-4 w-full">
 
-          {/* Left Main Card - NextUI Style - 883x500 */}
+          {/* Top Main Card - Full Width Edge to Edge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="relative overflow-hidden rounded-xl transition-all duration-300 flex-shrink-0 w-full lg:w-[883px] aspect-[4/3] sm:aspect-[16/9] lg:aspect-[883/500]"
+            className="relative overflow-hidden transition-all duration-300 w-full h-[650px] sm:h-auto sm:aspect-[16/9] lg:aspect-[21/9]"
           >
             {/* Background Image Carousel with Framer Motion */}
             <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
@@ -64,7 +64,7 @@ export function Hero() {
                     fill
                     className={`object-cover ${mainHeroImages[mainCurrentImageIndex].align}`}
                     priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 883px, 883px"
+                    sizes="100vw"
                   />
                 </motion.div>
               </AnimatePresence>
@@ -89,42 +89,60 @@ export function Hero() {
             </div>
           </motion.div>
 
-          {/* Right Column - Two cards responsive */}
-          <div className="flex flex-col gap-4 flex-shrink-0 w-full lg:w-[429px]">
-            {/* Top Right Card - NextUI Style - 429x240 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative overflow-hidden rounded-xl transition-all duration-300 w-full aspect-[3/2] sm:aspect-[16/9] lg:aspect-[429/240]"
-            >
-              <Image
-                src={`/${topRightImage}`}
-                alt="Office Furniture"
-                fill
-                className="object-cover object-center"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 429px, 429px"
-              />
-            </motion.div>
+          {/* Bottom Row - 3 Cards (2 on Mobile) - Contained */}
+          <div className="w-[95%] mx-auto px-2 sm:px-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+              {/* Card 1: Office Table */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="relative overflow-hidden rounded-xl transition-all duration-300 w-full aspect-[4/3] sm:aspect-[3/2] lg:aspect-[16/9]"
+              >
+                <Image
+                  src={`/${topRightImage}`}
+                  alt="Office Furniture"
+                  fill
+                  className="object-cover object-center"
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                />
+              </motion.div>
 
-            {/* Bottom Right Card - NextUI Style - 429x240 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="relative overflow-hidden rounded-xl transition-all duration-300 w-full aspect-[3/2] sm:aspect-[16/9] lg:aspect-[429/240]"
-            >
-              <Image
-                src={`/${bottomRightImage}`}
-                alt="Student Furniture"
-                fill
-                className="object-cover object-center"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 429px, 429px"
-              />
-            </motion.div>
-          </div >
-        </div >
-      </div >
-    </section >
+              {/* Card 2: Refer and Earn (New) */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="relative overflow-hidden rounded-xl transition-all duration-300 w-full aspect-[4/3] sm:aspect-[3/2] lg:aspect-[16/9]"
+              >
+                <Image
+                  src="/promoHero/referAndEarn.png"
+                  alt="Refer and Earn"
+                  fill
+                  className="object-cover object-top"
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                />
+              </motion.div>
+
+              {/* Card 3: Student Chair (Hidden on Mobile) */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                className="relative overflow-hidden rounded-xl transition-all duration-300 w-full aspect-[4/3] sm:aspect-[3/2] lg:aspect-[16/9] hidden lg:block"
+              >
+                <Image
+                  src={`/${bottomRightImage}`}
+                  alt="Student Furniture"
+                  fill
+                  className="object-cover object-center"
+                  sizes="33vw"
+                />
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

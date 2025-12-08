@@ -51,19 +51,18 @@ export function OfficeChairsSection({ products }: OfficeChairsSectionProps) {
         {/* Header with gradient background and image */}
         <div className="relative mb-8 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl overflow-hidden shadow-inner">
           <div className="absolute inset-0 bg-gradient-to-br from-black/5 via-transparent to-transparent pointer-events-none"></div>
-          <div className="relative flex items-center justify-between px-6 py-3">
+          <div className="relative flex items-center justify-between px-6 py-3 min-h-[120px]">
             <div>
               <h2 className="text-2xl font-heading font-bold text-slate-900 dark:text-white tracking-tight">
                 Office Chairs
               </h2>
             </div>
-            <div className="hidden md:block -my-2">
+            <div className="hidden md:block absolute right-12 top-0 h-full w-[400px]">
               <Image
-                src="/catImg/oChair.png"
+                src="/catImg/officeChairPillV3.png"
                 alt="Office Chairs"
-                width={80}
-                height={55}
-                className="object-contain"
+                fill
+                className="object-contain object-right-bottom"
               />
             </div>
           </div>
@@ -76,8 +75,8 @@ export function OfficeChairsSection({ products }: OfficeChairsSectionProps) {
               key={type}
               onClick={() => setSelectedType(type)}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${selectedType === type
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
+                ? "bg-blue-600 text-white shadow-md"
+                : "bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
                 }`}
             >
               {type}

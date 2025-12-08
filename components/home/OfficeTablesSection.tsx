@@ -51,19 +51,18 @@ export function OfficeTablesSection({ products }: OfficeTablesSectionProps) {
         {/* Header with gradient background and image */}
         <div className="relative mb-8 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl overflow-hidden shadow-inner">
           <div className="absolute inset-0 bg-gradient-to-br from-black/5 via-transparent to-transparent pointer-events-none"></div>
-          <div className="relative flex items-center justify-between px-6 py-3">
+          <div className="relative flex items-center justify-between px-6 py-3 min-h-[120px]">
             <div>
               <h2 className="text-2xl font-heading font-bold text-slate-900 dark:text-white tracking-tight">
                 Office Tables
               </h2>
             </div>
-            <div className="hidden md:block -my-2">
+            <div className="hidden md:block absolute right-24 top-0 h-full w-[450px]">
               <Image
-                src="/catImg/oTable.png"
+                src="/catImg/officeTablePillRevampV8.png"
                 alt="Office Tables"
-                width={150}
-                height={100}
-                className="object-contain"
+                fill
+                className="object-contain object-right-bottom"
               />
             </div>
           </div>

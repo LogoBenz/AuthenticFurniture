@@ -122,7 +122,7 @@ export function Categories() {
     'office-tables': '/catImg/oTable.png',
     'desks-tables': '/catImg/oTable.png', // Map fallback slug to same image
     'complementory': '/catImg/compCat.png',
-    'complementary': '/catImg/compCat.png', // Fix typo
+    'complementary': '/catImg/compCatWhite.png', // Fixed background
     'office-chairs': '/catImg/oChair.png',
     'sofa-sets': '/catImg/sofaCar.png',
     'auditorium-chairs': '/catImg/AuditoriumCat.png',
@@ -132,7 +132,7 @@ export function Categories() {
     'cabinets': '/catImg/cabinet.png',
     'storage-cabinets': '/catImg/cabinet.png',
     'lounges-bars': '/catImg/lounge-bar.png',
-    'canopy': '/catImg/canopy.png',
+    'canopy': '/catImg/heavyDutyUmbrella.png',
     'patio-sets': '/catImg/patioCat.png',
   };
 
