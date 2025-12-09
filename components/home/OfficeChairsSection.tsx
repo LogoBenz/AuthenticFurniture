@@ -57,7 +57,7 @@ export function OfficeChairsSection({ products }: OfficeChairsSectionProps) {
                 Office Chairs
               </h2>
             </div>
-            <div className="hidden md:block absolute right-12 top-0 h-full w-[400px]">
+            <div className="block absolute -right-8 md:right-12 top-0 h-full w-[250px] md:w-[400px] opacity-80 md:opacity-100">
               <Image
                 src="/catImg/officeChairPillV3.png"
                 alt="Office Chairs"
@@ -69,7 +69,7 @@ export function OfficeChairsSection({ products }: OfficeChairsSectionProps) {
         </div>
 
         {/* Type Filter Tabs */}
-        <div className="flex gap-3 mb-8 justify-center overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-3 mb-8 justify-start md:justify-center overflow-x-auto pb-2 scrollbar-hide px-2">
           {CHAIR_TYPES.map((type) => (
             <button
               key={type}

@@ -57,19 +57,19 @@ export function OfficeTablesSection({ products }: OfficeTablesSectionProps) {
                 Office Tables
               </h2>
             </div>
-            <div className="hidden md:block absolute right-24 top-0 h-full w-[450px]">
+            <div className="block absolute -right-36 md:right-24 top-0 h-full w-[260px] md:w-[450px] opacity-80 md:opacity-100">
               <Image
-                src="/catImg/officeTablePillRevampV8.png"
+                src="/catImg/officeTablePillRevampV9.png"
                 alt="Office Tables"
                 fill
-                className="object-contain object-right-bottom"
+                className="object-contain object-right-bottom scale-x-[-1]"
               />
             </div>
           </div>
         </div>
 
         {/* Type Filter Tabs */}
-        <div className="flex gap-3 mb-8 justify-center overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-3 mb-8 justify-start md:justify-center overflow-x-auto pb-2 scrollbar-hide px-2">
           {PRODUCT_TYPES.map((type) => (
             <button
               key={type}
