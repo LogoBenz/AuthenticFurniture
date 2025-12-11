@@ -8,15 +8,23 @@ import { QuickViewModal } from "./QuickViewModal";
 interface FeaturedDealsGridProps {
   title?: string;
   fetcher?: () => Promise<Product[]>;
+  products?: Product[];
+  isLoading?: boolean;
 }
 
-export function FeaturedDealsGrid({ title = "Deals of the Week", fetcher }: FeaturedDealsGridProps) {
+export function FeaturedDealsGrid({ title = "Deals of the Week", fetcher, products: propProducts, isLoading: propLoading }: FeaturedDealsGridProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
 
   useEffect(() => {
+    if (propProducts) {
+      setProducts(propProducts);
+      setLoading(!!propLoading);
+      return;
+    }
+
     let mounted = true;
     (async () => {
       try {
@@ -31,7 +39,7 @@ export function FeaturedDealsGrid({ title = "Deals of the Week", fetcher }: Feat
       }
     })();
     return () => { mounted = false; };
-  }, [fetcher]);
+  }, [fetcher, propProducts, propLoading]);
 
   // 2 big cards on top, 4 normal cards at bottom (6 total)
   const bigCards = products.slice(0, 2);

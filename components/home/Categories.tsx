@@ -22,6 +22,7 @@ import { FeaturedDealsGrid } from "@/components/products/FeaturedDealsGrid";
 import { getFeaturedDeals } from "@/lib/products";
 import { getAllSpaces } from "@/lib/categories";
 import { Space, Subcategory } from "@/types";
+import { useHomeSections } from "@/hooks/useHomeSections";
 
 export function Categories() {
   const [spaces, setSpaces] = useState<Space[]>([]);
@@ -39,23 +40,38 @@ export function Categories() {
     }
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const spacesData = await getAllSpaces();
-        setSpaces(spacesData);
+  const { isCombinedEnabled, data: combinedData, isLoading: isCombinedLoading } = useHomeSections();
 
-        // Extract all subcategories from all spaces
-        const allSubcategories = spacesData.flatMap(space => space.subcategories || []);
+  useEffect(() => {
+    if (isCombinedEnabled) {
+      if (combinedData?.popularCategories) {
+        setSpaces(combinedData.popularCategories);
+        const allSubcategories = combinedData.popularCategories.flatMap(space => space.subcategories || []);
         setSubcategories(allSubcategories);
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
+        setLoading(false);
+      } else if (!isCombinedLoading) {
+        // Fallback or error state if needed
         setLoading(false);
       }
-    };
-    loadData();
-  }, []);
+    } else {
+      // Legacy fetch logic
+      const loadData = async () => {
+        try {
+          const spacesData = await getAllSpaces();
+          setSpaces(spacesData);
+
+          // Extract all subcategories from all spaces
+          const allSubcategories = spacesData.flatMap(space => space.subcategories || []);
+          setSubcategories(allSubcategories);
+        } catch (error) {
+          console.error('Error loading data:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadData();
+    }
+  }, [isCombinedEnabled, combinedData, isCombinedLoading]);
 
   // Helper function to get icon component
   const getIconComponent = (iconName: string) => {
@@ -219,7 +235,12 @@ export function Categories() {
       <div className="h-8"></div>
 
       {/* Featured Deals Grid - replaces Promo Products with 2+4 layout */}
-      <FeaturedDealsGrid title="Deals of the Week" fetcher={getFeaturedDeals} />
+      <FeaturedDealsGrid
+        title="Deals of the Week"
+        fetcher={getFeaturedDeals}
+        products={isCombinedEnabled && combinedData?.dealsOfWeek ? combinedData.dealsOfWeek : undefined}
+        isLoading={isCombinedEnabled ? false : undefined} // If combined enabled, we already loaded.
+      />
     </section>
   );
 }

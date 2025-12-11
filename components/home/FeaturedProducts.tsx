@@ -9,7 +9,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
+import { useHomeSections } from "@/hooks/useHomeSections";
+
 export function NewArrivals() {
+  const { isCombinedEnabled, data: combinedData, isLoading: isCombinedLoading } = useHomeSections();
+
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(
@@ -40,20 +44,29 @@ export function NewArrivals() {
   }, [newArrivals]);
 
   useEffect(() => {
-    const loadNewArrivals = async () => {
-      try {
-        const products = await getFeaturedProducts();
-        setNewArrivals(products);
-      } catch (error) {
-        console.error("Error loading new arrivals:", error);
-        setNewArrivals([]);
-      } finally {
+    if (isCombinedEnabled) {
+      if (combinedData?.newArrivals) {
+        setNewArrivals(combinedData.newArrivals);
+        setIsLoading(false);
+      } else if (!isCombinedLoading) {
+        // Fallback or error state
         setIsLoading(false);
       }
-    };
-
-    loadNewArrivals();
-  }, []);
+    } else {
+      const loadNewArrivals = async () => {
+        try {
+          const products = await getFeaturedProducts();
+          setNewArrivals(products);
+        } catch (error) {
+          console.error("Error loading new arrivals:", error);
+          setNewArrivals([]);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      loadNewArrivals();
+    }
+  }, [isCombinedEnabled, combinedData, isCombinedLoading]);
 
   // Auto-scroll functionality - pauses on hover
   useEffect(() => {

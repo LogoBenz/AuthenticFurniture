@@ -57,13 +57,23 @@ export function OfficeTablesSection({ products }: OfficeTablesSectionProps) {
                 Office Tables
               </h2>
             </div>
-            <div className="block absolute -right-36 md:right-24 top-0 h-full w-[260px] md:w-[450px] opacity-80 md:opacity-100">
+            <div className="block md:hidden absolute -right-36 top-0 h-full w-[260px] opacity-80">
               <Image
                 src="/catImg/officeTablePillRevampV9.png"
                 alt="Office Tables"
                 fill
                 className="object-contain object-right-bottom scale-x-[-1]"
               />
+            </div>
+            <div className="hidden md:block absolute right-20 top-0 h-full w-[600px] opacity-100 mix-blend-multiply">
+              <div className="relative w-full h-full" style={{ maskImage: 'linear-gradient(to right, transparent, black 15%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%)' }}>
+                <Image
+                  src="/catImg/officeTableDesktopV4.png"
+                  alt="Office Tables Executive"
+                  fill
+                  className="object-contain object-right"
+                />
+              </div>
             </div>
           </div>
         </div>
