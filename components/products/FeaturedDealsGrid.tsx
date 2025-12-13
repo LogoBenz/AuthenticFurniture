@@ -68,7 +68,7 @@ export function FeaturedDealsGrid({ title = "Deals of the Week", fetcher, produc
         <div className="w-full">
           {/* Big Cards Row - 2 large cards side by side */}
           {bigCards.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
               {bigCards.map((product, index) => (
                 <motion.div
                   key={product.id}
@@ -92,7 +92,7 @@ export function FeaturedDealsGrid({ title = "Deals of the Week", fetcher, produc
 
           {/* Normal Cards Row - 4 cards in a row */}
           {normalCards.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {normalCards.map((product, index) => (
                 <motion.div
                   key={product.id}

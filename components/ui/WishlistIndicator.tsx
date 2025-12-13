@@ -36,7 +36,7 @@ export function WishlistIndicator({ className }: WishlistIndicatorProps) {
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 0.3 }}
       >
-        <Heart className="h-5 w-5" strokeWidth={1.5} />
+        <Heart className="h-5 w-5" />
       </motion.div>
 
       {/* Count Badge */}

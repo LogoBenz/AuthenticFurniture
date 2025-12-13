@@ -41,41 +41,44 @@ export function StatsSection() {
     return (
         <section className="py-8 bg-white dark:bg-slate-950">
             <div className="w-full px-4 mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:divide-x divide-slate-200 dark:divide-slate-800">
+                <div className="flex flex-row justify-between md:grid md:grid-cols-3 md:gap-8 text-center divide-x divide-slate-200 dark:divide-slate-800">
                     <motion.div
-                        className="p-4 flex flex-col items-center cursor-default"
+                        className="flex-1 px-1 md:p-4 flex flex-col items-center cursor-default"
                         whileHover={{ scale: 1.1 }}
                         transition={{ type: "spring", stiffness: 400, damping: 10 }}
                     >
-                        <div className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-2 tabular-nums group-hover:text-blue-600 transition-colors">
+                        <div className="text-2xl sm:text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-1 md:mb-2 tabular-nums group-hover:text-blue-600 transition-colors">
                             <Counter value={20} />+
                         </div>
-                        <div className="text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                            Years in the Industry
+                        <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest break-words w-full">
+                            <span className="md:hidden">Years</span>
+                            <span className="hidden md:inline">Years in the Industry</span>
                         </div>
                     </motion.div>
                     <motion.div
-                        className="p-4 flex flex-col items-center cursor-default"
+                        className="flex-1 px-1 md:p-4 flex flex-col items-center cursor-default"
                         whileHover={{ scale: 1.1 }}
                         transition={{ type: "spring", stiffness: 400, damping: 10 }}
                     >
-                        <div className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-2 tabular-nums group-hover:text-blue-600 transition-colors">
+                        <div className="text-2xl sm:text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-1 md:mb-2 tabular-nums group-hover:text-blue-600 transition-colors">
                             <Counter value={1000} />+
                         </div>
-                        <div className="text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                            Businesses Furnished
+                        <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest break-words w-full">
+                            <span className="md:hidden">Clients</span>
+                            <span className="hidden md:inline">Businesses Furnished</span>
                         </div>
                     </motion.div>
                     <motion.div
-                        className="p-4 flex flex-col items-center cursor-default"
+                        className="flex-1 px-1 md:p-4 flex flex-col items-center cursor-default"
                         whileHover={{ scale: 1.1 }}
                         transition={{ type: "spring", stiffness: 400, damping: 10 }}
                     >
-                        <div className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-2 tabular-nums group-hover:text-blue-600 transition-colors">
+                        <div className="text-2xl sm:text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-1 md:mb-2 tabular-nums group-hover:text-blue-600 transition-colors">
                             <Counter value={100000} />+
                         </div>
-                        <div className="text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                            Pcs Sold
+                        <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest break-words w-full">
+                            <span className="md:hidden">Sold</span>
+                            <span className="hidden md:inline">Pcs Sold</span>
                         </div>
                     </motion.div>
                 </div>

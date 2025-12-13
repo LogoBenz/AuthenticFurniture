@@ -242,7 +242,7 @@ export function Header() {
 
       {/* Unified Fixed Container */}
       <div
-        className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out ${transformClass}`}
+        className={`fixed top-0 left-0 w-screen z-50 transition-transform duration-300 ease-in-out ${transformClass}`}
       >
 
         {/* Top Social Bar (Height: 40px) */}
@@ -272,7 +272,7 @@ export function Header() {
               {/* 1. Logo Section */}
               <div className="flex items-center gap-4">
                 <MobileMenu spaces={spaces} wishlistCount={wishlistCount} isAuthenticated={isAuthenticated} onSignOut={handleSignOut} />
-                <Link href="/" ref={logoRef} className="flex items-center mr-8">
+                <Link href="/" ref={logoRef} className="flex items-center mr-4">
                   <h1 className="text-xl sm:text-2xl font-bold tracking-tighter whitespace-nowrap">
                     Authentic <span className="text-blue-600 dark:text-blue-500">Furniture</span>
                   </h1>
@@ -281,11 +281,17 @@ export function Header() {
 
               {/* 2. Central Pill Navigation (Desktop Only) */}
               {/* 2. Central Pill Navigation (Desktop Only) */}
-              <nav className="hidden md:flex items-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-sm rounded-full p-1 mx-4 gap-1">
+              <nav className="hidden md:flex items-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-sm rounded-full p-1 mr-4">
                 <ShopBySpaceMenu spaces={spaces} />
                 <Link
+                  href="/products"
+                  className="px-3 lg:px-4 py-2 text-sm font-medium text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 whitespace-nowrap"
+                >
+                  Products
+                </Link>
+                <Link
                   href="/showroom"
-                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+                  className="px-3 lg:px-4 py-2 text-sm font-medium text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 whitespace-nowrap"
                 >
                   Showroom
                 </Link>
@@ -293,42 +299,39 @@ export function Header() {
               </nav>
 
               {/* 3. Search & Icons Section */}
-              <div className="flex items-center gap-3 ml-auto">
+              <div className="flex items-center gap-2 ml-auto">
 
                 {/* Visible Search Bar (Desktop) */}
-                <div className="hidden lg:block relative w-[280px]">
+                <div className="hidden xl:block relative w-[320px]">
                   <SearchBar />
                 </div>
 
-                {/* Mobile Search Icon */}
-                <div className="lg:hidden">
-                  <Button variant="ghost" size="icon" onClick={() => setIsSearchModalOpen(true)}>
-                    <Search className="h-5 w-5" strokeWidth={1.5} />
+                {/* All Icons - Consistent Spacing */}
+                <div className="flex items-center">
+                  {/* Mobile/Tablet Search Icon */}
+                  <Button variant="ghost" size="icon" onClick={() => setIsSearchModalOpen(true)} className="xl:hidden hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800">
+                    <Search className="h-5 w-5" />
                   </Button>
-                </div>
 
-                <div className="flex items-center space-x-1">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => router.push(isAuthenticated ? '/profile' : '/auth/login')}
-                    className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800"
+                    className="hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800"
                   >
-                    <User className="h-5 w-5" strokeWidth={1.5} />
+                    <User className="h-5 w-5" />
                   </Button>
 
-                  <WishlistIndicator />
+                  <WishlistIndicator className="hidden md:flex" />
 
-                  <div className="relative">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsCartModalOpen(true)}
-                      className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800"
-                    >
-                      <CartIndicator />
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsCartModalOpen(true)}
+                    className="hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800"
+                  >
+                    <CartIndicator />
+                  </Button>
                 </div>
               </div>
 
@@ -387,9 +390,9 @@ function ShopBySpaceMenu({ spaces }: { spaces: Space[] }) {
     <HoverCard.Root openDelay={100} closeDelay={200} onOpenChange={setOpen}>
       <HoverCard.Trigger asChild>
         <button
-          className={`flex items-center space-x-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all rounded-full outline-none ${open ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+          className={`flex items-center space-x-1 px-3 lg:px-4 py-2 text-sm font-medium text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white transition-all rounded-full outline-none whitespace-nowrap ${open ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
         >
-          <span>Shop by Space</span>
+          <span>Spaces</span>
           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
         </button>
       </HoverCard.Trigger>
@@ -642,7 +645,7 @@ function CompanyMenu() {
     <HoverCard.Root openDelay={150} closeDelay={200} onOpenChange={setOpen}>
       <HoverCard.Trigger asChild>
         <button
-          className={`flex items-center space-x-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all rounded-full outline-none ${open ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+          className={`flex items-center space-x-1 px-3 lg:px-4 py-2 text-sm font-medium text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white transition-all rounded-full outline-none ${open ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}
         >
           <span>Company</span>
           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />

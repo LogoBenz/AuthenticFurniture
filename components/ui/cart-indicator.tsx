@@ -8,7 +8,7 @@ import { ShoppingCart } from "lucide-react";
 
 function CustomCartIcon(props: any) {
   return (
-    <ShoppingCart {...props} strokeWidth={1.5} />
+    <ShoppingCart {...props} />
   );
 }
 

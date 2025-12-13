@@ -4,17 +4,16 @@ import { getProductsBySubcategory, getBestSellers, getFeaturedDeals, getFeatured
 import { getAllSpaces } from '@/lib/categories';
 import { HomeSectionsPayload } from '@/types/home';
 
-import { NewArrivals } from '@/components/home/FeaturedProducts';
 import { Hero } from '@/components/home/Hero';
 import { StatsSection } from '@/components/home/StatsSection';
 import { Categories } from '@/components/home/Categories';
+import { FeaturedCollections } from '@/components/home/FeaturedCollections';
 import WhyChooseUs from '@/components/home/WhyChooseUs';
 import { Testimonials } from '@/components/home/Testimonials';
 import { NewsletterSignup } from '@/components/home/NewsletterSignup';
 import { CTASection } from '@/components/home/CTASection';
 import { OfficeTablesSection } from '@/components/home/OfficeTablesSection';
 import { OfficeChairsSection } from '@/components/home/OfficeChairsSection';
-import { BestSellers } from '@/components/home/BestSellers';
 
 export default async function Home() {
   const queryClient = new QueryClient();
@@ -41,14 +40,17 @@ export default async function Home() {
   const officeTablesProducts = await getProductsBySubcategory('office-tables');
   const officeChairsProducts = await getProductsBySubcategory('office-chairs');
   const bestSellersProducts = await getBestSellers();
+  const newArrivalsProducts = await getFeaturedProducts();
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <Hero />
       <StatsSection />
       <Categories />
-      <NewArrivals />
-      <BestSellers products={bestSellersProducts} />
+      <FeaturedCollections
+        newArrivals={newArrivalsProducts}
+        bestSellers={bestSellersProducts}
+      />
       <OfficeTablesSection products={officeTablesProducts} />
       <OfficeChairsSection products={officeChairsProducts} />
       <WhyChooseUs />
